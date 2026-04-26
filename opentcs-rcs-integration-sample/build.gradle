@@ -1,0 +1,26 @@
+// SPDX-FileCopyrightText: The openTCS Authors
+// SPDX-License-Identifier: MIT
+
+apply from: "${rootDir}/gradle/java-project.gradle"
+apply from: "${rootDir}/gradle/java-codequality.gradle"
+apply from: "${rootDir}/gradle/publishing-java.gradle"
+
+dependencies {
+  implementation libs.jackson.databind
+  implementation libs.jackson.datatype.jsr310
+  implementation libs.javalin
+}
+
+task release {
+  dependsOn build
+}
+
+task runRcsSample(type: JavaExec) {
+  group = 'application'
+  description = 'Runs the RCS integration sample service.'
+  classpath = sourceSets.main.runtimeClasspath
+  mainClass = 'org.opentcs.rcs.RcsIntegrationApplication'
+  if (project.hasProperty('rcsPort')) {
+    args project.property('rcsPort').toString()
+  }
+}
