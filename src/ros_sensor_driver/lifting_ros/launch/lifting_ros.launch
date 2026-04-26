@@ -1,0 +1,9 @@
+<launch>
+    <node name="lifting_ros_node" pkg="lifting_ros" type="lifting_ros_node" output="screen" respawn="false">
+        <param name="serial_port" type="string" value="/dev/ttyUSB1"/>
+        <param name="baudrate" type="int" value="9600"/>
+        <param name="serial_timeout_ms" type="int" value="1000"/>
+        <param name="limit_read_interval_ms" type="int" value="200"/>
+    </node>
+	
+</launch>

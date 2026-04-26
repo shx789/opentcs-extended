@@ -1,0 +1,16 @@
+#请求的数据，一般由客户端发送给服务端
+uint32 id
+uint32 task_mode
+---
+#请求结果，一般由服务端发送给客户端
+uint32 result
+uint32 id
+geometry_msgs/Pose2D pose
+---
+#反馈的消息内容，一般由服务端不间断发送到客户端
+uint32 step
+bool obstacle
+float32 socre
+uint32 id
+geometry_msgs/Pose2D pose
+

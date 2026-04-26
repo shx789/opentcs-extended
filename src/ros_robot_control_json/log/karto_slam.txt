@@ -1,0 +1,27 @@
+... logging to /home/zkwl/.ros/log/2d048c00-879b-11eb-850a-54bf643cc7c3/roslaunch-zkwl-G7-7588-6054.log
+Checking log directory for disk usage. This may take awhile.
+Press Ctrl-C to interrupt
+]2;/home/zkwl/catkin_ws_agv/src/zkwl_robot_start/launch/karto_slam.launch
+[1mstarted roslaunch server http://zkwl-G7-7588:42181/[0m
+
+SUMMARY
+========
+
+PARAMETERS
+ * /rosdistro: kinetic
+ * /rosversion: 1.12.14
+ * /slam_karto/map_update_interval: 1
+ * /slam_karto/odom_frame: odom_combined
+ * /slam_karto/resolution: 0.025
+
+NODES
+  /
+    slam_karto (slam_karto/slam_karto)
+
+[1mROS_MASTER_URI=http://localhost:11311[0m
+]2;/home/zkwl/catkin_ws_agv/src/zkwl_robot_start/launch/karto_slam.launch http://localhost:11311
+[1mprocess[slam_karto-1]: started with pid [6079][0m
+[slam_karto-1] killing on exit
+shutting down processing monitor...
+... shutting down processing monitor complete
+[1mdone[0m

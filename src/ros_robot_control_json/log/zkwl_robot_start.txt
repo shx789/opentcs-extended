@@ -1,0 +1,90 @@
+[0m[ INFO] [1616057975.441529913]: Opening UDP socket: address 192.168.1.222[0m
+[0m[ INFO] [1616057975.441575973]: Opening UDP socket: port 2368[0m
+[0m[ INFO] [1616057975.441604938]: expected frequency: 888.889 (Hz)[0m
+[0m[ INFO] [1616057975.449704464]: Opening UDP socket: port 2368[0m
+[0m[ INFO] [1616057975.449724694]: Initialised lslidar n301 without error[0m
+[0m[ INFO] [1616057975.397428278]: [ZXP] base controller node start! [0m
+[0m[ INFO] [1616057975.468522758]: output frame: odom_combined[0m
+[0m[ INFO] [1616057975.468551495]: base frame: base_footprint[0m
+[33m[ WARN] [1616057975.462607307]: Using GPS timestamp or not 0[0m
+... logging to /home/zkwl/.ros/log/2d048c00-879b-11eb-850a-54bf643cc7c3/roslaunch-zkwl-G7-7588-5818.log
+Checking log directory for disk usage. This may take awhile.
+Press Ctrl-C to interrupt
+]2;/home/zkwl/catkin_ws_agv/src/zkwl_robot_start/launch/zkwl_robot_start.launch
+[1mstarted roslaunch server http://zkwl-G7-7588:37679/[0m
+
+SUMMARY
+========
+
+PARAMETERS
+ * /lslidar_n301_decoder_node/angle_disable_max: 280
+ * /lslidar_n301_decoder_node/angle_disable_min: 80
+ * /lslidar_n301_decoder_node/child_frame_id: laser
+ * /lslidar_n301_decoder_node/frequency: 10.0
+ * /lslidar_n301_decoder_node/max_range: 100.0
+ * /lslidar_n301_decoder_node/min_range: 0.0
+ * /lslidar_n301_decoder_node/point_num: 2000
+ * /lslidar_n301_decoder_node/publish_point_cloud: False
+ * /lslidar_n301_driver_node/device_ip: 192.168.1.222
+ * /lslidar_n301_driver_node/device_port: 2368
+ * /lslidar_n301_driver_node/frame_id: laser
+ * /publish_agv_msg/baud_data: 115200
+ * /publish_agv_msg/smoother_cmd_vel: smoother_cmd_vel
+ * /publish_agv_msg/usart_port: /dev/ttyUSB0
+ * /publish_odom/filter_Vth_match: 1.0
+ * /publish_odom/filter_Vx_match: 1.0
+ * /publish_odom/imu_velocity_z: False
+ * /publish_odom/robot_frame_id: base_footprint
+ * /publish_odom/smoother_cmd_vel: smoother_cmd_vel
+ * /robot_pose_ekf/freq: 30.0
+ * /robot_pose_ekf/imu_used: True
+ * /robot_pose_ekf/odom_used: True
+ * /robot_pose_ekf/sensor_timeout: 2.0
+ * /robot_pose_ekf/vo_used: False
+ * /rosdistro: kinetic
+ * /rosversion: 1.12.14
+ * /velocity_smoother/accel_lim_v: 1.0
+ * /velocity_smoother/accel_lim_w: 2.5
+ * /velocity_smoother/decel_factor: 1.0
+ * /velocity_smoother/frequency: 20.0
+ * /velocity_smoother/robot_feedback: 0
+ * /velocity_smoother/speed_lim_v: 0.45
+ * /velocity_smoother/speed_lim_w: 1.0
+
+NODES
+  /
+    base_to_gyro (tf/static_transform_publisher)
+    base_to_laser (tf/static_transform_publisher)
+    base_to_link (tf/static_transform_publisher)
+    lslidar_n301_decoder_node (lslidar_n301_decoder/lslidar_n301_decoder_node)
+    lslidar_n301_driver_node (lslidar_n301_driver/lslidar_n301_driver_node)
+    nodelet_manager (nodelet/nodelet)
+    publish_agv_msg (ros_agv3_msg/ros_agv3_talker)
+    publish_odom (zkwl_robot_start/zkwl_robot_node)
+    robot_pose_ekf (robot_pose_ekf/robot_pose_ekf)
+    velocity_smoother (nodelet/nodelet)
+
+[1mROS_MASTER_URI=http://localhost:11311[0m
+]2;/home/zkwl/catkin_ws_agv/src/zkwl_robot_start/launch/zkwl_robot_start.launch http://localhost:11311
+[1mprocess[base_to_link-1]: started with pid [5843][0m
+[1mprocess[base_to_gyro-2]: started with pid [5844][0m
+[1mprocess[base_to_laser-3]: started with pid [5850][0m
+[1mprocess[publish_agv_msg-4]: started with pid [5863][0m
+[1mprocess[publish_odom-5]: started with pid [5873][0m
+[1mprocess[lslidar_n301_driver_node-6]: started with pid [5888][0m
+[1mprocess[lslidar_n301_decoder_node-7]: started with pid [5905][0m
+[1mprocess[robot_pose_ekf-8]: started with pid [5921][0m
+[1mprocess[nodelet_manager-9]: started with pid [5925][0m
+[1mprocess[velocity_smoother-10]: started with pid [5937][0m
+[velocity_smoother-10] killing on exit
+[nodelet_manager-9] killing on exit
+[robot_pose_ekf-8] killing on exit
+[lslidar_n301_driver_node-6] killing on exit
+[lslidar_n301_decoder_node-7] killing on exit
+[base_to_laser-3] killing on exit
+[base_to_gyro-2] killing on exit
+[base_to_link-1] killing on exit
+[publish_odom-5] killing on exit
+shutting down processing monitor...
+... shutting down processing monitor complete
+[1mdone[0m

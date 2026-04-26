@@ -1,0 +1,16 @@
+<launch>
+    <node pkg="ros_gpio_msg" type="ros_gpio_msg" name="publish_gpio_msg" output="screen">
+      <param name="gpio_pin1" type="int" value="116"/>
+      <param name="direction1" type="string"  value="in"/>
+      <param name="gpio_pin2" type="int" value="125"/>
+      <param name="direction2" type="string"  value="in"/>
+
+      <param name="gpio_pin3" type="int" value="135"/>
+      <param name="direction3" type="string"  value="in"/>
+      <param name="gpio_pin4" type="int" value="27"/>
+      <param name="direction4" type="string"  value="in"/>
+    </node>
+</launch>
+
+
+

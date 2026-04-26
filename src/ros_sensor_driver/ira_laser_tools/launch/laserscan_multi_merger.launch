@@ -1,0 +1,19 @@
+<!-- DESCRITPION -->
+
+<launch>
+	<node pkg="tf" type="static_transform_publisher" name="ira_static_broadcaster1" args="0 0 0 0 0 0 laser laser0 50" />
+	<node pkg="tf" type="static_transform_publisher" name="ira_static_broadcaster2" args="-0.85 0 0 3.141592654 0 0 laser laser1 50" />
+
+	<node pkg="ira_laser_tools" name="laserscan_multi_merger" type="laserscan_multi_merger" output="screen">
+	<param name="destination_frame" value="laser"/>
+	<param name="cloud_destination_topic" value="/merged_cloud"/>
+	<param name="scan_destination_topic" value="/scan"/>
+	<param name="laserscan_topics" value ="/scan0 /scan1" /> <!-- LIST OF THE LASER SCAN TOPICS TO SUBSCRIBE -->
+	<param name="angle_min" value="-3.14"/>
+	<param name="angle_max" value="3.14"/>
+	<param name="angle_increment" value="0.00436324998736"/>
+	<param name="scan_time" value="0.0333333"/>
+	<param name="range_min" value="0.01"/>
+	<param name="range_max" value="50"/>
+	</node>
+</launch>

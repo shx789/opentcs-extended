@@ -1,0 +1,154 @@
+<launch>
+  
+ <!--tf-->
+  <include file="$(find ros_robot_control_mqtt)/custom/custom.launch">
+  </include>
+
+  <!--imu-->
+  <include file="$(find fdilink_ahrs)/launch/ahrs_data.launch">
+  </include>
+
+  <!--ros_agv3_msg
+  <include file="$(find ros_agv3_msg)/launch/ros_agv3_start.launch">
+  </include>-->
+
+  <!--ros_four1_msg
+  <include file="$(find ros_four1_msg)/launch/ros_four1_start.launch">
+  </include>-->
+
+   <!--ros_pt_msg
+  <include file="$(find ros_pt_msg)/launch/ros_pt_start.launch">
+  </include>-->
+
+  <!--ros_dt_msg
+  <include file="$(find ros_dt_msg)/launch/ros_dt_start.launch">
+  </include>-->
+
+  <!--agv
+  <include file="$(find agv)/launch/agv.launch">
+  </include>-->
+
+  <!--dt_control
+  <include file="$(find dt_control)/launch/dt_control.launch">
+  </include>-->
+
+  <!--wj716
+  <include file="$(find wj_716_lidar)/launch/wj_716_lidar_01.launch">
+  </include>-->
+
+  <!--wj716N
+  <include file="$(find wj_716N_lidar)/launch/wj_716N_lidar_01.launch">
+  </include>-->
+
+  <!--nvilidar_ros
+  <include file="$(find nvilidar_ros)/launch/lidar.launch">
+  </include>-->
+  
+  <!--four_wheel-->
+  <include file="$(find four_wheel)/launch/four_wheel.launch">
+  </include>
+
+  <!--rslidar_sdk
+  <include file="$(find rslidar_sdk)/launch/start.launch">
+  </include>-->
+
+  <!--pavo_ros
+  <include file="$(find pavo_ros)/launch/pavo_scan_2.launch">
+  </include>-->
+  
+  <!--bluesea2
+  <include file="$(find bluesea2)/launch/udp_lidar.launch">
+  </include>-->
+  
+  <!--WS_25PCD-->
+  <include file="$(find laser_udp)/launch/laser_udp_with_1_lidar.launch">
+  </include>
+
+  <!--pointcloud_to_laserscan
+  <include file="$(find pointcloud_to_laserscan)/launch/point_to_scan.launch">
+  </include>-->
+
+  <!--laserscan_multi_merger
+   <include file="$(find ira_laser_tools)/launch/laserscan_multi_merger.launch">
+  </include>-->
+
+ 
+
+  <!--Start the robot's base control code and publish the odometer data-->
+  <node pkg="zkwl_robot_start" type="zkwl_robot_node" required="true" name="publish_odom" output="screen">
+    <param name="robot_frame_id"     type="string" value="base_footprint"/>
+    <param name="filter_Vx_match"    type="double" value="0.91"/>
+    <param name="filter_Vth_match"   type="double" value="1.0"/>
+  </node>
+
+  
+  <!--ls  lidar
+   <node pkg="lslidar_n301_driver" type="lslidar_n301_driver_node" name="lslidar_n301_driver_node" output="screen">
+    <param name="frame_id" value="laser"/>
+    <param name="device_ip" value="192.168.1.222"/>
+    <param name="device_port" value="2368"/>
+  </node>
+
+  <node pkg="lslidar_n301_decoder" type="lslidar_n301_decoder_node" name="lslidar_n301_decoder_node" output="screen">
+    <param name="child_frame_id" value="laser"/>
+    <param name="point_num" value="2000"/>
+    <param name="angle_disable_min" value="80"/>
+    <param name="angle_disable_max" value="280"/>
+    <param name="min_range" value="0.0"/>
+    <param name="max_range" value="100.0"/>
+    <param name="frequency" value="10.0"/>
+    <param name="publish_point_cloud" value="false"/>
+  </node>
+  -->
+
+  <!--kl  lidar 20 
+  <param name="robot_description" command="$(find xacro)/xacro.py '$(find wr_ls_udp)/urdf/wr_ls1207de.urdf.xacro'" />
+  <node name="wr_ls1207de" pkg="wr_ls_udp" type="wr_ls1207de"  output="screen">
+      <param name="frame_id" type="str" value="laser" />
+      <param name="range_min" type="double" value="0.01" />
+      <param name="range_max" type="double" value="20.0" />
+      <param name="hostname" type="string" value="192.168.0.10" />
+      <param name="port" type="string" value="2112" />
+      <param name="timelimit" type="int" value="5" />
+      <param name="checkframe" type="bool" value="true" />
+      
+  </node>-->
+  
+  <!--kl  lidar 30 
+   <param name="robot_description" command="$(find xacro)/xacro.py '$(find wr_ls_udp)/urdf/wr_ls1207de.urdf.xacro'" />
+   <node name="wr_ls1207de" pkg="wr_ls_udp" type="wr_ls1207de" respawn="true" output="screen">
+      <param name="frame_id" type="str" value="laser" />
+      <param name="range_min" type="double" value="0.01" />
+      <param name="range_max" type="double" value="20.0" />
+      <param name="hostname" type="string" value="192.168.0.10" />
+      <param name="port" type="string" value="2112" />
+      <param name="timelimit" type="int" value="5" />
+      <param name="checkframe" type="bool" value="true" />
+  </node>-->
+
+  <!--klm  lidar 
+  <node name="wr_klm" pkg="wr_klm_udp" type="wr_klm" respawn="true" output="screen">
+      <param name="frame_id" type="str" value="laser" />
+      <param name="range_min" type="double" value="0.01" />
+      <param name="range_max" type="double" value="30.0" />
+      <param name="hostname" type="string" value="192.168.0.10" />
+      <param name="port" type="string" value="2112" />
+      <param name="timelimit" type="int" value="5" />
+      <param name="checkframe" type="bool" value="true" />
+  </node>
+  -->
+  <include file="$(find cartographer_ros)/launch/my_getmap_add.launch">
+  </include>
+
+  <!--ros_bms_msg-->
+  <include file="$(find ros_bms_msg)/launch/ros_bms_msg.launch">
+  </include>
+
+  <rosparam file="$(find ros_robot_control_mqtt)/custom/custom.yaml" command="load" />
+
+  <!--opencv_flask
+  <include file="$(find usb_cam)/launch/usb_cam_with_calibration.launch" />
+  <include file="$(find opencv_flask)/launch/opencv_flask.launch">
+  </include>-->
+
+</launch>

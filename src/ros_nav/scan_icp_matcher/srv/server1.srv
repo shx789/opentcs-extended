@@ -1,0 +1,5 @@
+#请求的数据，一般由客户端发送给服务端
+std_msgs/String  name
+---
+#请求结果，一般由服务端发送给客户端
+bool result

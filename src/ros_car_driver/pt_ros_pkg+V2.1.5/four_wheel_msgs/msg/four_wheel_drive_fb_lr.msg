@@ -1,0 +1,5 @@
+four_wheel_drive_error error
+four_wheel_drive_state state
+
+float32 current
+float32 max_current

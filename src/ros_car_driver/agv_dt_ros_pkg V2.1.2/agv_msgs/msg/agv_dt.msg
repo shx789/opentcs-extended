@@ -1,0 +1,9 @@
+uint8[] cmd_81_state
+uint8[] cmd_87_software
+uint8[] cmd_88_hardware
+uint8[] cmd_89_param
+uint8[] cmd_8A_date
+uint8[] cmd_B0_drive_full
+uint8[] cmd_C0_drive_full
+uint8[] cmd_B1_drive_base
+uint8[] cmd_C1_drive_base

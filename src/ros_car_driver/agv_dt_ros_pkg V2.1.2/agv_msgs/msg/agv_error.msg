@@ -1,0 +1,5 @@
+bool remote_ctrl_lost
+bool drive_lost
+
+bool left_drive_error
+bool right_drive_error

@@ -1,0 +1,11 @@
+<launch>
+  <node pkg="xadz_lifting_ros" type="xadz_lifting_ros_node" name="xadz_lifting_ros_node" output="screen">
+
+    <param name="lifting_port" type="string" value="/dev/ttyS8"/>
+    <param name="lifting_baudrate" type="int" value="115200"/>
+
+    <param name="lifting_log_display" type="bool" value="true"/>
+    <param name="lifting_original_display" type="bool" value="false"/>
+
+  </node>
+</launch>

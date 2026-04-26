@@ -1,0 +1,5 @@
+agv_drive_error error
+agv_drive_state state
+
+float32 current
+float32 max_current

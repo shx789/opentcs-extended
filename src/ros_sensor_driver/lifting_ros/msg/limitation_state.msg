@@ -1,0 +1,3 @@
+bool upper_limit_state
+bool low_limit_state
+bool run_state

@@ -1,0 +1,38 @@
+# Move base node parameters. For full documentation of the parameters in this file, please see
+#
+#  http://www.ros.org/wiki/move_base
+#
+clearing_rotation_allowed: false
+#recovery_behaviors:
+#  - {name: conservative_reset, type: clear_costmap_recovery/ClearCostmapRecovery}
+#  - {name: stepback_and_steerturn_recovery, type: stepback_and_steerturn_recovery/StepBackAndSteerTurnRecovery}
+#  - {name: aggressive_reset, type: clear_costmap_recovery/ClearCostmapRecovery}
+
+shutdown_costmaps: false
+
+controller_frequency: 5 #3.0
+controller_patience: 3.0
+
+
+planner_frequency:  0.0 #1.0
+planner_patience: 5.0
+
+oscillation_timeout: 10.0
+oscillation_distance: 0.2
+
+# local planner - default is trajectory rollout
+base_local_planner: "dwa_local_planner/DWAPlannerROS"
+
+#base_global_planner: "navfn/NavfnROS"
+base_global_planner: "global_planner/GlobalPlanner"
+#base_global_planner: "waypoint_global_planner/WaypointGlobalPlanner"
+
+#base_global_planner: "RRTstar_planner/RRTstarPlannerROS"
+
+#base_global_planner: "astar_planner/AstarPlanner"
+
+ #alternatives: global_planner/GlobalPlanner, carrot_planner/CarrotPlanner
+
+
+
+

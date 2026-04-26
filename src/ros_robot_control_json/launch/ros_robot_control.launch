@@ -1,0 +1,6 @@
+<launch>
+  <node pkg="ros_robot_control" type="ros_robot_control" name="ros_robot_control_node" output="screen">
+  </node>
+</launch>
+
+

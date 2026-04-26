@@ -1,0 +1,15 @@
+{
+   "cmd" : null,
+   "cmd_type" : "setting",
+   "exit_power" : 90,
+   "exit_power_check" : true,
+   "go_power" : 20,
+   "go_power_check" : true,
+   "go_power_error" : 2,
+   "nav_time" : 5,
+   "path_check" : true,
+   "power_max" : 25,
+   "power_min" : 20,
+   "radra_check" : true,
+   "start_point" : false
+}

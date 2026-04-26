@@ -1,0 +1,59 @@
+move_base:
+ TebLocalPlannerROS:
+
+  max_vel_x: 0.5                 #最大X轴速度 m
+  max_vel_x_backwards: 0.11      #最大后退速度 m
+  max_vel_theta: 0.5             #最大角速度 rad/s
+  acc_lim_x: 0.11                #X轴加速度  m/ss
+  acc_lim_theta: 0.11            #角加速度
+  weight_acc_lim_x: 1.0           #X轴加速度权重
+  weight_acc_lim_theta: 1.0        #角加速度权重
+  weight_optimaltime: 1.0
+  footprint_model:
+   #type: "point"
+   type: "polygon"
+   vertices: [[0.30,-0.16],[0.30,0.16],[-0.30,0.16],[-0.30,-0.16]] #车体坐标，以车正中心为坐标0点分别为左上角、右上角、左下角、右下角坐标 m
+  min_obstacle_dist: 0.05         #离障碍物最近距离 m
+  inflation_dist: 0.21
+
+ global_costmap:
+  footprint: [[0.30,-0.16],[0.30,0.16],[-0.30,0.16],[-0.30,-0.16]]  #车体坐标，以车正中心为坐标0点分别为左上角、右上角、左下角、右下角坐标 m
+  inflation_layer:
+   inflation_radius: 0.21        #代价地图膨胀距离 m 一般为车体宽度一半+离障碍物距离
+
+ local_costmap:
+  footprint: [[0.30,-0.16],[0.30,0.16],[-0.30,0.16],[-0.30,-0.16]]   #车体坐标，以车正中心为坐标0点分别为左上角、右上角、左下角、右下角坐标 m
+  inflation_layer:
+   inflation_radius: 0.21       #代价地图膨胀距离 m 一般为车体宽度一半+离障碍物距离
+
+ros_end_control:
+ footprint: "[[0.30,-0.16],[0.30,0.16],[-0.30,0.16],[-0.30,-0.16]]"   #车体坐标，以车正中心为坐标0点分别为左上角、右上角、左下角、右下角坐标 m
+ Before_Target: 0.5             #目标前点距离(可离目标的最近距离)
+ Forward_obstacle_dis: 0.01     #前方避障距离
+ Side_obstacle_dis: 0.01        #侧方避障距离
+
+wj_716_lidar_01:
+ min_ang: -2.00712864           #雷达最小角度 rad
+ max_ang: +2.00712864           #雷达最大角度 rad
+ range_min: 0.02                #雷达最近距离 m
+ range_max: 25                  #雷达最远距离 m
+
+wj_716N_lidar_01:
+ min_ang: -2.00712864            #雷达最小角度 rad
+ max_ang: +2.00712864            #雷达最大角度 rad
+ range_min: 0.02                #雷达最近距离 m
+ range_max: 25                  #雷达最远距离 m
+
+
+publish_agv_msg:
+ usart_port: /dev/ttyS7         #底盘串口名
+ baud_data:  115200             #底盘串口波特率
+
+publish_four_msg:
+ usart_port: /dev/ttyS7         #底盘串口名
+ baud_data:  115200             #底盘串口波特率
+
+ahrs_driver:
+ baud: 921600                   #imu串口波特率
+ port: /dev/imu_usb             #imu串口名
+ 

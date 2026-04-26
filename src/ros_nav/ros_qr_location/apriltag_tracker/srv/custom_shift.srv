@@ -1,0 +1,4 @@
+float32 custom_x
+float32 custom_y
+---
+bool result

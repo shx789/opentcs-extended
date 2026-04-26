@@ -1,0 +1,8 @@
+bool remote_ctrl_lost
+bool front_drive_lost
+bool back_drive_lost
+
+bool front_left_drive_error
+bool front_right_drive_error
+bool back_left_drive_error
+bool back_right_drive_error

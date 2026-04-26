@@ -1,0 +1,13 @@
+<launch>
+   
+  <node pkg="ros_half_planner" type="ros_half_planner"  name="ros_half_planner" required="true"  output="log">
+    <param name="path_point_filename" type="str" value="$(find ros_robot_control_mqtt)/json/path_point.json"/>
+  </node>
+  
+   <!--
+   <node name="rviz" pkg="rviz" type="rviz" required="true"
+      args="-d $(find ros_half_planner)/rviz/pnc.rviz" />-->
+
+</launch>
+
+

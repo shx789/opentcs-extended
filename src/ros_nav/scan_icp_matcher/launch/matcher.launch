@@ -1,0 +1,26 @@
+<launch>
+
+    <arg name="scan_topic" default="/scan" />                                                    <!-- Name of lidar scan topic -->
+    <arg name="pattern_topic" default="pattern" />                                              <!-- Name of lidar pattern topic -->
+    <arg name="clustered_points_topic" default="clustered_points" />                            <!-- Name of lidar clustered point topic -->
+    <arg name="pattern_filepath" default="$(find scan_icp_matcher)/pcd/pattern_charge.pcd" />           <!-- Filepath of pcd file -->
+
+    <node name="pattern_matcher" type="scan_icp_matcher" pkg="scan_icp_matcher" output="screen">
+        <param name="scan_topic" value="$(arg scan_topic)" />
+        <param name="pattern_topic" value="$(arg pattern_topic)" />
+        <param name="clustered_points_topic" value="$(arg clustered_points_topic)" />
+        <param name="pattern_filepath" value="$(arg pattern_filepath)" />
+    </node>
+
+    <node name="ros_end_control" type="ros_end_control" pkg="scan_icp_matcher" output="screen">
+         <param name="scan_topic" value="$(arg scan_topic)" />
+    </node>
+
+      <!--   
+    <node name="ros_scan_shadow" type="ros_scan_shadow" pkg="scan_icp_matcher" output="screen">
+    </node> -->
+     <!--  
+    <node name="rviz" pkg="rviz" type="rviz" args="-d $(find scan_icp_matcher)/config/pattern_matcher.rviz"/>
+    -->
+
+</launch>

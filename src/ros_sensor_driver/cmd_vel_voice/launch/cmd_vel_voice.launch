@@ -1,0 +1,4 @@
+<launch>
+  <node pkg="cmd_vel_voice"     type="cmd_vel_voice" name="cmd_vel_voice" output="screen">
+  </node>
+</launch>

@@ -1,0 +1,10 @@
+int16 flwspeed
+int16 frwspeed
+int16 blwspeed
+int16 brwspeed
+int16 flwadd
+int16 frwadd
+int16 blwadd
+int16 brwadd
+float32 voltage
+uint16 status

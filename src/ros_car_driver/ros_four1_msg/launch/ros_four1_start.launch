@@ -1,0 +1,8 @@
+<launch>
+  <node pkg="ros_four1_msg"         type="ros_four1_talker" name="publish_four_msg"  respawn="true"  output="screen">
+    <param name="usart_port"       type="string"          value="/dev/ttyS0"/>
+    <param name="baud_data"        type="int"    	  value="115200"/>
+  </node>
+</launch>
+
+

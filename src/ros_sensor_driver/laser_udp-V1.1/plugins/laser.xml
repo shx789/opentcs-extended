@@ -1,0 +1,3 @@
+<library path="lib/liblaser_nodelet">
+  	<class name="laser_udp/laserNodelet" type="laser_udp::laserNodelet" base_class_type="nodelet::Nodelet"/>
+</library>

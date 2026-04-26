@@ -1,0 +1,8 @@
+<launch>
+
+   <node pkg="apriltag_tracker" type="apriltag_tracker" name="apriltag_tracker" output="screen" >
+       <param name="tag_save_filename" type="string" value="/home/robotcar/catkin_ws/src/ros_nav/ros_qr_location/apriltag_tracker/json/tag_save.json" />
+       <param name="noise_fit_filename" type="string" value="/home/robotcar/catkin_ws/src/ros_nav/ros_qr_location/apriltag_tracker/json/noise_fit.json" />
+   </node>
+   
+</launch>

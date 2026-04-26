@@ -1,0 +1,5 @@
+uint16 wheel_base
+uint16 track_width
+uint16 wheel_diameter
+uint16 gear_ratio
+uint16 encoder_line

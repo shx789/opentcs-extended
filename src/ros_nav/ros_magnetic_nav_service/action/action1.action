@@ -1,0 +1,14 @@
+#请求的数据，一般由客户端发送给服务端
+uint32 aim_id
+int8 aim_dir #0:front 1:back
+int8 aim_action #0:ac_Straight 3:up 4:low
+---
+#请求结果，一般由服务端发送给客户端
+uint32 result #0:success 1:er_Off_Track 2:er_Get_ErrorID 3:er_Cancel 4:er_Collision
+uint32 now_rfid
+---
+#反馈的消息内容，一般由服务端不间断发送到客户端
+uint32 step
+uint32 aim_id
+uint32 now_rfid
+
