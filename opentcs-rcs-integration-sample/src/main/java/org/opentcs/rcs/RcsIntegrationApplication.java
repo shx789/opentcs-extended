@@ -30,6 +30,7 @@ import org.opentcs.rcs.api.wcs.WcsTaskService;
 import org.opentcs.rcs.api.wcs.WmsTaskResultService;
 import org.opentcs.rcs.api.wcs.ResourceNotFoundException;
 import org.opentcs.rcs.api.wcs.TaskStateConflictException;
+import org.opentcs.rcs.api.wcs.AgvMonitorHttpHandlers;
 import org.opentcs.rcs.agvcommand.AgvCommandHttpHandlers;
 import org.opentcs.rcs.agvcommand.AgvCommandOutboxService;
 import org.opentcs.rcs.agvcommand.AgvCommandOutboxStore;
@@ -177,6 +178,10 @@ public final class RcsIntegrationApplication {
     Consumer<JavalinConfig> config = cfg -> {
       cfg.startup.showJavalinBanner = false;
       cfg.routes.apiBuilder(() -> {
+        get(
+            "/demo/agv-monitor",
+            AgvMonitorHttpHandlers.pageHandler()
+        );
         get(
             "/demo/wcs",
             WcsDemoHttpHandlers.pageHandler(
