@@ -116,6 +116,7 @@ public final class AgvMonitorHttpHandlers {
                 <div class="actions">
                   <button onclick="createMission()">创建 mission</button>
                   <button class="secondary" onclick="refreshAll()">刷新</button>
+                  <button class="secondary" onclick="cancelMission()">取消 mission</button>
                   <button class="gold" onclick="fillTimestamp()">换一组编号</button>
                 </div>
               </div>
@@ -147,6 +148,17 @@ public final class AgvMonitorHttpHandlers {
                     <label class="auto"><input type="checkbox" id="autoRefresh" onchange="toggleAuto()"/> 自动刷新</label>
                   </div>
                   <div id="commandsTable" class="empty">还没有查询结果</div>
+                </div>
+              </section>
+
+              <section class="panel" style="margin-top:16px;">
+                <h2>WCS callback 记录</h2>
+                <div class="body">
+                  <div class="monitor-head">
+                    <div class="subtitle">读取 /demo/wcs/callbacks，适合配合 callback_url=/demo/wcs/callback 使用</div>
+                    <button class="secondary" onclick="clearCallbacks()">清空回调</button>
+                  </div>
+                  <div id="callbacksTable" class="empty">还没有 callback 记录</div>
                 </div>
               </section>
 
@@ -201,6 +213,23 @@ public final class AgvMonitorHttpHandlers {
             }
           }
 
+          async function cancelMission() {
+            const missionNo = $('missionNo').value.trim();
+            if (!missionNo) return;
+            try {
+              const body = await request(`/api/v1/wcs/agv/missions/${encodeURIComponent(missionNo)}/cancel`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: '{}'
+              });
+              $('raw').textContent = asJson(body);
+              await refreshAll();
+            }
+            catch (err) {
+              $('raw').textContent = asJson(err);
+            }
+          }
+
           async function refreshMission() {
             const missionNo = $('missionNo').value.trim();
             if (!missionNo) return null;
@@ -224,12 +253,30 @@ public final class AgvMonitorHttpHandlers {
             return body;
           }
 
+          async function refreshCallbacks() {
+            const body = await request('/demo/wcs/callbacks');
+            renderCallbacks((body && body.data) || []);
+            return body;
+          }
+
+          async function clearCallbacks() {
+            try {
+              const body = await request('/demo/wcs/callbacks/clear', { method: 'POST' });
+              $('raw').textContent = asJson(body);
+              await refreshCallbacks();
+            }
+            catch (err) {
+              $('raw').textContent = asJson(err);
+            }
+          }
+
           async function refreshAll() {
             try {
               const missions = await refreshMissions().catch(err => err);
               const mission = await refreshMission().catch(err => err);
               const commands = await refreshCommands().catch(err => err);
-              $('raw').textContent = asJson({ missions, mission, commands });
+              const callbacks = await refreshCallbacks().catch(err => err);
+              $('raw').textContent = asJson({ missions, mission, commands, callbacks });
             }
             catch (err) {
               $('raw').textContent = asJson(err);
@@ -262,6 +309,27 @@ public final class AgvMonitorHttpHandlers {
           function selectMission(missionNo) {
             $('missionNo').value = missionNo;
             refreshAll();
+          }
+
+          function renderCallbacks(callbacks) {
+            if (!callbacks.length) {
+              $('callbacksTable').className = 'empty';
+              $('callbacksTable').innerHTML = '还没有 callback 记录';
+              return;
+            }
+            $('callbacksTable').className = '';
+            $('callbacksTable').innerHTML = `
+              <table>
+                <thead><tr><th>time</th><th>trace</th><th>request</th><th>payload</th></tr></thead>
+                <tbody>${callbacks.slice().reverse().map(item => `
+                  <tr>
+                    <td><code>${escapeHtml(item.receivedAt || '')}</code></td>
+                    <td><code>${escapeHtml(item.traceId || '')}</code></td>
+                    <td><code>${escapeHtml(item.requestId || '')}</code></td>
+                    <td><code>${escapeHtml(item.payload || '')}</code></td>
+                  </tr>
+                `).join('')}</tbody>
+              </table>`;
           }
 
           function renderCommands(commands) {
@@ -329,7 +397,7 @@ public final class AgvMonitorHttpHandlers {
               .replace(/>/g, '&gt;');
           }
 
-          refreshMissions().catch(err => { $('raw').textContent = asJson(err); });
+          refreshAll().catch(err => { $('raw').textContent = asJson(err); });
         </script>
       </body>
       </html>
