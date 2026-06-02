@@ -33,6 +33,25 @@ class CallbackRetryProcessorTest {
   }
 
   @Test
+  void shouldNotRequeueAlreadyProcessedIdempotencyKey() {
+    InMemoryCallbackOutboxStore store = new InMemoryCallbackOutboxStore();
+    CallbackOutboxService service = new CallbackOutboxService(store, new ObjectMapper());
+    String idemKey = "M1-ARRIVED_FROM";
+    service.enqueue("M1", "http://wcs/callback", new Payload("ARRIVED_FROM"), idemKey);
+
+    CallbackRetryProcessor processor = new CallbackRetryProcessor(
+        store,
+        (url, payload) -> {
+        }
+    );
+    processor.processDue(10);
+    service.enqueue("M1", "http://wcs/callback", new Payload("ARRIVED_FROM"), idemKey);
+
+    assertThat(store.findDue(Instant.now().plusSeconds(1), 10)).isEmpty();
+    assertThat(store.findByIdemKey(idemKey).orElseThrow().status()).isEqualTo("SUCCESS");
+  }
+
+  @Test
   void shouldIncreaseRetryCountWhenCallbackSendFails() {
     InMemoryCallbackOutboxStore store = new InMemoryCallbackOutboxStore();
     CallbackOutboxService service = new CallbackOutboxService(store, new ObjectMapper());

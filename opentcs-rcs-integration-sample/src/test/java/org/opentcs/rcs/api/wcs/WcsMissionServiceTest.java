@@ -3,6 +3,7 @@
 package org.opentcs.rcs.api.wcs;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -13,6 +14,7 @@ import org.opentcs.rcs.api.dto.CreateMissionReq;
 import org.opentcs.rcs.api.dto.CreateMissionResp;
 import org.opentcs.rcs.api.dto.QueryMissionResp;
 import org.opentcs.rcs.bridge.opentcs.OpenTcsOrderClient;
+import org.opentcs.rcs.bridge.agv.AgvCommandPublisher;
 import org.opentcs.rcs.bridge.opentcs.OpenTcsPayloadMapper;
 import org.opentcs.rcs.bridge.opentcs.dto.OpenTcsTransportOrderReq;
 import org.opentcs.rcs.core.idem.IdempotencyService;
@@ -47,7 +49,8 @@ class WcsMissionServiceTest {
           }
         },
         new ObjectMapper(),
-        new InMemoryMissionStore()
+        new InMemoryMissionStore(),
+        AgvCommandPublisher.noop()
     );
   }
 
@@ -99,4 +102,46 @@ class WcsMissionServiceTest {
     QueryMissionResp afterCancel = service.queryMission(req.missionNo());
     assertThat(afterCancel.rcsStatus()).isEqualTo("CANCELED");
   }
+  @Test
+  void shouldMarkMissionFailedWhenAgvCommandPublishFails() {
+    InMemoryMissionStore missionStore = new InMemoryMissionStore();
+    WcsMissionService failingService = new WcsMissionService(
+        new IdempotencyService(new InMemoryIdempotencyStore(), new ObjectMapper()),
+        new OpenTcsPayloadMapper(),
+        new OpenTcsOrderClient() {
+          @Override
+          public void createTransportOrder(String orderName, OpenTcsTransportOrderReq payload) {
+            openTcsCalls.incrementAndGet();
+          }
+
+          @Override
+          public void cancelTransportOrder(String orderName) {
+            openTcsCancelCalls.incrementAndGet();
+          }
+        },
+        new ObjectMapper(),
+        missionStore,
+        mission -> {
+          throw new IllegalStateException("MQTT publish failed");
+        }
+    );
+    CreateMissionReq req = new CreateMissionReq(
+        "M202602100012",
+        "T202602090012",
+        "P_WAIT_IN_01",
+        "ST_IN_01",
+        "PLT000000123",
+        30,
+        "/api/v1/wcs/agv/events"
+    );
+
+    assertThatThrownBy(() -> failingService.createMission(req, REQUEST_CONTEXT))
+        .isInstanceOf(IllegalStateException.class)
+        .hasMessage("MQTT publish failed");
+
+    assertThat(openTcsCalls.get()).isEqualTo(1);
+    assertThat(missionStore.findByMissionNo(req.missionNo())).isPresent();
+    assertThat(failingService.queryMission(req.missionNo()).rcsStatus()).isEqualTo("FAILED");
+  }
+
 }

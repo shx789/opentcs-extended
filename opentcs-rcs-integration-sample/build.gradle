@@ -9,6 +9,7 @@ dependencies {
   implementation libs.jackson.databind
   implementation libs.jackson.datatype.jsr310
   implementation libs.javalin
+  implementation libs.mqtt.client
 }
 
 task release {

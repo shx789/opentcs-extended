@@ -13,6 +13,7 @@ import org.opentcs.rcs.api.dto.CreateWcsTaskReq;
 import org.opentcs.rcs.api.dto.CreateWcsTaskResp;
 import org.opentcs.rcs.api.dto.QueryWcsTaskResp;
 import org.opentcs.rcs.bridge.opentcs.OpenTcsOrderClient;
+import org.opentcs.rcs.bridge.agv.AgvCommandPublisher;
 import org.opentcs.rcs.bridge.opentcs.OpenTcsPayloadMapper;
 import org.opentcs.rcs.bridge.opentcs.dto.OpenTcsTransportOrderReq;
 import org.opentcs.rcs.core.idem.IdempotencyService;
@@ -51,7 +52,8 @@ class WcsTaskServiceTest {
           }
         },
         objectMapper,
-        missionStore
+        missionStore,
+        AgvCommandPublisher.noop()
     );
     service = new WcsTaskService(
         new IdempotencyService(new InMemoryIdempotencyStore(), objectMapper),

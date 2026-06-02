@@ -1,6 +1,6 @@
 // SPDX-FileCopyrightText: The openTCS Authors
 // SPDX-License-Identifier: MIT
-package org.opentcs.rcs.callback;
+package org.opentcs.rcs.agvcommand;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -18,41 +18,50 @@ import java.util.Objects;
 import java.util.Optional;
 
 /**
- * File-backed callback outbox store for local persistence.
+ * File-backed AGV command outbox store for local persistence.
  */
-public class FileCallbackOutboxStore
-    implements CallbackOutboxStore {
+public class FileAgvCommandOutboxStore
+    implements AgvCommandOutboxStore {
 
   private final Path storageFile;
   private final ObjectMapper objectMapper;
-  private final Map<String, CallbackOutboxEntry> entriesByIdemKey = new LinkedHashMap<>();
+  private final Map<String, AgvCommandOutboxEntry> entriesByIdemKey = new LinkedHashMap<>();
 
-  public FileCallbackOutboxStore(Path storageFile, ObjectMapper objectMapper) {
+  public FileAgvCommandOutboxStore(Path storageFile, ObjectMapper objectMapper) {
     this.storageFile = Objects.requireNonNull(storageFile, "storageFile").toAbsolutePath();
     this.objectMapper = Objects.requireNonNull(objectMapper, "objectMapper");
     loadFromDisk();
   }
 
   @Override
-  public synchronized void save(CallbackOutboxEntry entry) {
+  public synchronized void save(AgvCommandOutboxEntry entry) {
     Objects.requireNonNull(entry, "entry");
     entriesByIdemKey.put(entry.idemKey(), copy(entry));
     persistToDisk();
   }
 
   @Override
-  public synchronized Optional<CallbackOutboxEntry> findByIdemKey(String idemKey) {
+  public synchronized Optional<AgvCommandOutboxEntry> findByIdemKey(String idemKey) {
     return Optional.ofNullable(entriesByIdemKey.get(idemKey)).map(this::copy);
   }
 
   @Override
-  public synchronized List<CallbackOutboxEntry> findDue(Instant now, int limit) {
+  public synchronized List<AgvCommandOutboxEntry> findByMissionNo(String missionNo) {
+    return entriesByIdemKey.values().stream()
+        .filter(entry -> entry.missionNo().equals(missionNo))
+        .sorted(Comparator.comparing(AgvCommandOutboxEntry::idemKey))
+        .map(this::copy)
+        .toList();
+  }
+
+  @Override
+  public synchronized List<AgvCommandOutboxEntry> findDue(Instant now, int limit) {
     return entriesByIdemKey.values().stream()
         .filter(
-            e -> ("PENDING".equals(e.status()) || "FAILED".equals(e.status()))
-                && (e.nextRetryAt() == null || !e.nextRetryAt().isAfter(now))
+            entry -> ("PENDING".equals(entry.status()) || "FAILED".equals(entry.status()))
+                && (entry.nextRetryAt() == null || !entry.nextRetryAt().isAfter(now))
         )
-        .sorted(Comparator.comparing(CallbackOutboxEntry::idemKey))
+        .sorted(Comparator.comparing(AgvCommandOutboxEntry::idemKey))
         .limit(limit)
         .map(this::copy)
         .toList();
@@ -66,17 +75,17 @@ public class FileCallbackOutboxStore
       if (Files.size(storageFile) == 0L) {
         return;
       }
-      List<StoredOutboxEntry> loadedEntries = objectMapper.readValue(
+      List<StoredAgvCommandEntry> loadedEntries = objectMapper.readValue(
           storageFile.toFile(),
-          new TypeReference<List<StoredOutboxEntry>>() {
+          new TypeReference<List<StoredAgvCommandEntry>>() {
           }
       );
-      for (StoredOutboxEntry entry : loadedEntries) {
-        entriesByIdemKey.put(entry.idemKey(), entry.toCallbackOutboxEntry());
+      for (StoredAgvCommandEntry entry : loadedEntries) {
+        entriesByIdemKey.put(entry.idemKey(), entry.toAgvCommandOutboxEntry());
       }
     }
     catch (IOException exc) {
-      throw new IllegalStateException("Could not read callback outbox store: " + storageFile, exc);
+      throw new IllegalStateException("Could not read AGV command outbox store: " + storageFile, exc);
     }
   }
 
@@ -87,20 +96,20 @@ public class FileCallbackOutboxStore
         Files.createDirectories(parentDir);
       }
       catch (IOException exc) {
-        throw new IllegalStateException("Could not create callback store directory: " + parentDir, exc);
+        throw new IllegalStateException("Could not create AGV command store directory: " + parentDir, exc);
       }
     }
     Path tempFile = storageFile.resolveSibling(storageFile.getFileName() + ".tmp");
-    List<StoredOutboxEntry> entries = entriesByIdemKey.values().stream()
-        .sorted(Comparator.comparing(CallbackOutboxEntry::idemKey))
-        .map(StoredOutboxEntry::from)
+    List<StoredAgvCommandEntry> entries = entriesByIdemKey.values().stream()
+        .sorted(Comparator.comparing(AgvCommandOutboxEntry::idemKey))
+        .map(StoredAgvCommandEntry::from)
         .toList();
     try {
       objectMapper.writeValue(tempFile.toFile(), entries);
       moveTempFile(tempFile, storageFile);
     }
     catch (IOException exc) {
-      throw new IllegalStateException("Could not persist callback outbox store: " + storageFile, exc);
+      throw new IllegalStateException("Could not persist AGV command outbox store: " + storageFile, exc);
     }
   }
 
@@ -118,12 +127,13 @@ public class FileCallbackOutboxStore
     }
   }
 
-  private CallbackOutboxEntry copy(CallbackOutboxEntry source) {
-    return new CallbackOutboxEntry(
+  private AgvCommandOutboxEntry copy(AgvCommandOutboxEntry source) {
+    return new AgvCommandOutboxEntry(
         source.missionNo(),
-        source.callbackUrl(),
-        source.payloadJson(),
+        source.taskNo(),
+        source.commandStage(),
         source.idemKey(),
+        source.payloadJson(),
         source.status(),
         source.retryCount(),
         source.nextRetryAt(),
@@ -131,23 +141,25 @@ public class FileCallbackOutboxStore
     );
   }
 
-  private record StoredOutboxEntry(
+  private record StoredAgvCommandEntry(
       String missionNo,
-      String callbackUrl,
-      String payloadJson,
+      String taskNo,
+      String commandStage,
       String idemKey,
+      String payloadJson,
       String status,
       int retryCount,
       Instant nextRetryAt,
       String lastError
   ) {
 
-    private static StoredOutboxEntry from(CallbackOutboxEntry entry) {
-      return new StoredOutboxEntry(
+    private static StoredAgvCommandEntry from(AgvCommandOutboxEntry entry) {
+      return new StoredAgvCommandEntry(
           entry.missionNo(),
-          entry.callbackUrl(),
-          entry.payloadJson(),
+          entry.taskNo(),
+          entry.commandStage(),
           entry.idemKey(),
+          entry.payloadJson(),
           entry.status(),
           entry.retryCount(),
           entry.nextRetryAt(),
@@ -155,12 +167,13 @@ public class FileCallbackOutboxStore
       );
     }
 
-    private CallbackOutboxEntry toCallbackOutboxEntry() {
-      return new CallbackOutboxEntry(
+    private AgvCommandOutboxEntry toAgvCommandOutboxEntry() {
+      return new AgvCommandOutboxEntry(
           missionNo,
-          callbackUrl,
-          payloadJson,
+          taskNo,
+          commandStage,
           idemKey,
+          payloadJson,
           status,
           retryCount,
           nextRetryAt,

@@ -13,7 +13,11 @@ public record MissionCallbackTarget(
     String callbackUrl,
     String traceId,
     String requestId,
-    String rcsStatus
+    String rcsStatus,
+    String fromPoint,
+    String toPoint,
+    String palletNo,
+    Integer priority
 ) {
 
   public MissionCallbackTarget {
@@ -23,6 +27,9 @@ public record MissionCallbackTarget(
     traceId = normalizeTracingField(traceId);
     requestId = normalizeTracingField(requestId);
     rcsStatus = normalizeStatus(rcsStatus);
+    fromPoint = normalizeOptional(fromPoint);
+    toPoint = normalizeOptional(toPoint);
+    palletNo = normalizeOptional(palletNo);
   }
 
   public MissionCallbackTarget(
@@ -32,11 +39,47 @@ public record MissionCallbackTarget(
       String traceId,
       String requestId
   ) {
-    this(missionNo, taskNo, callbackUrl, traceId, requestId, "RECEIVED");
+    this(missionNo, taskNo, callbackUrl, traceId, requestId, "RECEIVED", null, null, null, null);
+  }
+
+  public MissionCallbackTarget(
+      String missionNo,
+      String taskNo,
+      String callbackUrl,
+      String traceId,
+      String requestId,
+      String fromPoint,
+      String toPoint,
+      String palletNo,
+      Integer priority
+  ) {
+    this(
+        missionNo,
+        taskNo,
+        callbackUrl,
+        traceId,
+        requestId,
+        "RECEIVED",
+        fromPoint,
+        toPoint,
+        palletNo,
+        priority
+    );
   }
 
   public MissionCallbackTarget withRcsStatus(String status) {
-    return new MissionCallbackTarget(missionNo, taskNo, callbackUrl, traceId, requestId, status);
+    return new MissionCallbackTarget(
+        missionNo,
+        taskNo,
+        callbackUrl,
+        traceId,
+        requestId,
+        status,
+        fromPoint,
+        toPoint,
+        palletNo,
+        priority
+    );
   }
 
   private static String normalizeStatus(String value) {
@@ -57,6 +100,13 @@ public record MissionCallbackTarget(
   private static String normalizeTracingField(String value) {
     if (value == null || value.isBlank()) {
       return "legacy";
+    }
+    return value.trim();
+  }
+
+  private static String normalizeOptional(String value) {
+    if (value == null || value.isBlank()) {
+      return null;
     }
     return value.trim();
   }

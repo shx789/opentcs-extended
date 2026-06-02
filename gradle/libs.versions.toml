@@ -17,6 +17,7 @@ jgrapht-core = "1.5.2"
 jhotdraw = "7.6.20190506"
 jts-core = "1.20.0"
 modelmapper = "3.2.5"
+mqtt-client = "1.2.5"
 openapi-generator-cli = "7.20.0"
 semver4j = "6.0.0"
 slf4j = "2.0.17"
@@ -58,6 +59,7 @@ jgrapht-core = { group = "org.jgrapht", name = "jgrapht-core", version.ref = "jg
 jhotdraw = { group = "org.opentcs.thirdparty.jhotdraw", name = "jhotdraw", version.ref = "jhotdraw" }
 jts-core = { group = "org.locationtech.jts", name = "jts-core", version.ref = "jts-core" }
 modelmapper = { group = "org.modelmapper", name = "modelmapper", version.ref = "modelmapper" }
+mqtt-client = { group = "org.eclipse.paho", name = "org.eclipse.paho.client.mqttv3", version.ref = "mqtt-client" }
 openapi-generator-cli = { group = "org.openapitools", name = "openapi-generator-cli", version.ref = "openapi-generator-cli" }
 semver4j = { group = "org.semver4j", name = "semver4j", version.ref = "semver4j" }
 slf4j-api = { group = "org.slf4j", name = "slf4j-api", version.ref = "slf4j" }
@@ -82,4 +84,3 @@ hidetake-swagger-generator = { id = "org.hidetake.swagger.generator", version.re
 jacocolog = { id = "org.barfuin.gradle.jacocolog", version.ref = "jacocolog" }
 openapi-generator = { id = "org.openapi.generator", version.ref = "openapi-generator" }
 spotless = { id = "com.diffplug.spotless", version.ref = "spotless" }
-

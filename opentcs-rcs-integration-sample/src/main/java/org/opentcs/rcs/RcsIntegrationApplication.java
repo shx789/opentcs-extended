@@ -3,6 +3,7 @@
 package org.opentcs.rcs;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import io.javalin.Javalin;
 import io.javalin.config.JavalinConfig;
@@ -14,6 +15,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.Locale;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.ArrayList;
@@ -27,6 +30,18 @@ import org.opentcs.rcs.api.wcs.WcsTaskService;
 import org.opentcs.rcs.api.wcs.WmsTaskResultService;
 import org.opentcs.rcs.api.wcs.ResourceNotFoundException;
 import org.opentcs.rcs.api.wcs.TaskStateConflictException;
+import org.opentcs.rcs.agvcommand.AgvCommandHttpHandlers;
+import org.opentcs.rcs.agvcommand.AgvCommandOutboxService;
+import org.opentcs.rcs.agvcommand.AgvCommandOutboxStore;
+import org.opentcs.rcs.agvcommand.AgvCommandRetryProcessor;
+import org.opentcs.rcs.agvcommand.AgvCommandRetryScheduler;
+import org.opentcs.rcs.agvcommand.FileAgvCommandOutboxStore;
+import org.opentcs.rcs.agvcommand.InMemoryAgvCommandOutboxStore;
+import org.opentcs.rcs.bridge.agv.AgvCommandPublisher;
+import org.opentcs.rcs.bridge.agv.AgvMqttStatusEventConsumer;
+import org.opentcs.rcs.bridge.agv.AgvMqttStatusPayloadParser;
+import org.opentcs.rcs.bridge.agv.AgvMqttStatusSubscriber;
+import org.opentcs.rcs.bridge.agv.MqttAgvRobotControlPublisher;
 import org.opentcs.rcs.bridge.opentcs.HttpOpenTcsOrderClient;
 import org.opentcs.rcs.bridge.opentcs.InMemoryOpenTcsOrderClient;
 import org.opentcs.rcs.bridge.opentcs.OpenTcsClientException;
@@ -84,11 +99,14 @@ public final class RcsIntegrationApplication {
   }
 
   private static AppRuntime createRuntime() {
-    ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
+    ObjectMapper objectMapper = new ObjectMapper()
+        .registerModule(new JavaTimeModule())
+        .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
     MissionStore missionStore = createMissionStore(objectMapper);
     TaskStore taskStore = createTaskStore(objectMapper);
     IdempotencyStore idempotencyStore = createIdempotencyStore(objectMapper);
     CallbackOutboxStore callbackOutboxStore = createCallbackOutboxStore(objectMapper);
+    AgvCommandOutboxStore agvCommandOutboxStore = createAgvCommandOutboxStore(objectMapper);
     CallbackOutboxService callbackOutboxService = new CallbackOutboxService(
         callbackOutboxStore,
         objectMapper
@@ -111,12 +129,15 @@ public final class RcsIntegrationApplication {
     );
     OpenTcsSsePayloadParser ssePayloadParser = new OpenTcsSsePayloadParser(objectMapper);
     OpenTcsOrderClient orderClient = createOpenTcsOrderClient(objectMapper);
+    AgvCommandRuntime agvCommandRuntime = createAgvCommandRuntime(objectMapper, agvCommandOutboxStore);
+    AgvCommandPublisher agvCommandPublisher = agvCommandRuntime.publisher();
     WcsMissionService missionService = new WcsMissionService(
         new IdempotencyService(idempotencyStore, objectMapper),
         new OpenTcsPayloadMapper(),
         orderClient,
         objectMapper,
-        missionStore
+        missionStore,
+        agvCommandPublisher
     );
     WcsTaskService taskService = new WcsTaskService(
         new IdempotencyService(idempotencyStore, objectMapper),
@@ -141,6 +162,15 @@ public final class RcsIntegrationApplication {
     Optional<OpenTcsSseTransportOrderSubscriber> sseSubscriber = createOpenTcsSseSubscriber(
         ssePayloadParser,
         openTcsEventConsumer,
+        callbackRetryProcessor,
+        dispatchBatchSize
+    );
+    Optional<AgvMqttStatusSubscriber> agvMqttSubscriber = createAgvMqttSubscriber(
+        objectMapper,
+        callbackOutboxService,
+        missionStore,
+        taskStore,
+        wmsTaskResultService,
         callbackRetryProcessor,
         dispatchBatchSize
     );
@@ -200,6 +230,10 @@ public final class RcsIntegrationApplication {
             "/api/v1/wcs/agv/missions/{mission_no}",
             WcsMissionHttpHandlers.queryMissionHandler(missionService)
         );
+        get(
+            "/api/v1/wcs/agv/missions/{mission_no}/commands",
+            AgvCommandHttpHandlers.queryMissionCommandsHandler(agvCommandOutboxStore)
+        );
         post(
             "/api/v1/wcs/inbound/tasks",
             WcsTaskHttpHandlers.createInboundTaskHandler(taskService, objectMapper)
@@ -254,6 +288,8 @@ public final class RcsIntegrationApplication {
     return new AppRuntime(
         Javalin.create(config),
         sseSubscriber,
+        agvMqttSubscriber,
+        agvCommandRuntime.scheduler(),
         callbackRetryScheduler
     );
   }
@@ -290,6 +326,17 @@ public final class RcsIntegrationApplication {
       case "memory" -> new InMemoryCallbackOutboxStore();
       case "file" -> new FileCallbackOutboxStore(
           resolveStoreDirectory().resolve("callback-outbox-store.json"),
+          objectMapper
+      );
+      default -> throw invalidStoreModeException();
+    };
+  }
+
+  private static AgvCommandOutboxStore createAgvCommandOutboxStore(ObjectMapper objectMapper) {
+    return switch (resolveStoreMode()) {
+      case "memory" -> new InMemoryAgvCommandOutboxStore();
+      case "file" -> new FileAgvCommandOutboxStore(
+          resolveStoreDirectory().resolve("agv-command-outbox-store.json"),
           objectMapper
       );
       default -> throw invalidStoreModeException();
@@ -405,6 +452,119 @@ public final class RcsIntegrationApplication {
     return Optional.of(subscriber);
   }
 
+  private static AgvCommandRuntime createAgvCommandRuntime(
+      ObjectMapper objectMapper,
+      AgvCommandOutboxStore commandOutboxStore
+  ) {
+    if (!resolveBoolean("rcs.agvCommand.enabled", "RCS_AGV_COMMAND_ENABLED", false)) {
+      return new AgvCommandRuntime(AgvCommandPublisher.noop(), Optional.empty());
+    }
+    MqttAgvRobotControlPublisher mqttPublisher = createMqttAgvRobotControlPublisher(objectMapper);
+    AgvCommandRetryProcessor retryProcessor = new AgvCommandRetryProcessor(
+        commandOutboxStore,
+        mqttPublisher
+    );
+    AgvCommandRetryScheduler retryScheduler = new AgvCommandRetryScheduler(
+        retryProcessor,
+        resolveInt("rcs.agvCommand.dispatchBatchSize", "RCS_AGV_COMMAND_DISPATCH_BATCH_SIZE", 100),
+        Duration.ofMillis(resolveLong(
+            "rcs.agvCommand.retryTickMillis",
+            "RCS_AGV_COMMAND_RETRY_TICK_MILLIS",
+            1000L
+        ))
+    );
+    return new AgvCommandRuntime(
+        new AgvCommandOutboxService(commandOutboxStore, mqttPublisher),
+        Optional.of(retryScheduler)
+    );
+  }
+
+  private static MqttAgvRobotControlPublisher createMqttAgvRobotControlPublisher(ObjectMapper objectMapper) {
+    Map<String, Integer> pointIdMap = parsePointIdMap(
+        firstNonBlank(
+            System.getProperty("rcs.agvCommand.pointIdMap"),
+            System.getenv("RCS_AGV_POINT_ID_MAP")
+        ).orElseThrow(
+            () -> new IllegalArgumentException(
+                "AGV command publishing requires rcs.agvCommand.pointIdMap or RCS_AGV_POINT_ID_MAP"
+            )
+        )
+    );
+    return new MqttAgvRobotControlPublisher(
+        firstNonBlank(
+            System.getProperty("rcs.agvCommand.brokerUri"),
+            System.getenv("RCS_AGV_COMMAND_BROKER_URI")
+        ).orElse("tcp://127.0.0.1:1883"),
+        firstNonBlank(
+            System.getProperty("rcs.agvCommand.clientId"),
+            System.getenv("RCS_AGV_COMMAND_CLIENT_ID")
+        ).orElse("rcs-agv-command-publisher"),
+        firstNonBlank(
+            System.getProperty("rcs.agvCommand.topic"),
+            System.getenv("RCS_AGV_COMMAND_TOPIC")
+        ).orElse("robot_control"),
+        resolveInt("rcs.agvCommand.qos", "RCS_AGV_COMMAND_QOS", 1),
+        firstNonBlank(
+            System.getProperty("rcs.agvCommand.username"),
+            System.getenv("RCS_AGV_COMMAND_USERNAME")
+        ).orElse(null),
+        firstNonBlank(
+            System.getProperty("rcs.agvCommand.password"),
+            System.getenv("RCS_AGV_COMMAND_PASSWORD")
+        ).orElse(null),
+        pointIdMap,
+        resolveDouble("rcs.agvCommand.defaultRunSpeed", "RCS_AGV_DEFAULT_RUN_SPEED", 0.5),
+        objectMapper
+    );
+  }
+
+  private static Optional<AgvMqttStatusSubscriber> createAgvMqttSubscriber(
+      ObjectMapper objectMapper,
+      CallbackOutboxService callbackOutboxService,
+      MissionStore missionStore,
+      TaskStore taskStore,
+      WmsTaskResultService wmsTaskResultService,
+      CallbackRetryProcessor callbackRetryProcessor,
+      int dispatchBatchSize
+  ) {
+    if (!resolveBoolean("rcs.agvMqtt.enabled", "RCS_AGV_MQTT_ENABLED", false)) {
+      return Optional.empty();
+    }
+    AgvMqttStatusSubscriber subscriber = new AgvMqttStatusSubscriber(
+        firstNonBlank(
+            System.getProperty("rcs.agvMqtt.brokerUri"),
+            System.getenv("RCS_AGV_MQTT_BROKER_URI")
+        ).orElse("tcp://127.0.0.1:1883"),
+        firstNonBlank(
+            System.getProperty("rcs.agvMqtt.clientId"),
+            System.getenv("RCS_AGV_MQTT_CLIENT_ID")
+        ).orElse("rcs-agv-status-subscriber"),
+        firstNonBlank(
+            System.getProperty("rcs.agvMqtt.topic"),
+            System.getenv("RCS_AGV_MQTT_TOPIC")
+        ).orElse("agv/+/#"),
+        resolveInt("rcs.agvMqtt.qos", "RCS_AGV_MQTT_QOS", 1),
+        firstNonBlank(
+            System.getProperty("rcs.agvMqtt.username"),
+            System.getenv("RCS_AGV_MQTT_USERNAME")
+        ).orElse(null),
+        firstNonBlank(
+            System.getProperty("rcs.agvMqtt.password"),
+            System.getenv("RCS_AGV_MQTT_PASSWORD")
+        ).orElse(null),
+        new AgvMqttStatusPayloadParser(objectMapper),
+        new AgvMqttStatusEventConsumer(
+            callbackOutboxService,
+            missionStore,
+            taskStore,
+            wmsTaskResultService
+        ),
+        callbackRetryProcessor,
+        dispatchBatchSize
+    );
+    return Optional.of(subscriber);
+  }
+
   private static Optional<String> resolveWmsBaseUrl() {
     return firstNonBlank(
         System.getProperty("rcs.wms.baseUrl"),
@@ -429,6 +589,30 @@ public final class RcsIntegrationApplication {
     return firstNonBlank(System.getProperty(propertyName), System.getenv(envName))
         .map(Integer::parseInt)
         .orElse(defaultValue);
+  }
+
+  private static double resolveDouble(String propertyName, String envName, double defaultValue) {
+    return firstNonBlank(System.getProperty(propertyName), System.getenv(envName))
+        .map(Double::parseDouble)
+        .orElse(defaultValue);
+  }
+
+  private static Map<String, Integer> parsePointIdMap(String value) {
+    Map<String, Integer> result = new LinkedHashMap<>();
+    for (String entry : value.split(",")) {
+      if (entry.isBlank()) {
+        continue;
+      }
+      String[] parts = entry.trim().split("[:=]", 2);
+      if (parts.length != 2 || parts[0].isBlank() || parts[1].isBlank()) {
+        throw new IllegalArgumentException("Invalid AGV point id map entry: " + entry);
+      }
+      result.put(parts[0].trim(), Integer.parseInt(parts[1].trim()));
+    }
+    if (result.isEmpty()) {
+      throw new IllegalArgumentException("AGV point id map must not be empty");
+    }
+    return result;
   }
 
   private static long resolveLong(String propertyName, String envName, long defaultValue) {
@@ -475,25 +659,44 @@ public final class RcsIntegrationApplication {
     );
   }
 
+  private record AgvCommandRuntime(
+      AgvCommandPublisher publisher,
+      Optional<AgvCommandRetryScheduler> scheduler
+  ) {
+
+    private AgvCommandRuntime {
+      Objects.requireNonNull(publisher, "publisher");
+      Objects.requireNonNull(scheduler, "scheduler");
+    }
+  }
+
   private record AppRuntime(
       Javalin app,
       Optional<OpenTcsSseTransportOrderSubscriber> sseSubscriber,
+      Optional<AgvMqttStatusSubscriber> agvMqttSubscriber,
+      Optional<AgvCommandRetryScheduler> agvCommandRetryScheduler,
       CallbackRetryScheduler callbackRetryScheduler
   ) {
 
     private AppRuntime {
       Objects.requireNonNull(app, "app");
       Objects.requireNonNull(sseSubscriber, "sseSubscriber");
+      Objects.requireNonNull(agvMqttSubscriber, "agvMqttSubscriber");
+      Objects.requireNonNull(agvCommandRetryScheduler, "agvCommandRetryScheduler");
       Objects.requireNonNull(callbackRetryScheduler, "callbackRetryScheduler");
     }
 
     private void startBackgroundWorkers() {
       callbackRetryScheduler.start();
+      agvCommandRetryScheduler.ifPresent(AgvCommandRetryScheduler::start);
       sseSubscriber.ifPresent(OpenTcsSseTransportOrderSubscriber::start);
+      agvMqttSubscriber.ifPresent(AgvMqttStatusSubscriber::start);
     }
 
     private void stopBackgroundWorkers() {
+      agvMqttSubscriber.ifPresent(AgvMqttStatusSubscriber::stop);
       sseSubscriber.ifPresent(OpenTcsSseTransportOrderSubscriber::stop);
+      agvCommandRetryScheduler.ifPresent(AgvCommandRetryScheduler::stop);
       callbackRetryScheduler.stop();
     }
   }

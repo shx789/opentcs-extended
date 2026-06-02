@@ -5,6 +5,7 @@ package org.opentcs.rcs.callback;
 import java.time.Instant;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -19,6 +20,11 @@ public class InMemoryCallbackOutboxStore
   @Override
   public void save(CallbackOutboxEntry entry) {
     entries.put(entry.idemKey(), copy(entry));
+  }
+
+  @Override
+  public Optional<CallbackOutboxEntry> findByIdemKey(String idemKey) {
+    return Optional.ofNullable(entries.get(idemKey)).map(this::copy);
   }
 
   @Override

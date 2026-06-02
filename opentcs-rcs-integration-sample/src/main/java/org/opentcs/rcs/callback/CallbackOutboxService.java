@@ -21,6 +21,9 @@ public class CallbackOutboxService {
   }
 
   public void enqueue(String missionNo, String callbackUrl, Object payload, String idemKey) {
+    if (store.findByIdemKey(idemKey).isPresent()) {
+      return;
+    }
     store.save(
         new CallbackOutboxEntry(
             missionNo,

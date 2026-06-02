@@ -12,6 +12,7 @@ import org.opentcs.rcs.api.dto.Mission;
 import org.opentcs.rcs.api.dto.QueryMissionResp;
 import org.opentcs.rcs.bridge.opentcs.OpenTcsOrderClient;
 import org.opentcs.rcs.bridge.opentcs.OpenTcsPayloadMapper;
+import org.opentcs.rcs.bridge.agv.AgvCommandPublisher;
 import org.opentcs.rcs.bridge.opentcs.dto.OpenTcsTransportOrderReq;
 import org.opentcs.rcs.core.idem.IdempotencyResult;
 import org.opentcs.rcs.core.idem.IdempotencyService;
@@ -40,19 +41,22 @@ public class WcsMissionService {
   private final OpenTcsOrderClient openTcsOrderClient;
   private final ObjectMapper objectMapper;
   private final MissionStore missionStore;
+  private final AgvCommandPublisher agvCommandPublisher;
 
   public WcsMissionService(
       IdempotencyService idempotencyService,
       OpenTcsPayloadMapper payloadMapper,
       OpenTcsOrderClient openTcsOrderClient,
       ObjectMapper objectMapper,
-      MissionStore missionStore
+      MissionStore missionStore,
+      AgvCommandPublisher agvCommandPublisher
   ) {
     this.idempotencyService = Objects.requireNonNull(idempotencyService, "idempotencyService");
     this.payloadMapper = Objects.requireNonNull(payloadMapper, "payloadMapper");
     this.openTcsOrderClient = Objects.requireNonNull(openTcsOrderClient, "openTcsOrderClient");
     this.objectMapper = Objects.requireNonNull(objectMapper, "objectMapper");
     this.missionStore = Objects.requireNonNull(missionStore, "missionStore");
+    this.agvCommandPublisher = Objects.requireNonNull(agvCommandPublisher, "agvCommandPublisher");
   }
 
   public CreateMissionResp createMission(CreateMissionReq request, RequestContext requestContext) {
@@ -79,16 +83,27 @@ public class WcsMissionService {
         request.callbackUrl()
     );
     OpenTcsTransportOrderReq payload = payloadMapper.toTransportOrderReq(mission);
-    openTcsOrderClient.createTransportOrder(mission.missionNo(), payload);
-    missionStore.save(
-        new MissionCallbackTarget(
-            mission.missionNo(),
-            mission.taskNo(),
-            mission.callbackUrl(),
-            requestContext.traceId(),
-            requestContext.requestId()
-        )
+    MissionCallbackTarget callbackTarget = new MissionCallbackTarget(
+        mission.missionNo(),
+        mission.taskNo(),
+        mission.callbackUrl(),
+        requestContext.traceId(),
+        requestContext.requestId(),
+        mission.fromPoint(),
+        mission.toPoint(),
+        mission.palletNo(),
+        mission.priority()
     );
+
+    openTcsOrderClient.createTransportOrder(mission.missionNo(), payload);
+    missionStore.save(callbackTarget);
+    try {
+      agvCommandPublisher.publishMissionStart(mission);
+    }
+    catch (RuntimeException exc) {
+      missionStore.updateStatus(mission.missionNo(), STATUS_FAILED);
+      throw exc;
+    }
 
     CreateMissionResp response = new CreateMissionResp(
         mission.missionNo(),
