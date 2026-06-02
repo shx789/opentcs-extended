@@ -227,6 +227,10 @@ public final class RcsIntegrationApplication {
             "/api/v1/wcs/agv/missions",
             WcsMissionHttpHandlers.createMissionHandler(missionService, objectMapper)
         );
+        get(
+            "/api/v1/wcs/agv/missions",
+            WcsMissionHttpHandlers.listMissionsHandler(missionService)
+        );
         post(
             "/api/v1/wcs/agv/missions/{mission_no}/cancel",
             WcsMissionHttpHandlers.cancelMissionHandler(missionService)

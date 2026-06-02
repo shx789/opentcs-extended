@@ -103,6 +103,31 @@ class WcsMissionServiceTest {
     assertThat(afterCancel.rcsStatus()).isEqualTo("CANCELED");
   }
   @Test
+  void shouldListMissionSummaries() {
+    CreateMissionReq req = new CreateMissionReq(
+        "M202602100013",
+        "T202602090013",
+        "P_WAIT_IN_01",
+        "ST_IN_01",
+        "PLT000000123",
+        30,
+        "/api/v1/wcs/agv/events"
+    );
+    service.createMission(req, REQUEST_CONTEXT);
+
+    assertThat(service.listMissions())
+        .anySatisfy(summary -> {
+          assertThat(summary.missionNo()).isEqualTo(req.missionNo());
+          assertThat(summary.taskNo()).isEqualTo(req.taskNo());
+          assertThat(summary.rcsStatus()).isEqualTo("RECEIVED");
+          assertThat(summary.fromPoint()).isEqualTo(req.fromPoint());
+          assertThat(summary.toPoint()).isEqualTo(req.toPoint());
+          assertThat(summary.palletNo()).isEqualTo(req.palletNo());
+          assertThat(summary.priority()).isEqualTo(req.priority());
+        });
+  }
+
+  @Test
   void shouldMarkMissionFailedWhenAgvCommandPublishFails() {
     InMemoryMissionStore missionStore = new InMemoryMissionStore();
     WcsMissionService failingService = new WcsMissionService(

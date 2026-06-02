@@ -40,6 +40,11 @@ public final class WcsMissionHttpHandlers {
     return ctx -> handleQueryMission(ctx, missionService);
   }
 
+  public static Handler listMissionsHandler(WcsMissionService missionService) {
+    Objects.requireNonNull(missionService, "missionService");
+    return ctx -> handleListMissions(ctx, missionService);
+  }
+
   private static void handleCreateMission(
       Context ctx,
       WcsMissionService missionService,
@@ -70,5 +75,13 @@ public final class WcsMissionHttpHandlers {
     String missionNo = ctx.pathParam("mission_no");
     QueryMissionResp response = missionService.queryMission(missionNo);
     ctx.status(200).json(ApiResponse.success(response));
+  }
+
+  private static void handleListMissions(
+      Context ctx,
+      WcsMissionService missionService
+  ) {
+    RequestContext.from(ctx).writeToResponse(ctx);
+    ctx.status(200).json(ApiResponse.success(missionService.listMissions()));
   }
 }

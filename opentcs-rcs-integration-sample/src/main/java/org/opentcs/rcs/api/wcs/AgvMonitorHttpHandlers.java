@@ -128,6 +128,17 @@ public final class AgvMonitorHttpHandlers {
                 <div class="metric"><div class="name">command 状态</div><div class="value" id="commandSummary">-</div></div>
               </div>
 
+              <section class="panel" style="margin-bottom:16px;">
+                <h2>最近 mission</h2>
+                <div class="body">
+                  <div class="monitor-head">
+                    <div class="subtitle">查询接口：/api/v1/wcs/agv/missions</div>
+                    <button class="secondary" onclick="refreshMissions()">刷新列表</button>
+                  </div>
+                  <div id="missionsTable" class="empty">还没有 mission 记录</div>
+                </div>
+              </section>
+
               <section class="panel">
                 <h2>AGV command outbox</h2>
                 <div class="body">
@@ -207,15 +218,50 @@ public final class AgvMonitorHttpHandlers {
             return body;
           }
 
+          async function refreshMissions() {
+            const body = await request('/api/v1/wcs/agv/missions');
+            renderMissions((body && body.data) || []);
+            return body;
+          }
+
           async function refreshAll() {
             try {
+              const missions = await refreshMissions().catch(err => err);
               const mission = await refreshMission().catch(err => err);
               const commands = await refreshCommands().catch(err => err);
-              $('raw').textContent = asJson({ mission, commands });
+              $('raw').textContent = asJson({ missions, mission, commands });
             }
             catch (err) {
               $('raw').textContent = asJson(err);
             }
+          }
+
+          function renderMissions(missions) {
+            if (!missions.length) {
+              $('missionsTable').className = 'empty';
+              $('missionsTable').innerHTML = '没有 mission 记录';
+              return;
+            }
+            $('missionsTable').className = '';
+            $('missionsTable').innerHTML = `
+              <table>
+                <thead><tr><th>mission</th><th>task</th><th>status</th><th>from</th><th>to</th><th>pallet</th></tr></thead>
+                <tbody>${missions.map(item => `
+                  <tr onclick="selectMission('${escapeAttr(item.mission_no || '')}')" style="cursor:pointer;">
+                    <td><code>${escapeHtml(item.mission_no || '')}</code></td>
+                    <td><code>${escapeHtml(item.task_no || '')}</code></td>
+                    <td>${status(item.rcs_status)}</td>
+                    <td><code>${escapeHtml(item.from_point || '')}</code></td>
+                    <td><code>${escapeHtml(item.to_point || '')}</code></td>
+                    <td><code>${escapeHtml(item.pallet_no || '')}</code></td>
+                  </tr>
+                `).join('')}</tbody>
+              </table>`;
+          }
+
+          function selectMission(missionNo) {
+            $('missionNo').value = missionNo;
+            refreshAll();
           }
 
           function renderCommands(commands) {
@@ -272,6 +318,18 @@ public final class AgvMonitorHttpHandlers {
               '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
             }[char]));
           }
+
+          function escapeAttr(value) {
+            return String(value)
+              .replace(/\\/g, "\\\\")
+              .replace(/'/g, "\\'")
+              .replace(/&/g, '&amp;')
+              .replace(/"/g, '&quot;')
+              .replace(/</g, '&lt;')
+              .replace(/>/g, '&gt;');
+          }
+
+          refreshMissions().catch(err => { $('raw').textContent = asJson(err); });
         </script>
       </body>
       </html>

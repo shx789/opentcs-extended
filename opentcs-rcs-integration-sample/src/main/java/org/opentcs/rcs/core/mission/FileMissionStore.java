@@ -9,6 +9,7 @@ import java.nio.file.AtomicMoveNotSupportedException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -41,6 +42,13 @@ public class FileMissionStore
   @Override
   public synchronized Optional<MissionCallbackTarget> findByMissionNo(String missionNo) {
     return Optional.ofNullable(targetsByMissionNo.get(missionNo));
+  }
+
+  @Override
+  public synchronized List<MissionCallbackTarget> findAll() {
+    return targetsByMissionNo.values().stream()
+        .sorted(Comparator.comparing(MissionCallbackTarget::missionNo))
+        .toList();
   }
 
   private void loadFromDisk() {

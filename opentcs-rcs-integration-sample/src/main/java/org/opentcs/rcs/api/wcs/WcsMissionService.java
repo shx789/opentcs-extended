@@ -3,12 +3,15 @@
 package org.opentcs.rcs.api.wcs;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.Comparator;
+import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import org.opentcs.rcs.api.dto.CancelMissionResp;
 import org.opentcs.rcs.api.dto.CreateMissionReq;
 import org.opentcs.rcs.api.dto.CreateMissionResp;
 import org.opentcs.rcs.api.dto.Mission;
+import org.opentcs.rcs.api.dto.MissionSummaryResp;
 import org.opentcs.rcs.api.dto.QueryMissionResp;
 import org.opentcs.rcs.bridge.opentcs.OpenTcsOrderClient;
 import org.opentcs.rcs.bridge.opentcs.OpenTcsPayloadMapper;
@@ -113,6 +116,22 @@ public class WcsMissionService {
     );
     idempotencyService.storeSuccess(BIZ_TYPE, request.missionNo(), request, response);
     return response;
+  }
+
+
+  public List<MissionSummaryResp> listMissions() {
+    return missionStore.findAll().stream()
+        .sorted(Comparator.comparing(MissionCallbackTarget::missionNo))
+        .map(target -> new MissionSummaryResp(
+            target.missionNo(),
+            target.taskNo(),
+            target.rcsStatus(),
+            target.fromPoint(),
+            target.toPoint(),
+            target.palletNo(),
+            target.priority()
+        ))
+        .toList();
   }
 
   public QueryMissionResp queryMission(String missionNo) {
