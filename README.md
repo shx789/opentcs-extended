@@ -2,7 +2,7 @@
 
 本项目基于原始 openTCS 代码扩展，保留 openTCS 原有内核、调度、建模、操作台等模块，并新增一个 RCS 集成样例模块，用于演示 WCS、RCS、openTCS 与 AGV MQTT 之间的任务下发、状态同步和回调闭环。
 
-原始 openTCS 文档仍保留在 [README.adoc](README.adoc)，本 README 重点说明当前分支相对原始 openTCS 的差异和新增集成能力。
+原始 openTCS 英文 README 可在 `main` 分支或 openTCS 官方仓库查看；本 README 重点说明当前分支相对原始 openTCS 的差异和新增集成能力。
 
 ## 功能特性
 
@@ -401,7 +401,7 @@ POST /api/v1/wms/outbound-results
 4. 启用 AGV command 时必须配置点位映射，否则无法把 openTCS 点位转换为 AGV 协议点位 ID。
 5. 文件存储模式适合本地联调，不建议直接作为生产级数据库使用。
 6. MQTT Broker、openTCS HTTP 服务和 WMS 回调地址需要按现场网络环境配置。
-7. 根目录的 `README.adoc` 是原始 openTCS 说明，当前中文 README 说明的是本扩展分支。
+7. 根目录的 `README.md` 和 `README.adoc` 都是当前扩展分支的中文说明；原始 openTCS 英文 README 可在 `main` 分支或官方仓库查看。
 
 ## 版本历史
 
@@ -417,4 +417,3 @@ POST /api/v1/wms/outbound-results
   - 新增 WCS demo 页面和 AGV monitor 页面。
   - 新增本地启动、停止和端到端演示脚本。
   - 新增集成模块单元测试与联调文档。
-
