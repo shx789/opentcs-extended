@@ -183,6 +183,10 @@ public final class RcsIntegrationApplication {
             AgvMonitorHttpHandlers.pageHandler()
         );
         get(
+            "/api/v1/wcs/agv/runtime",
+            AgvMonitorHttpHandlers.runtimeStatusHandler()
+        );
+        get(
             "/demo/wcs",
             WcsDemoHttpHandlers.pageHandler(
                 firstNonBlank(

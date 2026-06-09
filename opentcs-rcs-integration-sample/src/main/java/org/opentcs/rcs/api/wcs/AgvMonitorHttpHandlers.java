@@ -3,6 +3,9 @@
 package org.opentcs.rcs.api.wcs;
 
 import io.javalin.http.Handler;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import org.opentcs.rcs.api.dto.ApiResponse;
 
 /**
  * Minimal browser monitor for AGV missions and command outbox state.
@@ -14,6 +17,55 @@ public final class AgvMonitorHttpHandlers {
 
   public static Handler pageHandler() {
     return ctx -> ctx.contentType("text/html; charset=utf-8").result(PAGE);
+  }
+
+  public static Handler runtimeStatusHandler() {
+    return ctx -> {
+      Map<String, Object> data = new LinkedHashMap<>();
+      data.put("agv_command_enabled", resolveBoolean(
+          "rcs.agv.command.enabled",
+          "RCS_AGV_COMMAND_ENABLED",
+          false
+      ));
+      data.put("agv_command_broker_uri", resolveValue(
+          "rcs.agv.command.brokerUri",
+          "RCS_AGV_COMMAND_BROKER_URI",
+          "tcp://127.0.0.1:1883"
+      ));
+      data.put("agv_command_topic", resolveValue(
+          "rcs.agv.command.topic",
+          "RCS_AGV_COMMAND_TOPIC",
+          "robot_control"
+      ));
+      data.put("agv_status_enabled", resolveBoolean(
+          "rcs.agv.mqtt.enabled",
+          "RCS_AGV_MQTT_ENABLED",
+          false
+      ));
+      data.put("agv_status_broker_uri", resolveValue(
+          "rcs.agv.mqtt.brokerUri",
+          "RCS_AGV_MQTT_BROKER_URI",
+          "tcp://127.0.0.1:1883"
+      ));
+      ctx.json(ApiResponse.success(data));
+    };
+  }
+
+  private static boolean resolveBoolean(String propertyName, String envName, boolean defaultValue) {
+    String value = resolveValue(propertyName, envName, Boolean.toString(defaultValue));
+    return Boolean.parseBoolean(value);
+  }
+
+  private static String resolveValue(String propertyName, String envName, String defaultValue) {
+    String propertyValue = System.getProperty(propertyName);
+    if (propertyValue != null && !propertyValue.isBlank()) {
+      return propertyValue;
+    }
+    String envValue = System.getenv(envName);
+    if (envValue != null && !envValue.isBlank()) {
+      return envValue;
+    }
+    return defaultValue;
   }
 
   private static final String PAGE = """
@@ -83,6 +135,10 @@ public final class AgvMonitorHttpHandlers {
           .auto { display: inline-flex; align-items: center; gap: 7px; color: var(--muted); font-size: 13px; }
           .auto input { width: auto; }
           .empty { padding: 24px; text-align: center; color: var(--muted); border: 1px dashed var(--line); border-radius: 16px; background: rgba(255,253,245,.64); }
+          .notice { margin-bottom: 14px; padding: 13px 15px; border: 1px solid var(--line); border-left: 6px solid var(--accent); border-radius: 14px; background: rgba(255,253,245,.82); color: var(--ink); font-size: 14px; line-height: 1.55; }
+          .notice.warn { border-left-color: var(--wait); }
+          .notice.bad { border-left-color: var(--bad); }
+          .notice strong { margin-right: 8px; }
           @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } .cards { grid-template-columns: 1fr; } header { align-items: flex-start; flex-direction: column; } }
         </style>
       </head>
@@ -95,6 +151,9 @@ public final class AgvMonitorHttpHandlers {
             </div>
             <div class="pill">RCS local page · /demo/agv-monitor</div>
           </header>
+
+          <div id="runtimeNotice" class="notice">正在读取 RCS 运行配置...</div>
+          <div id="operationNotice" class="notice">等待操作。创建 mission 后，如果没有 AGV MQTT 反馈，状态会停留在 RECEIVED，这是当前链路没有下游设备响应的表现。</div>
 
           <div class="grid">
             <section class="panel">
@@ -199,6 +258,7 @@ public final class AgvMonitorHttpHandlers {
           }
 
           async function createMission() {
+            setOperation('正在创建 mission...', 'notice');
             try {
               const body = await request('/api/v1/wcs/agv/missions', {
                 method: 'POST',
@@ -206,9 +266,11 @@ public final class AgvMonitorHttpHandlers {
                 body: JSON.stringify(payload())
               });
               $('raw').textContent = asJson(body);
+              setOperation(`创建成功：RCS 已接收 ${escapeHtml(body.data && body.data.mission_no || '')}，当前状态 ${escapeHtml(body.data && body.data.rcs_status || '-')}`);
               await refreshAll();
             }
             catch (err) {
+              setOperation('创建失败，查看原始响应。', 'notice bad');
               $('raw').textContent = asJson(err);
             }
           }
@@ -216,6 +278,7 @@ public final class AgvMonitorHttpHandlers {
           async function cancelMission() {
             const missionNo = $('missionNo').value.trim();
             if (!missionNo) return;
+            setOperation(`正在取消 mission：${escapeHtml(missionNo)}...`, 'notice');
             try {
               const body = await request(`/api/v1/wcs/agv/missions/${encodeURIComponent(missionNo)}/cancel`, {
                 method: 'POST',
@@ -223,9 +286,11 @@ public final class AgvMonitorHttpHandlers {
                 body: '{}'
               });
               $('raw').textContent = asJson(body);
+              setOperation(`取消请求已处理：当前状态 ${escapeHtml(body.data && body.data.rcs_status || '-')}`);
               await refreshAll();
             }
             catch (err) {
+              setOperation('取消失败，查看原始响应。', 'notice bad');
               $('raw').textContent = asJson(err);
             }
           }
@@ -272,11 +337,12 @@ public final class AgvMonitorHttpHandlers {
 
           async function refreshAll() {
             try {
+              const runtime = await refreshRuntime().catch(err => err);
               const missions = await refreshMissions().catch(err => err);
               const mission = await refreshMission().catch(err => err);
               const commands = await refreshCommands().catch(err => err);
               const callbacks = await refreshCallbacks().catch(err => err);
-              $('raw').textContent = asJson({ missions, mission, commands, callbacks });
+              $('raw').textContent = asJson({ runtime, missions, mission, commands, callbacks });
             }
             catch (err) {
               $('raw').textContent = asJson(err);
@@ -336,7 +402,7 @@ public final class AgvMonitorHttpHandlers {
             if (!commands.length) {
               $('commandSummary').textContent = '0';
               $('commandsTable').className = 'empty';
-              $('commandsTable').innerHTML = '没有 command outbox 记录';
+              $('commandsTable').innerHTML = '没有 command outbox 记录。若 RCS_AGV_COMMAND_ENABLED=false，RCS 只接收 mission，不会向 AGV MQTT 发布 robot_control。';
               return;
             }
             const counts = commands.reduce((acc, item) => {
@@ -361,6 +427,31 @@ public final class AgvMonitorHttpHandlers {
                   </tr>
                 `).join('')}</tbody>
               </table>`;
+          }
+
+          async function refreshRuntime() {
+            const body = await request('/api/v1/wcs/agv/runtime');
+            renderRuntime(body && body.data ? body.data : {});
+            return body;
+          }
+
+          function renderRuntime(runtime) {
+            const commandEnabled = runtime.agv_command_enabled === true;
+            const statusClass = commandEnabled ? 'notice' : 'notice warn';
+            $('runtimeNotice').className = statusClass;
+            $('runtimeNotice').innerHTML = `
+              <strong>运行配置</strong>
+              AGV 指令桥：${commandEnabled ? '已开启' : '未开启'}；
+              command broker：<code>${escapeHtml(runtime.agv_command_broker_uri || '')}</code>；
+              command topic：<code>${escapeHtml(runtime.agv_command_topic || '')}</code>；
+              AGV 状态订阅：${runtime.agv_status_enabled === true ? '已开启' : '未开启'}。
+              ${commandEnabled ? '' : '<br/>当前模式下创建 mission 后不会真实下发 AGV 控制指令。'}
+            `;
+          }
+
+          function setOperation(message, className = 'notice') {
+            $('operationNotice').className = className;
+            $('operationNotice').innerHTML = `<strong>操作结果</strong>${message}`;
           }
 
           function toggleAuto() {
