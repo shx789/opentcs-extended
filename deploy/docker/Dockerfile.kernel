@@ -1,0 +1,31 @@
+# SPDX-FileCopyrightText: The openTCS Authors
+# SPDX-License-Identifier: MIT
+#
+# Base images: jammy tags are widely mirrored (noble may be missing on some mirrors).
+# Gradle: uses deploy/docker/scripts/docker-gradle-build.sh (mirror + longer timeout).
+# Fallback: Dockerfile.kernel.host (build with -HostGradle on the host first).
+
+ARG JDK_IMAGE=eclipse-temurin:21-jdk-jammy
+ARG JRE_IMAGE=eclipse-temurin:21-jre-jammy
+ARG GRADLE_DISTRIBUTION_URL=https://mirrors.cloud.tencent.com/gradle/gradle-8.14.4-bin.zip
+
+FROM ${JDK_IMAGE} AS build
+ARG GRADLE_DISTRIBUTION_URL
+ENV GRADLE_DISTRIBUTION_URL=${GRADLE_DISTRIBUTION_URL}
+WORKDIR /src
+COPY . .
+RUN chmod +x deploy/docker/scripts/docker-gradle-build.sh \
+ && deploy/docker/scripts/docker-gradle-build.sh :opentcs-kernel:installDist -x test
+
+FROM ${JRE_IMAGE}
+RUN apt-get update \
+ && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends curl \
+ && rm -rf /var/lib/apt/lists/*
+WORKDIR /opt/opentcs-kernel
+COPY --from=build /src/opentcs-kernel/build/install/opentcs-kernel .
+COPY deploy/docker/scripts/start-kernel-docker.sh ./start-kernel-docker.sh
+RUN chmod +x startKernel.sh generateKeystores.sh start-kernel-docker.sh \
+ && export PATH="/opt/java/openjdk/bin:${PATH}" \
+ && ./generateKeystores.sh
+EXPOSE 55200 1099 55000-55010
+CMD ["./start-kernel-docker.sh"]

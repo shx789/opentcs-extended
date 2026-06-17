@@ -37,6 +37,7 @@ jacocolog = "3.1.0"
 openapi-generator = "7.20.0"
 gradle-nexus-publish-plugin = "2.0.0"
 spotless = "8.3.0"
+shadow = "8.3.5"
 swagger-generator = "2.19.2"
 
 [libraries]
@@ -84,3 +85,4 @@ hidetake-swagger-generator = { id = "org.hidetake.swagger.generator", version.re
 jacocolog = { id = "org.barfuin.gradle.jacocolog", version.ref = "jacocolog" }
 openapi-generator = { id = "org.openapi.generator", version.ref = "openapi-generator" }
 spotless = { id = "com.diffplug.spotless", version.ref = "spotless" }
+shadow = { id = "com.gradleup.shadow", version.ref = "shadow" }

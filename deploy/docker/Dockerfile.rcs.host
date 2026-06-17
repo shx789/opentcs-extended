@@ -1,0 +1,16 @@
+# SPDX-FileCopyrightText: The openTCS Authors
+# SPDX-License-Identifier: MIT
+#
+# Host-prebuilt variant. Artifacts are staged by build-images.ps1 -HostGradle into deploy/docker/dist/.
+#   .\deploy\docker\scripts\build-images.ps1 -HostGradle
+
+ARG JRE_IMAGE=eclipse-temurin:21-jre-jammy
+
+FROM ${JRE_IMAGE}
+WORKDIR /app
+COPY deploy/docker/dist/rcs/app.jar /app/app.jar
+EXPOSE 8090
+ENV RCS_STORE_MODE=file
+ENV RCS_STORE_FILE_DIR=/data/rcs-store
+ENTRYPOINT ["java", "-jar", "/app/app.jar"]
+CMD ["8090"]

@@ -1,0 +1,20 @@
+# SPDX-FileCopyrightText: The openTCS Authors
+# SPDX-License-Identifier: MIT
+#
+# Host-prebuilt variant. Artifacts are staged by build-images.ps1 -HostGradle into deploy/docker/dist/.
+#   .\deploy\docker\scripts\build-images.ps1 -HostGradle
+
+ARG JRE_IMAGE=eclipse-temurin:21-jre-jammy
+
+FROM ${JRE_IMAGE}
+RUN apt-get update \
+ && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends curl \
+ && rm -rf /var/lib/apt/lists/*
+WORKDIR /opt/opentcs-kernel
+COPY deploy/docker/dist/kernel/ .
+COPY deploy/docker/scripts/start-kernel-docker.sh ./start-kernel-docker.sh
+RUN chmod +x startKernel.sh generateKeystores.sh start-kernel-docker.sh \
+ && export PATH="/opt/java/openjdk/bin:${PATH}" \
+ && ./generateKeystores.sh
+EXPOSE 55200 1099 55000-55010
+CMD ["./start-kernel-docker.sh"]

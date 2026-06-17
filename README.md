@@ -219,6 +219,28 @@ $env:RCS_AGV_MQTT_TOPIC = "robot_status"
 .\gradlew.bat :opentcs-rcs-integration-sample:runRcsSample -PrcsPort=8090
 ```
 
+## Docker 部署
+
+本地编译镜像 → 上传服务器 → 启动容器。完整步骤见 **[deploy/docker/README.md](deploy/docker/README.md)**。
+
+```powershell
+# 本地（Windows）
+.\deploy\docker\scripts\build-images.ps1 -HostGradle
+.\deploy\docker\scripts\export-images.ps1
+```
+
+```bash
+# 上传
+scp deploy/docker/opentcs-images.tar user@server:/opt/opentcs/
+scp -r deploy/docker user@server:/opt/opentcs/
+
+# 服务器
+cd /opt/opentcs/deploy/docker/scripts
+bash server-up.sh ../../opentcs-images.tar
+```
+
+服务端口：RCS **8090**、Kernel **55200**、MQTT **1883**。常见问题见 deploy 文档 FAQ。
+
 ## API 接口
 
 ### 1. 创建 AGV mission

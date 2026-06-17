@@ -7,6 +7,7 @@
 /.gradle/
 /build/
 /opentcs-*/build/
+/deploy/docker/dist/
 *~
 
 # Ignore approval test result files.
