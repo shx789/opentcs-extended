@@ -113,13 +113,30 @@ if is_port_in_use "${KERNEL_HOST_PORT}"; then
   exit 1
 fi
 
+KERNEL_MODEL_FILE="${KERNEL_MODEL_FILE:-}"
+
+KERNEL_VOLUME_MOUNTS=(
+  -v opentcs-kernel-data:/opt/opentcs-kernel/data
+)
+
+if [[ -n "${KERNEL_MODEL_FILE}" ]]; then
+  if [[ ! -f "${KERNEL_MODEL_FILE}" ]]; then
+    echo "ERROR: KERNEL_MODEL_FILE not found: ${KERNEL_MODEL_FILE}" >&2
+    exit 1
+  fi
+  KERNEL_VOLUME_MOUNTS+=(
+    -v "${KERNEL_MODEL_FILE}:/opt/opentcs-kernel/data/model.xml:ro"
+  )
+  echo "Kernel plant model: ${KERNEL_MODEL_FILE} -> /opt/opentcs-kernel/data/model.xml"
+fi
+
 echo "Starting openTCS Kernel (host ${KERNEL_HOST_PORT})..."
 docker run -d \
   "${DOCKER_RUN_OPTS[@]}" \
   --name opentcs-kernel \
   --network "${NETWORK_NAME}" \
   -p "${KERNEL_HOST_PORT}:55200" \
-  -v opentcs-kernel-data:/opt/opentcs-kernel/data \
+  "${KERNEL_VOLUME_MOUNTS[@]}" \
   -e "JAVA_TOOL_OPTIONS=${JAVA_TOOL_OPTIONS:--Xmx512m}" \
   --restart unless-stopped \
   --entrypoint sh \

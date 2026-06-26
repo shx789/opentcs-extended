@@ -38,6 +38,7 @@ resolve_tar_file() {
   for candidate in \
     "${DOCKER_DIR}/opentcs-images.tar" \
     "${DOCKER_DIR}/../opentcs-images.tar" \
+    "/root/services/opentcs/docker/opentcs-images.tar" \
     "/opt/opentcs/opentcs-images.tar"; do
     if [[ -f "${candidate}" ]]; then
       echo "${candidate}"
@@ -55,6 +56,7 @@ if [[ -z "${TAR_FILE}" || ! -f "${TAR_FILE}" ]]; then
   echo "Searched:" >&2
   echo "  ${DOCKER_DIR}/opentcs-images.tar" >&2
   echo "  ${DOCKER_DIR}/../opentcs-images.tar" >&2
+  echo "  /root/services/opentcs/docker/opentcs-images.tar" >&2
   echo "  /opt/opentcs/opentcs-images.tar" >&2
   exit 1
 fi

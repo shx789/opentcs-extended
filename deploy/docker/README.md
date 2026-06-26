@@ -76,15 +76,17 @@ gzip deploy/docker/opentcs-images.tar
 
 ## 3. 上传到服务器
 
+示例服务器目录：`/root/services/opentcs/docker`（可按实际路径调整）。
+
 ```bash
-scp deploy/docker/opentcs-images.tar user@server:/opt/opentcs/
-scp -r deploy/docker user@server:/opt/opentcs/
+scp deploy/docker/opentcs-images.tar root@server:/root/services/opentcs/docker/
+scp -r deploy/docker/* root@server:/root/services/opentcs/docker/
 ```
 
 若使用了 `.tar.gz`：
 
 ```bash
-scp deploy/docker/opentcs-images.tar.gz user@server:/opt/opentcs/
+scp deploy/docker/opentcs-images.tar.gz root@server:/root/services/opentcs/docker/
 # 服务器上：gzip -d opentcs-images.tar.gz
 ```
 
@@ -93,8 +95,8 @@ scp deploy/docker/opentcs-images.tar.gz user@server:/opt/opentcs/
 ## 4. 服务器启动
 
 ```bash
-ssh user@server
-cd /opt/opentcs/deploy/docker/scripts
+ssh root@server
+cd /root/services/opentcs/docker/scripts
 
 chmod +x *.sh
 sed -i 's/\r$//' *.sh ../.env.example 2>/dev/null
@@ -131,8 +133,8 @@ curl http://localhost:8090/api/v1/wcs/agv/missions
 本地重新构建并导出后，在服务器执行：
 
 ```bash
-docker load -i /opt/opentcs/opentcs-images.tar
-cd /opt/opentcs/deploy/docker/scripts
+docker load -i /root/services/opentcs/docker/opentcs-images.tar
+cd /root/services/opentcs/docker/scripts
 bash start-containers.sh
 ```
 
@@ -140,13 +142,68 @@ bash start-containers.sh
 
 ## 说明
 
-- Plant model 需通过 Kernel HTTP API `PUT /v1/plantModel` 导入。
+- Kernel 启动时从 `data/model.xml` 加载地图（容器内路径：`/opt/opentcs-kernel/data/model.xml`）。
+- 推荐通过 `.env` 中的 `KERNEL_MODEL_FILE` 将宿主机 XML 挂载为 `model.xml`（见下方 FAQ）。
+- HTTP API `PUT /v1/plantModel` 接受 JSON，不能直接上传 ModelEditor 导出的 XML。
 - ModelEditor / OperationsDesk 在开发机使用，不必进容器。
 - `RCS_STORE_MODE=file` 适合联调，不建议作为生产数据库。
 
 ---
 
 ## FAQ
+
+### Docker 启动时如何放置 model.xml
+
+Kernel 与本地 Gradle 安装读取同一文件名 `model.xml`，路径对应关系：
+
+| 环境 | 路径 |
+|------|------|
+| 本地 Gradle | `opentcs-kernel/build/install/opentcs-kernel/data/model.xml` |
+| Docker 容器内 | `/opt/opentcs-kernel/data/model.xml` |
+
+**推荐方式（`KERNEL_MODEL_FILE`）：**
+
+1. 上传地图到服务器（宿主机文件名可以是 `1.xml` 或 `model.xml`）：
+
+```bash
+scp 1.xml root@server:/root/services/opentcs/docker/model.xml
+```
+
+2. 在服务器 `/root/services/opentcs/docker/.env` 中设置（若无 `.env`，从 `.env.example` 复制后修改）：
+
+```bash
+KERNEL_MODEL_FILE=/root/services/opentcs/docker/model.xml
+```
+
+3. 重启容器：
+
+```bash
+cd /root/services/opentcs/docker/scripts
+bash start-containers.sh
+```
+
+更新地图时，替换宿主机文件后再次执行 `bash start-containers.sh` 即可。若需清空旧卷数据：
+
+```bash
+RESET_KERNEL_VOLUMES=true bash start-containers.sh
+```
+
+4. 验证：
+
+```bash
+docker exec opentcs-kernel ls -la /opt/opentcs-kernel/data/model.xml
+curl -s http://localhost:55200/v1/plantModel | head
+docker logs opentcs-kernel --tail 20
+```
+
+**临时手动方式（未配置 `KERNEL_MODEL_FILE` 时）：**
+
+```bash
+docker cp /root/services/opentcs/docker/model.xml opentcs-kernel:/opt/opentcs-kernel/data/model.xml
+docker restart opentcs-kernel
+```
+
+---
 
 ### 脚本 `$'\r': command not found`
 
@@ -180,7 +237,7 @@ bash start-containers.sh
 docker rm -f opentcs-mqtt opentcs-kernel opentcs-rcs
 docker-compose -f ../docker-compose.yml down 2>/dev/null || true
 
-cd /opt/opentcs/deploy/docker/scripts
+cd /root/services/opentcs/docker/scripts
 bash start-containers.sh
 ```
 
