@@ -8,6 +8,8 @@
 /build/
 /opentcs-*/build/
 /deploy/docker/dist/
+/deploy/docker/opentcs-images.tar
+/deploy/docker/opentcs-images.tar.gz
 *~
 
 # Ignore approval test result files.
