@@ -1,5 +1,12 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <model version="7.0.0" name="1">
+    <point name="P_WAIT_IN_01" positionX="-24000" positionY="6000" positionZ="0" vehicleOrientationAngle="NaN" type="HALT_POSITION">
+        <maxVehicleBoundingBox length="1000" width="1000" height="1000" referenceOffsetX="0" referenceOffsetY="0"/>
+        <outgoingPath name="P_WAIT_IN_01 --- Point-0026"/>
+        <outgoingPath name="P_WAIT_IN_01 --- Point-0030"/>
+        <outgoingPath name="P_WAIT_IN_01 --- Point-0042"/>
+        <pointLayout labelOffsetX="-10" labelOffsetY="-20" layerId="0"/>
+    </point>
     <point name="Point-0001" positionX="31000" positionY="11000" positionZ="0" vehicleOrientationAngle="NaN" type="HALT_POSITION">
         <maxVehicleBoundingBox length="1000" width="1000" height="1000" referenceOffsetX="0" referenceOffsetY="0"/>
         <outgoingPath name="Point-0001 --- Point-0002"/>
@@ -106,7 +113,7 @@
             <vertex x="-13000" y="-16000"/>
             <vertex x="-11000" y="-16000"/>
         </vehicleEnvelope>
-        <outgoingPath name="Point-0017 --- Point-0020"/>
+        <outgoingPath name="Point-0017 --- ST_IN_01"/>
         <pointLayout labelOffsetX="-10" labelOffsetY="-20" layerId="0"/>
     </point>
     <point name="Point-0018" positionX="8000" positionY="-15000" positionZ="0" vehicleOrientationAngle="NaN" type="HALT_POSITION">
@@ -125,11 +132,6 @@
         </vehicleEnvelope>
         <outgoingPath name="Point-0019 --- Point-0017"/>
         <outgoingPath name="Point-0019 --- Point-0022"/>
-        <pointLayout labelOffsetX="-10" labelOffsetY="-20" layerId="0"/>
-    </point>
-    <point name="Point-0020" positionX="-20000" positionY="-12000" positionZ="0" vehicleOrientationAngle="NaN" type="HALT_POSITION">
-        <maxVehicleBoundingBox length="1000" width="1000" height="1000" referenceOffsetX="0" referenceOffsetY="0"/>
-        <outgoingPath name="Point-0020 --- Point-0021"/>
         <pointLayout labelOffsetX="-10" labelOffsetY="-20" layerId="0"/>
     </point>
     <point name="Point-0021" positionX="-24000" positionY="-8000" positionZ="0" vehicleOrientationAngle="NaN" type="HALT_POSITION">
@@ -156,14 +158,7 @@
     </point>
     <point name="Point-0024" positionX="-24000" positionY="1000" positionZ="0" vehicleOrientationAngle="NaN" type="HALT_POSITION">
         <maxVehicleBoundingBox length="1000" width="1000" height="1000" referenceOffsetX="0" referenceOffsetY="0"/>
-        <outgoingPath name="Point-0024 --- Point-0025"/>
-        <pointLayout labelOffsetX="-10" labelOffsetY="-20" layerId="0"/>
-    </point>
-    <point name="Point-0025" positionX="-24000" positionY="6000" positionZ="0" vehicleOrientationAngle="NaN" type="HALT_POSITION">
-        <maxVehicleBoundingBox length="1000" width="1000" height="1000" referenceOffsetX="0" referenceOffsetY="0"/>
-        <outgoingPath name="Point-0025 --- Point-0026"/>
-        <outgoingPath name="Point-0025 --- Point-0030"/>
-        <outgoingPath name="Point-0025 --- Point-0042"/>
+        <outgoingPath name="Point-0024 --- P_WAIT_IN_01"/>
         <pointLayout labelOffsetX="-10" labelOffsetY="-20" layerId="0"/>
     </point>
     <point name="Point-0026" positionX="-24000" positionY="11000" positionZ="0" vehicleOrientationAngle="NaN" type="HALT_POSITION">
@@ -372,6 +367,26 @@
         <outgoingPath name="Point-0061 --- Point-0021"/>
         <pointLayout labelOffsetX="-10" labelOffsetY="-20" layerId="0"/>
     </point>
+    <point name="ST_IN_01" positionX="-20000" positionY="-12000" positionZ="0" vehicleOrientationAngle="NaN" type="HALT_POSITION">
+        <maxVehicleBoundingBox length="1000" width="1000" height="1000" referenceOffsetX="0" referenceOffsetY="0"/>
+        <outgoingPath name="ST_IN_01 --- Point-0021"/>
+        <pointLayout labelOffsetX="-10" labelOffsetY="-20" layerId="0"/>
+    </point>
+    <path name="P_WAIT_IN_01 --- Point-0026" sourcePoint="P_WAIT_IN_01" destinationPoint="Point-0026" length="4690" maxVelocity="1000" maxReverseVelocity="0" locked="false">
+        <pathLayout connectionType="DIRECT" layerId="0"/>
+    </path>
+    <path name="P_WAIT_IN_01 --- Point-0030" sourcePoint="P_WAIT_IN_01" destinationPoint="Point-0030" length="7695" maxVelocity="1000" maxReverseVelocity="0" locked="false">
+        <pathLayout connectionType="BEZIER" layerId="0">
+            <controlPoint x="-467" y="-205"/>
+            <controlPoint x="-467" y="-205"/>
+        </pathLayout>
+    </path>
+    <path name="P_WAIT_IN_01 --- Point-0042" sourcePoint="P_WAIT_IN_01" destinationPoint="Point-0042" length="5992" maxVelocity="1000" maxReverseVelocity="0" locked="false">
+        <pathLayout connectionType="BEZIER" layerId="0">
+            <controlPoint x="-469" y="-169"/>
+            <controlPoint x="-469" y="-169"/>
+        </pathLayout>
+    </path>
     <path name="Point-0001 --- Point-0002" sourcePoint="Point-0001" destinationPoint="Point-0002" length="4383" maxVelocity="1000" maxReverseVelocity="0" locked="false">
         <pathLayout connectionType="BEZIER" layerId="0">
             <controlPoint x="610" y="-180"/>
@@ -499,7 +514,7 @@
             <controlPoint x="-159" y="153"/>
         </pathLayout>
     </path>
-    <path name="Point-0017 --- Point-0020" sourcePoint="Point-0017" destinationPoint="Point-0020" length="8705" maxVelocity="1000" maxReverseVelocity="0" locked="false">
+    <path name="Point-0017 --- ST_IN_01" sourcePoint="Point-0017" destinationPoint="ST_IN_01" length="8705" maxVelocity="1000" maxReverseVelocity="0" locked="false">
         <pathLayout connectionType="BEZIER" layerId="0">
             <controlPoint x="-293" y="292"/>
             <controlPoint x="-343" y="250"/>
@@ -524,12 +539,6 @@
             <controlPoint x="-169" y="233"/>
         </pathLayout>
     </path>
-    <path name="Point-0020 --- Point-0021" sourcePoint="Point-0020" destinationPoint="Point-0021" length="6802" maxVelocity="1000" maxReverseVelocity="0" locked="false">
-        <pathLayout connectionType="BEZIER" layerId="0">
-            <controlPoint x="-465" y="230"/>
-            <controlPoint x="-465" y="230"/>
-        </pathLayout>
-    </path>
     <path name="Point-0021 --- Point-0023" sourcePoint="Point-0021" destinationPoint="Point-0023" length="3752" maxVelocity="1000" maxReverseVelocity="0" locked="false">
         <pathLayout connectionType="DIRECT" layerId="0"/>
     </path>
@@ -542,23 +551,8 @@
     <path name="Point-0023 --- Point-0024" sourcePoint="Point-0023" destinationPoint="Point-0024" length="4690" maxVelocity="1000" maxReverseVelocity="0" locked="false">
         <pathLayout connectionType="DIRECT" layerId="0"/>
     </path>
-    <path name="Point-0024 --- Point-0025" sourcePoint="Point-0024" destinationPoint="Point-0025" length="4690" maxVelocity="1000" maxReverseVelocity="0" locked="false">
+    <path name="Point-0024 --- P_WAIT_IN_01" sourcePoint="Point-0024" destinationPoint="P_WAIT_IN_01" length="4690" maxVelocity="1000" maxReverseVelocity="0" locked="false">
         <pathLayout connectionType="DIRECT" layerId="0"/>
-    </path>
-    <path name="Point-0025 --- Point-0026" sourcePoint="Point-0025" destinationPoint="Point-0026" length="4690" maxVelocity="1000" maxReverseVelocity="0" locked="false">
-        <pathLayout connectionType="DIRECT" layerId="0"/>
-    </path>
-    <path name="Point-0025 --- Point-0030" sourcePoint="Point-0025" destinationPoint="Point-0030" length="7695" maxVelocity="1000" maxReverseVelocity="0" locked="false">
-        <pathLayout connectionType="BEZIER" layerId="0">
-            <controlPoint x="-467" y="-205"/>
-            <controlPoint x="-467" y="-205"/>
-        </pathLayout>
-    </path>
-    <path name="Point-0025 --- Point-0042" sourcePoint="Point-0025" destinationPoint="Point-0042" length="5992" maxVelocity="1000" maxReverseVelocity="0" locked="false">
-        <pathLayout connectionType="BEZIER" layerId="0">
-            <controlPoint x="-469" y="-169"/>
-            <controlPoint x="-469" y="-169"/>
-        </pathLayout>
     </path>
     <path name="Point-0026 --- Point-0027" sourcePoint="Point-0026" destinationPoint="Point-0027" length="6841" maxVelocity="1000" maxReverseVelocity="0" locked="false">
         <pathLayout connectionType="BEZIER" layerId="0">
@@ -734,37 +728,34 @@
     <path name="Point-0061 --- Point-0021" sourcePoint="Point-0061" destinationPoint="Point-0021" length="8000" maxVelocity="1000" maxReverseVelocity="0" locked="false">
         <pathLayout connectionType="DIRECT" layerId="0"/>
     </path>
-    <vehicle name="Vehicle-0005" energyLevelCritical="30" energyLevelGood="90" energyLevelFullyRecharged="95" energyLevelSufficientlyRecharged="40" maxVelocity="1000" maxReverseVelocity="1000" envelopeKey="">
-        <boundingBox length="1000" width="1000" height="1000" referenceOffsetX="0" referenceOffsetY="0"/>
-        <property name="tcs:preferredAdapterClass" value="org.opentcs.virtualvehicle.LoopbackCommunicationAdapterFactory"/>
-        <vehicleLayout color="#0000FF"/>
-    </vehicle>
+    <path name="ST_IN_01 --- Point-0021" sourcePoint="ST_IN_01" destinationPoint="Point-0021" length="6802" maxVelocity="1000" maxReverseVelocity="0" locked="false">
+        <pathLayout connectionType="BEZIER" layerId="0">
+            <controlPoint x="-465" y="230"/>
+            <controlPoint x="-465" y="230"/>
+        </pathLayout>
+    </path>
     <vehicle name="Vehicle-01" energyLevelCritical="30" energyLevelGood="90" energyLevelFullyRecharged="95" energyLevelSufficientlyRecharged="45" maxVelocity="1000" maxReverseVelocity="1000" envelopeKey="envelope-a">
         <boundingBox length="1000" width="1000" height="1000" referenceOffsetX="0" referenceOffsetY="0"/>
         <property name="loopback:loadOperation" value="Load cargo"/>
         <property name="loopback:unloadOperation" value="Unload cargo"/>
-        <property name="tcs:preferredAdapterClass" value="org.opentcs.virtualvehicle.LoopbackCommunicationAdapterFactory"/>
         <vehicleLayout color="#FF0000"/>
     </vehicle>
     <vehicle name="Vehicle-02" energyLevelCritical="30" energyLevelGood="90" energyLevelFullyRecharged="95" energyLevelSufficientlyRecharged="45" maxVelocity="1000" maxReverseVelocity="1000" envelopeKey="envelope-a">
         <boundingBox length="1000" width="1000" height="1000" referenceOffsetX="0" referenceOffsetY="0"/>
         <property name="loopback:loadOperation" value="Load cargo"/>
         <property name="loopback:unloadOperation" value="Unload cargo"/>
-        <property name="tcs:preferredAdapterClass" value="org.opentcs.virtualvehicle.LoopbackCommunicationAdapterFactory"/>
         <vehicleLayout color="#33FF00"/>
     </vehicle>
     <vehicle name="Vehicle-03" energyLevelCritical="30" energyLevelGood="90" energyLevelFullyRecharged="95" energyLevelSufficientlyRecharged="45" maxVelocity="1000" maxReverseVelocity="1000" envelopeKey="envelope-a">
         <boundingBox length="1000" width="1000" height="1000" referenceOffsetX="0" referenceOffsetY="0"/>
         <property name="loopback:loadOperation" value="Load cargo"/>
         <property name="loopback:unloadOperation" value="Unload cargo"/>
-        <property name="tcs:preferredAdapterClass" value="org.opentcs.virtualvehicle.LoopbackCommunicationAdapterFactory"/>
         <vehicleLayout color="#00FFFF"/>
     </vehicle>
     <vehicle name="Vehicle-04" energyLevelCritical="30" energyLevelGood="90" energyLevelFullyRecharged="95" energyLevelSufficientlyRecharged="45" maxVelocity="1000" maxReverseVelocity="1000" envelopeKey="envelope-a">
         <boundingBox length="1000" width="1000" height="1000" referenceOffsetX="0" referenceOffsetY="0"/>
         <property name="loopback:loadOperation" value="Load cargo"/>
         <property name="loopback:unloadOperation" value="Unload cargo"/>
-        <property name="tcs:preferredAdapterClass" value="org.opentcs.virtualvehicle.LoopbackCommunicationAdapterFactory"/>
         <vehicleLayout color="#FF33FF"/>
     </vehicle>
     <locationType name="Fire door">
@@ -807,7 +798,7 @@
         <locationLayout labelOffsetX="-10" labelOffsetY="-20" locationRepresentation="DEFAULT" layerId="0"/>
     </location>
     <location name="Goods in north 02" positionX="-28000" positionY="6000" positionZ="0" locked="false" type="Transfer station">
-        <link point="Point-0025"/>
+        <link point="P_WAIT_IN_01"/>
         <property name="tcs:defaultLocationSymbol" value="DEFAULT"/>
         <locationLayout labelOffsetX="-10" labelOffsetY="-20" locationRepresentation="DEFAULT" layerId="0"/>
     </location>
@@ -822,7 +813,7 @@
         <locationLayout labelOffsetX="-10" labelOffsetY="-20" locationRepresentation="DEFAULT" layerId="0"/>
     </location>
     <location name="Goods out 01" positionX="-20000" positionY="-15000" positionZ="0" locked="false" type="Transfer station">
-        <link point="Point-0020"/>
+        <link point="ST_IN_01"/>
         <property name="tcs:defaultLocationSymbol" value="DEFAULT"/>
         <locationLayout labelOffsetX="-10" labelOffsetY="-20" locationRepresentation="DEFAULT" layerId="0"/>
     </location>
@@ -891,5 +882,5 @@
         <layer id="0" ordinal="0" visible="true" name="Default layer" groupId="0"/>
         <layerGroup id="0" name="Default layer group" visible="true"/>
     </visualLayout>
-    <property name="tcs:modelFileLastModified" value="2026-04-21T08:07:11Z"/>
+    <property name="tcs:modelFileLastModified" value="2026-06-26T09:07:29Z"/>
 </model>
