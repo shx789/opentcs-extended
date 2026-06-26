@@ -143,7 +143,7 @@ bash start-containers.sh
 ## 说明
 
 - Kernel 启动时从 `data/model.xml` 加载地图（容器内路径：`/opt/opentcs-kernel/data/model.xml`）。
-- 推荐通过 `.env` 中的 `KERNEL_MODEL_FILE` 将宿主机 XML 挂载为 `model.xml`（见下方 FAQ）。
+- 推荐通过 `.env` 中的 `KERNEL_MODEL_FILE` 在启动时将宿主机 XML 复制进 Kernel 数据卷（见下方 FAQ）。
 - HTTP API `PUT /v1/plantModel` 接受 JSON，不能直接上传 ModelEditor 导出的 XML。
 - ModelEditor / OperationsDesk 在开发机使用，不必进容器。
 - `RCS_STORE_MODE=file` 适合联调，不建议作为生产数据库。
@@ -162,6 +162,8 @@ Kernel 与本地 Gradle 安装读取同一文件名 `model.xml`，路径对应�
 | Docker 容器内 | `/opt/opentcs-kernel/data/model.xml` |
 
 **推荐方式（`KERNEL_MODEL_FILE`）：**
+
+启动脚本会在创建 Kernel 容器**之前**，将宿主机地图复制进 Docker 卷 `opentcs-kernel-data`（命名卷上直接 bind mount 单文件在部分 Docker 版本不可靠，因此采用复制方式）。
 
 1. 上传地图到服务器（宿主机文件名可以是 `1.xml` 或 `model.xml`）：
 
@@ -196,12 +198,95 @@ curl -s http://localhost:55200/v1/plantModel | head
 docker logs opentcs-kernel --tail 20
 ```
 
+启动时应看到类似输出（文件大小约 60KB，不是 341 字节）：
+
+```
+Copying plant model into kernel data volume: /root/services/opentcs/docker/model.xml
+-rw-r--r-- 1 root root 61904 ... /data/model.xml
+```
+
+**重要：** Kernel **仅在启动时**读取 `model.xml`。若先启动了容器再复制地图，必须 `docker restart opentcs-kernel` 或重新执行 `start-containers.sh`，否则 API 仍返回空模型（`"name":"unnamed"`、`points:[]`）。
+
 **临时手动方式（未配置 `KERNEL_MODEL_FILE` 时）：**
 
 ```bash
 docker cp /root/services/opentcs/docker/model.xml opentcs-kernel:/opt/opentcs-kernel/data/model.xml
 docker restart opentcs-kernel
 ```
+
+---
+
+### `curl /v1/plantModel` 没有地图数据
+
+按顺序排查（服务器目录示例：`/root/services/opentcs/docker`）：
+
+**1. 确认 API 有响应（而非完全无输出）**
+
+```bash
+curl -v http://localhost:55200/v1/plantModel
+```
+
+- 完全无输出 / `Connection refused`：Kernel 未就绪，执行 `docker logs opentcs-kernel --tail 50`
+- 返回 `403 Not authenticated`：在请求头加 access key（若 `.env` 或配置里设置了 `servicewebapi.accessKey`）
+- 返回 JSON 且 `"name":"unnamed"`、`"points":[]`：**空模型**，说明启动时未读到 `model.xml`（见下方步骤 2–4）
+
+**2. 确认容器内存在 model.xml**
+
+```bash
+docker exec opentcs-kernel ls -la /opt/opentcs-kernel/data/
+```
+
+若无 `model.xml` 或大小为 0：
+
+```bash
+# 宿主机先有文件
+ls -la /root/services/opentcs/docker/model.xml
+
+# 方式 A：.env + start-containers.sh 自动复制（需新版脚本）
+grep KERNEL_MODEL_FILE /root/services/opentcs/docker/.env
+cd /root/services/opentcs/docker/scripts && bash start-containers.sh
+
+# 方式 B：手动复制后必须重启
+docker cp /root/services/opentcs/docker/model.xml opentcs-kernel:/opt/opentcs-kernel/data/model.xml
+docker restart opentcs-kernel
+```
+
+**3. 确认启动脚本已复制地图进卷**
+
+重新执行 `bash start-containers.sh` 时，终端应出现：
+
+```
+Copying plant model into kernel data volume: /root/services/opentcs/docker/model.xml
+-rw-r--r-- 1 root root 61904 ... /data/model.xml
+```
+
+然后检查容器内文件大小：
+
+```bash
+docker exec opentcs-kernel ls -la /opt/opentcs-kernel/data/model.xml
+```
+
+完整地图约 60KB；若仍 ~341 字节，说明 `.env` 未生效或 `start-containers.sh` 版本过旧。
+
+**4. 确认 Kernel 日志已加载地图**
+
+```bash
+docker logs opentcs-kernel 2>&1 | grep -i "loaded model"
+```
+
+期望出现：`Kernel loaded model 1`（或你的模型名）。若只有空模型或未找到文件，检查 XML 是否损坏：
+
+```bash
+docker exec opentcs-kernel head -5 /opt/opentcs-kernel/data/model.xml
+```
+
+**5. 再次验证**
+
+```bash
+curl -s http://localhost:55200/v1/plantModel | python3 -c "import sys,json; d=json.load(sys.stdin); print('name:', d.get('name')); print('points:', len(d.get('points',[])))"
+```
+
+期望 `name: 1`（或你的模型名）且 `points` 数量大于 0。
 
 ---
 
