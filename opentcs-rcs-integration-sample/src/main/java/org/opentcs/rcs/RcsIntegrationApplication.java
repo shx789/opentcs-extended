@@ -55,6 +55,7 @@ import org.opentcs.rcs.bridge.opentcs.OpenTcsSsePayloadParser;
 import org.opentcs.rcs.bridge.opentcs.OpenTcsSseTransportOrderSubscriber;
 import org.opentcs.rcs.callback.CallbackOutboxService;
 import org.opentcs.rcs.callback.CallbackOutboxStore;
+import org.opentcs.rcs.callback.CallbackOutboxHttpHandlers;
 import org.opentcs.rcs.callback.CallbackRetryProcessor;
 import org.opentcs.rcs.callback.CallbackRetryScheduler;
 import org.opentcs.rcs.callback.CallbackSender;
@@ -222,6 +223,10 @@ public final class RcsIntegrationApplication {
         get(
             "/demo/wcs/callbacks",
             WcsDemoHttpHandlers.listCallbacksHandler(demoCallbackRecords)
+        );
+        get(
+            "/api/v1/rcs/callbacks",
+            CallbackOutboxHttpHandlers.listCallbacksHandler(callbackOutboxStore, objectMapper)
         );
         post(
             "/demo/wcs/callbacks/clear",

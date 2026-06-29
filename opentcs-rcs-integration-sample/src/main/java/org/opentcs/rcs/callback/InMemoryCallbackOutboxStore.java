@@ -28,6 +28,14 @@ public class InMemoryCallbackOutboxStore
   }
 
   @Override
+  public List<CallbackOutboxEntry> findAll() {
+    return entries.values().stream()
+        .sorted(Comparator.comparing(CallbackOutboxEntry::idemKey))
+        .map(this::copy)
+        .toList();
+  }
+
+  @Override
   public List<CallbackOutboxEntry> findDue(Instant now, int limit) {
     return entries.values().stream()
         .filter(

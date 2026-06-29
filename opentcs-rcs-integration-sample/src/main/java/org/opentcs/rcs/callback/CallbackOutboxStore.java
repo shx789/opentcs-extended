@@ -18,5 +18,7 @@ public interface CallbackOutboxStore {
 
   Optional<CallbackOutboxEntry> findByIdemKey(String idemKey);
 
+  List<CallbackOutboxEntry> findAll();
+
   List<CallbackOutboxEntry> findDue(Instant now, int limit);
 }

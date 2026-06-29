@@ -130,6 +130,86 @@ class RcsIntegrationApplicationTest {
   }
 
   @Test
+  void shouldExposeCallbackOutboxRecords() throws Exception {
+    HttpServer callbackServer = HttpServer.create(new InetSocketAddress(0), 0);
+    callbackServer.createContext(
+        "/api/v1/wcs/agv/events",
+        exchange -> {
+          byte[] bytes = "{}".getBytes(StandardCharsets.UTF_8);
+          exchange.sendResponseHeaders(200, bytes.length);
+          exchange.getResponseBody().write(bytes);
+          exchange.close();
+        }
+    );
+    callbackServer.start();
+
+    Javalin app = RcsIntegrationApplication.createApp();
+    app.start(0);
+    try {
+      int appPort = app.port();
+      int callbackPort = callbackServer.getAddress().getPort();
+      String callbackUrl = "http://127.0.0.1:%d/api/v1/wcs/agv/events".formatted(callbackPort);
+      String createMissionBody = """
+          {
+            "mission_no": "M202604140099",
+            "task_no": "T202604140099",
+            "from_point": "P_WAIT_IN_01",
+            "to_point": "ST_IN_01",
+            "pallet_no": "PLT000000123",
+            "priority": 30,
+            "callback_url": "%s"
+          }
+          """.formatted(callbackUrl);
+      HttpResponse<String> createMissionResp = postJson(
+          appPort,
+          "/api/v1/wcs/agv/missions",
+          createMissionBody
+      );
+      assertThat(createMissionResp.statusCode()).isEqualTo(200);
+
+      String openTcsEventBody = """
+          {
+            "eventTime": "2026-04-14T10:35:21Z",
+            "currentObjectState": {
+              "name": "M202604140099",
+              "state": "FINISHED",
+              "currentDriveOrderIndex": 1,
+              "processingVehicle": "AGV_01",
+              "properties": {
+                "task_no": "T202604140099"
+              }
+            }
+          }
+          """;
+      HttpResponse<String> eventResp = postJson(
+          appPort,
+          "/api/v1/opentcs/events/transport-orders",
+          openTcsEventBody
+      );
+      assertThat(eventResp.statusCode()).isEqualTo(202);
+
+      HttpResponse<String> callbacksResp = getJson(
+          appPort,
+          "/api/v1/rcs/callbacks?mission_no=M202604140099"
+      );
+      assertThat(callbacksResp.statusCode()).isEqualTo(200);
+      JsonNode json = new ObjectMapper().readTree(callbacksResp.body());
+      assertThat(json.get("code").asText()).isEqualTo("0");
+      assertThat(json.get("data")).hasSize(1);
+      JsonNode record = json.get("data").get(0);
+      assertThat(record.get("mission_no").asText()).isEqualTo("M202604140099");
+      assertThat(record.get("callback_url").asText()).isEqualTo(callbackUrl);
+      assertThat(record.get("status").asText()).isEqualTo("SUCCESS");
+      assertThat(record.get("retry_count").asInt()).isZero();
+      assertThat(record.get("payload").get("event_type").asText()).isEqualTo("DROPPED");
+    }
+    finally {
+      app.stop();
+      callbackServer.stop(0);
+    }
+  }
+
+  @Test
   void shouldKeepMissionCallbackTargetAfterRestartWhenFileStoreModeEnabled() throws Exception {
     AtomicInteger callbackCalls = new AtomicInteger();
     HttpServer callbackServer = HttpServer.create(new InetSocketAddress(0), 0);

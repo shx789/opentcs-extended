@@ -46,6 +46,14 @@ public class FileCallbackOutboxStore
   }
 
   @Override
+  public synchronized List<CallbackOutboxEntry> findAll() {
+    return entriesByIdemKey.values().stream()
+        .sorted(Comparator.comparing(CallbackOutboxEntry::idemKey))
+        .map(this::copy)
+        .toList();
+  }
+
+  @Override
   public synchronized List<CallbackOutboxEntry> findDue(Instant now, int limit) {
     return entriesByIdemKey.values().stream()
         .filter(
