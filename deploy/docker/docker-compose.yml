@@ -49,7 +49,7 @@ services:
       RCS_OPENTCS_SSE_ENABLED: "true"
       RCS_STORE_MODE: file
       RCS_STORE_FILE_DIR: /data/rcs-store
-      RCS_AGV_COMMAND_ENABLED: "true"
+      RCS_AGV_COMMAND_ENABLED: ${RCS_AGV_COMMAND_ENABLED:-false}
       RCS_AGV_COMMAND_BROKER_URI: tcp://opentcs-mqtt:1883
       RCS_AGV_COMMAND_TOPIC: ${RCS_AGV_COMMAND_TOPIC:-robot_control}
       RCS_AGV_POINT_ID_MAP: ${RCS_AGV_POINT_ID_MAP:-Point-0020=20,Point-0026=26}

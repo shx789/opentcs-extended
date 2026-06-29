@@ -110,7 +110,7 @@ bash start-containers.sh
 
 若 `server-up.sh` 输出 `Using: docker-compose`，说明脚本版本过旧，请重新上传 `deploy/docker/scripts/` 后改用 `bash start-containers.sh`。
 
-首次启动会自动从 `.env.example` 创建 `.env`，可按需修改 `RCS_AGV_POINT_ID_MAP` 等。
+首次启动会自动从 `.env.example` 创建 `.env`，可按需修改 `RCS_AGV_POINT_ID_MAP`、`RCS_AGV_COMMAND_ENABLED` 等（见下方 [AGV 控制下发开关](#rcs_agv_command_enabledagv-控制下发)）。
 
 ---
 
@@ -147,10 +147,89 @@ bash start-containers.sh
 - HTTP API `PUT /v1/plantModel` 接受 JSON，不能直接上传 ModelEditor 导出的 XML。
 - ModelEditor / OperationsDesk 在开发机使用，不必进容器。
 - `RCS_STORE_MODE=file` 适合联调，不建议作为生产数据库。
+- RCS 默认不向 AGV MQTT 发布 `robot_control`（`RCS_AGV_COMMAND_ENABLED=false`），现场联调确认后再开启，避免影响运行中的小车。
 
 ---
 
 ## FAQ
+
+### `RCS_AGV_COMMAND_ENABLED`（AGV 控制下发）
+
+该开关控制 RCS 是否通过 MQTT 向 AGV 下发 `robot_control` 命令。Java 代码默认值为 `false`；Docker 部署也应保持关闭，直到现场点位映射与 Broker 地址确认完毕。
+
+#### Docker 部署
+
+**方式 A（推荐）：`.env`**
+
+服务器上编辑 `deploy/docker/.env`（首次启动由 `.env.example` 生成，已含 `RCS_AGV_COMMAND_ENABLED=false`）：
+
+```bash
+RCS_AGV_COMMAND_ENABLED=false
+```
+
+保存后重新启动容器：
+
+```bash
+cd /root/services/opentcs/docker/scripts
+bash start-containers.sh
+```
+
+`start-containers.sh` 会将 `.env` 中的值传入 RCS 容器。
+
+**方式 B：`docker-compose.yml`**
+
+若使用 compose 启动，在 `rcs-integration` 服务的 `environment` 中设置：
+
+```yaml
+environment:
+  RCS_AGV_COMMAND_ENABLED: "false"
+```
+
+也可在 `.env` 中写 `RCS_AGV_COMMAND_ENABLED=false`，compose 会通过 `${RCS_AGV_COMMAND_ENABLED:-false}` 读取。
+
+验证 RCS 容器环境变量：
+
+```bash
+docker exec opentcs-rcs printenv RCS_AGV_COMMAND_ENABLED
+```
+
+期望输出 `false`。AGV 监控页 `http://<服务器IP>:8090/demo/agv-monitor` 在关闭时不应出现 command outbox 下发记录。
+
+#### 本地 Java / Gradle 直接启动
+
+在启动 RCS **之前**设置环境变量（不设置时 Java 默认也是 `false`，显式设置可避免被 shell 历史或其他配置覆盖）：
+
+Linux / macOS：
+
+```bash
+export RCS_AGV_COMMAND_ENABLED=false
+./gradlew :opentcs-rcs-integration-sample:runRcsSample -PrcsPort=8090
+```
+
+Windows PowerShell：
+
+```powershell
+$env:RCS_AGV_COMMAND_ENABLED = "false"
+.\gradlew.bat :opentcs-rcs-integration-sample:runRcsSample -PrcsPort=8090
+```
+
+#### 现场联调后开启
+
+确认 Broker、topic、`RCS_AGV_POINT_ID_MAP` 无误后，将值改为 `true` 并重启 RCS：
+
+```bash
+# Docker：.env
+RCS_AGV_COMMAND_ENABLED=true
+
+# 本地 Java
+export RCS_AGV_COMMAND_ENABLED=true
+export RCS_AGV_COMMAND_BROKER_URI=tcp://127.0.0.1:1883
+export RCS_AGV_POINT_ID_MAP=Point-0020=20,Point-0026=26
+```
+
+详见根目录 [README.md](../../README.md) 中「启用 AGV MQTT 命令下发」一节。
+
+---
 
 ### Docker 启动时如何放置 model.xml
 
@@ -421,4 +500,4 @@ docker rm -f opentcs-kernel opentcs-rcs opentcs-mqtt
 
 ### 环境变量参考
 
-见 [`.env.example`](.env.example)：`IMAGE_TAG`、`MQTT_HOST_PORT`、`SKIP_MQTT`、`RCS_AGV_POINT_ID_MAP` 等。
+见 [`.env.example`](.env.example)：`IMAGE_TAG`、`MQTT_HOST_PORT`、`SKIP_MQTT`、`RCS_AGV_COMMAND_ENABLED`、`RCS_AGV_POINT_ID_MAP` 等。
