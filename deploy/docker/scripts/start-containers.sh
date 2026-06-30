@@ -50,6 +50,7 @@ RCS_AGV_COMMAND_ENABLED="${RCS_AGV_COMMAND_ENABLED:-false}"
 RCS_AGV_COMMAND_TOPIC="${RCS_AGV_COMMAND_TOPIC:-robot_control}"
 RCS_AGV_MQTT_TOPIC="${RCS_AGV_MQTT_TOPIC:-robot_status}"
 RCS_AGV_POINT_ID_MAP="${RCS_AGV_POINT_ID_MAP:-Point-0020=20,Point-0026=26}"
+RCS_CALLBACK_BASE_URL="${RCS_CALLBACK_BASE_URL:-http://116.63.181.113:9098}"
 
 # Some cloud ECS hosts block pthread in containers unless seccomp is relaxed.
 DOCKER_RUN_OPTS=()
@@ -175,13 +176,11 @@ RCS_ENV=(
   -e "RCS_AGV_MQTT_ENABLED=true"
   -e "RCS_AGV_MQTT_BROKER_URI=tcp://${MQTT_BROKER_HOST}:1883"
   -e "RCS_AGV_MQTT_TOPIC=${RCS_AGV_MQTT_TOPIC}"
+  -e "RCS_CALLBACK_BASE_URL=${RCS_CALLBACK_BASE_URL}"
 )
 
 if [[ -n "${RCS_WMS_BASE_URL:-}" ]]; then
   RCS_ENV+=(-e "RCS_WMS_BASE_URL=${RCS_WMS_BASE_URL}")
-fi
-if [[ -n "${RCS_CALLBACK_BASE_URL:-}" ]]; then
-  RCS_ENV+=(-e "RCS_CALLBACK_BASE_URL=${RCS_CALLBACK_BASE_URL}")
 fi
 
 echo "Starting RCS (host ${RCS_HOST_PORT})..."

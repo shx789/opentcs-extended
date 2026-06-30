@@ -110,7 +110,7 @@ bash start-containers.sh
 
 若 `server-up.sh` 输出 `Using: docker-compose`，说明脚本版本过旧，请重新上传 `deploy/docker/scripts/` 后改用 `bash start-containers.sh`。
 
-首次启动会自动从 `.env.example` 创建 `.env`，可按需修改 `RCS_AGV_POINT_ID_MAP`、`RCS_AGV_COMMAND_ENABLED` 等（见下方 [AGV 控制下发开关](#rcs_agv_command_enabledagv-控制下发)）。
+首次启动会自动从 `.env.example` 创建 `.env`，可按需修改 `RCS_AGV_POINT_ID_MAP`、`RCS_AGV_COMMAND_ENABLED`、`RCS_CALLBACK_BASE_URL` 等（见下方 FAQ）。
 
 ---
 
@@ -148,6 +148,7 @@ bash start-containers.sh
 - ModelEditor / OperationsDesk 在开发机使用，不必进容器。
 - `RCS_STORE_MODE=file` 适合联调，不建议作为生产数据库。
 - RCS 默认不向 AGV MQTT 发布 `robot_control`（`RCS_AGV_COMMAND_ENABLED=false`），现场联调确认后再开启，避免影响运行中的小车。
+- WCS 回调相对路径补全基础地址默认为 `http://116.63.181.113:9098`（`RCS_CALLBACK_BASE_URL`），可在 `.env` 中修改。
 
 ---
 
@@ -228,6 +229,46 @@ export RCS_AGV_POINT_ID_MAP=Point-0020=20,Point-0026=26
 ```
 
 详见根目录 [README.md](../../README.md) 中「启用 AGV MQTT 命令下发」一节。
+
+---
+
+### `RCS_CALLBACK_BASE_URL`（WCS 回调基础地址）
+
+RCS 向 WCS 发送任务状态回调时，若回调 URL 为相对路径（如 `/api/callback`），会拼接 `RCS_CALLBACK_BASE_URL` 得到完整地址。Docker 部署默认值为 `http://116.63.181.113:9098`。
+
+#### Docker 部署
+
+**方式 A（推荐）：`.env`**
+
+`.env.example` 已含默认值，首次启动会自动写入 `.env`。按需修改：
+
+```bash
+RCS_CALLBACK_BASE_URL=http://116.63.181.113:9098
+```
+
+保存后重新启动：
+
+```bash
+cd /root/services/opentcs/docker/scripts
+bash start-containers.sh
+```
+
+**方式 B：`docker-compose.yml`**
+
+```yaml
+environment:
+  RCS_CALLBACK_BASE_URL: "http://116.63.181.113:9098"
+```
+
+也可在 `.env` 中设置，compose 通过 `${RCS_CALLBACK_BASE_URL:-http://116.63.181.113:9098}` 读取。
+
+验证：
+
+```bash
+docker exec opentcs-rcs printenv RCS_CALLBACK_BASE_URL
+```
+
+期望输出 `http://116.63.181.113:9098`。
 
 ---
 
@@ -500,4 +541,4 @@ docker rm -f opentcs-kernel opentcs-rcs opentcs-mqtt
 
 ### 环境变量参考
 
-见 [`.env.example`](.env.example)：`IMAGE_TAG`、`MQTT_HOST_PORT`、`SKIP_MQTT`、`RCS_AGV_COMMAND_ENABLED`、`RCS_AGV_POINT_ID_MAP` 等。
+见 [`.env.example`](.env.example)：`IMAGE_TAG`、`MQTT_HOST_PORT`、`SKIP_MQTT`、`RCS_AGV_COMMAND_ENABLED`、`RCS_AGV_POINT_ID_MAP`、`RCS_CALLBACK_BASE_URL` 等。

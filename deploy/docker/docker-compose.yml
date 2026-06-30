@@ -57,7 +57,7 @@ services:
       RCS_AGV_MQTT_BROKER_URI: tcp://opentcs-mqtt:1883
       RCS_AGV_MQTT_TOPIC: ${RCS_AGV_MQTT_TOPIC:-robot_status}
       RCS_WMS_BASE_URL: ${RCS_WMS_BASE_URL:-}
-      RCS_CALLBACK_BASE_URL: ${RCS_CALLBACK_BASE_URL:-}
+      RCS_CALLBACK_BASE_URL: ${RCS_CALLBACK_BASE_URL:-http://116.63.181.113:9098}
     volumes:
       - rcs-data:/data/rcs-store
     security_opt:
