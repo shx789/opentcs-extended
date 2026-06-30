@@ -1,5 +1,10 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <model version="7.0.0" name="1">
+    <point name="P_SHIP_01" positionX="-12000" positionY="-21000" positionZ="0" vehicleOrientationAngle="NaN" type="HALT_POSITION">
+        <maxVehicleBoundingBox length="1000" width="1000" height="1000" referenceOffsetX="0" referenceOffsetY="0"/>
+        <outgoingPath name="P_SHIP_01 --- Point-0060"/>
+        <pointLayout labelOffsetX="-10" labelOffsetY="-20" layerId="0"/>
+    </point>
     <point name="P_WAIT_IN_01" positionX="-24000" positionY="6000" positionZ="0" vehicleOrientationAngle="NaN" type="HALT_POSITION">
         <maxVehicleBoundingBox length="1000" width="1000" height="1000" referenceOffsetX="0" referenceOffsetY="0"/>
         <outgoingPath name="P_WAIT_IN_01 --- Point-0026"/>
@@ -118,20 +123,7 @@
     </point>
     <point name="Point-0018" positionX="8000" positionY="-15000" positionZ="0" vehicleOrientationAngle="NaN" type="HALT_POSITION">
         <maxVehicleBoundingBox length="1000" width="1000" height="1000" referenceOffsetX="0" referenceOffsetY="0"/>
-        <outgoingPath name="Point-0018 --- Point-0019"/>
-        <pointLayout labelOffsetX="-10" labelOffsetY="-20" layerId="0"/>
-    </point>
-    <point name="Point-0019" positionX="-2000" positionY="-15000" positionZ="0" vehicleOrientationAngle="NaN" type="HALT_POSITION">
-        <maxVehicleBoundingBox length="1000" width="1000" height="1000" referenceOffsetX="0" referenceOffsetY="0"/>
-        <vehicleEnvelope key="envelope-a">
-            <vertex x="-1000" y="-14000"/>
-            <vertex x="-3000" y="-14000"/>
-            <vertex x="-3000" y="-16000"/>
-            <vertex x="-1000" y="-16000"/>
-            <vertex x="-1000" y="-14000"/>
-        </vehicleEnvelope>
-        <outgoingPath name="Point-0019 --- Point-0017"/>
-        <outgoingPath name="Point-0019 --- Point-0022"/>
+        <outgoingPath name="Point-0018 --- ST_OUT_01"/>
         <pointLayout labelOffsetX="-10" labelOffsetY="-20" layerId="0"/>
     </point>
     <point name="Point-0021" positionX="-24000" positionY="-8000" positionZ="0" vehicleOrientationAngle="NaN" type="HALT_POSITION">
@@ -349,12 +341,7 @@
     </point>
     <point name="Point-0058" positionX="-2000" positionY="-21000" positionZ="0" vehicleOrientationAngle="NaN" type="HALT_POSITION">
         <maxVehicleBoundingBox length="1000" width="1000" height="1000" referenceOffsetX="0" referenceOffsetY="0"/>
-        <outgoingPath name="Point-0058 --- Point-0059"/>
-        <pointLayout labelOffsetX="-10" labelOffsetY="-20" layerId="0"/>
-    </point>
-    <point name="Point-0059" positionX="-12000" positionY="-21000" positionZ="0" vehicleOrientationAngle="NaN" type="HALT_POSITION">
-        <maxVehicleBoundingBox length="1000" width="1000" height="1000" referenceOffsetX="0" referenceOffsetY="0"/>
-        <outgoingPath name="Point-0059 --- Point-0060"/>
+        <outgoingPath name="Point-0058 --- P_SHIP_01"/>
         <pointLayout labelOffsetX="-10" labelOffsetY="-20" layerId="0"/>
     </point>
     <point name="Point-0060" positionX="-20000" positionY="-21000" positionZ="0" vehicleOrientationAngle="NaN" type="HALT_POSITION">
@@ -372,6 +359,22 @@
         <outgoingPath name="ST_IN_01 --- Point-0021"/>
         <pointLayout labelOffsetX="-10" labelOffsetY="-20" layerId="0"/>
     </point>
+    <point name="ST_OUT_01" positionX="-2000" positionY="-15000" positionZ="0" vehicleOrientationAngle="NaN" type="HALT_POSITION">
+        <maxVehicleBoundingBox length="1000" width="1000" height="1000" referenceOffsetX="0" referenceOffsetY="0"/>
+        <vehicleEnvelope key="envelope-a">
+            <vertex x="-1000" y="-14000"/>
+            <vertex x="-3000" y="-14000"/>
+            <vertex x="-3000" y="-16000"/>
+            <vertex x="-1000" y="-16000"/>
+            <vertex x="-1000" y="-14000"/>
+        </vehicleEnvelope>
+        <outgoingPath name="ST_OUT_01 --- Point-0017"/>
+        <outgoingPath name="ST_OUT_01 --- Point-0022"/>
+        <pointLayout labelOffsetX="-10" labelOffsetY="-20" layerId="0"/>
+    </point>
+    <path name="P_SHIP_01 --- Point-0060" sourcePoint="P_SHIP_01" destinationPoint="Point-0060" length="8000" maxVelocity="1000" maxReverseVelocity="0" locked="false">
+        <pathLayout connectionType="DIRECT" layerId="0"/>
+    </path>
     <path name="P_WAIT_IN_01 --- Point-0026" sourcePoint="P_WAIT_IN_01" destinationPoint="Point-0026" length="4690" maxVelocity="1000" maxReverseVelocity="0" locked="false">
         <pathLayout connectionType="DIRECT" layerId="0"/>
     </path>
@@ -520,24 +523,8 @@
             <controlPoint x="-343" y="250"/>
         </pathLayout>
     </path>
-    <path name="Point-0018 --- Point-0019" sourcePoint="Point-0018" destinationPoint="Point-0019" length="9381" maxVelocity="1000" maxReverseVelocity="0" locked="false">
+    <path name="Point-0018 --- ST_OUT_01" sourcePoint="Point-0018" destinationPoint="ST_OUT_01" length="9381" maxVelocity="1000" maxReverseVelocity="0" locked="false">
         <pathLayout connectionType="DIRECT" layerId="0"/>
-    </path>
-    <path name="Point-0019 --- Point-0017" sourcePoint="Point-0019" destinationPoint="Point-0017" length="9381" maxVelocity="1000" maxReverseVelocity="0" locked="false">
-        <pathLayout connectionType="DIRECT" layerId="0"/>
-    </path>
-    <path name="Point-0019 --- Point-0022" sourcePoint="Point-0019" destinationPoint="Point-0022" length="11062" maxVelocity="1000" maxReverseVelocity="0" locked="false">
-        <vehicleEnvelope key="envelope-a">
-            <vertex x="-2000" y="-14500"/>
-            <vertex x="-12000" y="-10500"/>
-            <vertex x="-12000" y="-11500"/>
-            <vertex x="-2000" y="-15500"/>
-            <vertex x="-2000" y="-14500"/>
-        </vehicleEnvelope>
-        <pathLayout connectionType="BEZIER" layerId="0">
-            <controlPoint x="-113" y="288"/>
-            <controlPoint x="-169" y="233"/>
-        </pathLayout>
     </path>
     <path name="Point-0021 --- Point-0023" sourcePoint="Point-0021" destinationPoint="Point-0023" length="3752" maxVelocity="1000" maxReverseVelocity="0" locked="false">
         <pathLayout connectionType="DIRECT" layerId="0"/>
@@ -713,10 +700,7 @@
         <peripheralOperation completionRequired="false" executionTrigger="AFTER_MOVEMENT" locationName="Fire door 01" name="Close"/>
         <pathLayout connectionType="DIRECT" layerId="0"/>
     </path>
-    <path name="Point-0058 --- Point-0059" sourcePoint="Point-0058" destinationPoint="Point-0059" length="10000" maxVelocity="1000" maxReverseVelocity="0" locked="false">
-        <pathLayout connectionType="DIRECT" layerId="0"/>
-    </path>
-    <path name="Point-0059 --- Point-0060" sourcePoint="Point-0059" destinationPoint="Point-0060" length="8000" maxVelocity="1000" maxReverseVelocity="0" locked="false">
+    <path name="Point-0058 --- P_SHIP_01" sourcePoint="Point-0058" destinationPoint="P_SHIP_01" length="10000" maxVelocity="1000" maxReverseVelocity="0" locked="false">
         <pathLayout connectionType="DIRECT" layerId="0"/>
     </path>
     <path name="Point-0060 --- Point-0061" sourcePoint="Point-0060" destinationPoint="Point-0061" length="7211" maxVelocity="1000" maxReverseVelocity="0" locked="false">
@@ -732,6 +716,22 @@
         <pathLayout connectionType="BEZIER" layerId="0">
             <controlPoint x="-465" y="230"/>
             <controlPoint x="-465" y="230"/>
+        </pathLayout>
+    </path>
+    <path name="ST_OUT_01 --- Point-0017" sourcePoint="ST_OUT_01" destinationPoint="Point-0017" length="9381" maxVelocity="1000" maxReverseVelocity="0" locked="false">
+        <pathLayout connectionType="DIRECT" layerId="0"/>
+    </path>
+    <path name="ST_OUT_01 --- Point-0022" sourcePoint="ST_OUT_01" destinationPoint="Point-0022" length="11062" maxVelocity="1000" maxReverseVelocity="0" locked="false">
+        <vehicleEnvelope key="envelope-a">
+            <vertex x="-2000" y="-14500"/>
+            <vertex x="-12000" y="-10500"/>
+            <vertex x="-12000" y="-11500"/>
+            <vertex x="-2000" y="-15500"/>
+            <vertex x="-2000" y="-14500"/>
+        </vehicleEnvelope>
+        <pathLayout connectionType="BEZIER" layerId="0">
+            <controlPoint x="-113" y="288"/>
+            <controlPoint x="-169" y="233"/>
         </pathLayout>
     </path>
     <vehicle name="Vehicle-01" energyLevelCritical="30" energyLevelGood="90" energyLevelFullyRecharged="95" energyLevelSufficientlyRecharged="45" maxVelocity="1000" maxReverseVelocity="1000" envelopeKey="envelope-a">
@@ -803,12 +803,12 @@
         <locationLayout labelOffsetX="-10" labelOffsetY="-20" locationRepresentation="DEFAULT" layerId="0"/>
     </location>
     <location name="Goods in south 01" positionX="-2000" positionY="-18000" positionZ="0" locked="false" type="Transfer station">
-        <link point="Point-0019"/>
+        <link point="ST_OUT_01"/>
         <property name="tcs:defaultLocationSymbol" value="DEFAULT"/>
         <locationLayout labelOffsetX="-10" labelOffsetY="-20" locationRepresentation="DEFAULT" layerId="0"/>
     </location>
     <location name="Goods in south 02" positionX="-12000" positionY="-24000" positionZ="0" locked="false" type="Transfer station">
-        <link point="Point-0059"/>
+        <link point="P_SHIP_01"/>
         <property name="tcs:defaultLocationSymbol" value="DEFAULT"/>
         <locationLayout labelOffsetX="-10" labelOffsetY="-20" locationRepresentation="DEFAULT" layerId="0"/>
     </location>
@@ -882,5 +882,5 @@
         <layer id="0" ordinal="0" visible="true" name="Default layer" groupId="0"/>
         <layerGroup id="0" name="Default layer group" visible="true"/>
     </visualLayout>
-    <property name="tcs:modelFileLastModified" value="2026-06-26T09:07:29Z"/>
+    <property name="tcs:modelFileLastModified" value="2026-06-30T02:18:56Z"/>
 </model>
