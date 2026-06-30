@@ -696,8 +696,6 @@
         </pathLayout>
     </path>
     <path name="Point-0057 --- Point-0058" sourcePoint="Point-0057" destinationPoint="Point-0058" length="10000" maxVelocity="1000" maxReverseVelocity="0" locked="false">
-        <peripheralOperation completionRequired="true" executionTrigger="AFTER_ALLOCATION" locationName="Fire door 01" name="Open"/>
-        <peripheralOperation completionRequired="false" executionTrigger="AFTER_MOVEMENT" locationName="Fire door 01" name="Close"/>
         <pathLayout connectionType="DIRECT" layerId="0"/>
     </path>
     <path name="Point-0058 --- P_SHIP_01" sourcePoint="Point-0058" destinationPoint="P_SHIP_01" length="10000" maxVelocity="1000" maxReverseVelocity="0" locked="false">
@@ -882,5 +880,5 @@
         <layer id="0" ordinal="0" visible="true" name="Default layer" groupId="0"/>
         <layerGroup id="0" name="Default layer group" visible="true"/>
     </visualLayout>
-    <property name="tcs:modelFileLastModified" value="2026-06-30T02:18:56Z"/>
+    <property name="tcs:modelFileLastModified" value="2026-06-30T06:13:43Z"/>
 </model>
