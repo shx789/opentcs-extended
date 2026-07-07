@@ -1,0 +1,483 @@
+{
+  "source_map": "/home/shx/workspace/catkin_ws/src/ros_nav/zkwl_robot_start/map/map.yaml",
+  "source_image": "/home/shx/workspace/catkin_ws/src/ros_nav/zkwl_robot_start/map/map.pgm",
+  "method": "curated first-pass business topology based on generated line preview",
+  "resolution_m_per_pixel": 0.05,
+  "origin": [
+    -14.9298,
+    -11.2626,
+    0.0
+  ],
+  "unit_rule": "openTCS x/y = ROS map x/y * 1000",
+  "points": [
+    {
+      "name": "WAIT_WEST",
+      "pixel": {
+        "x": 76,
+        "y": 105
+      },
+      "ros_pose": {
+        "x": -11.1048,
+        "y": 4.9624,
+        "yaw": 0.0
+      },
+      "opentcs_position": {
+        "x": -11105,
+        "y": 4962,
+        "z": 0
+      },
+      "comment": "候选西侧等待/端点"
+    },
+    {
+      "name": "AISLE_W_01",
+      "pixel": {
+        "x": 127,
+        "y": 105
+      },
+      "ros_pose": {
+        "x": -8.5548,
+        "y": 4.9624,
+        "yaw": 0.0
+      },
+      "opentcs_position": {
+        "x": -8555,
+        "y": 4962,
+        "z": 0
+      },
+      "comment": "西侧主通道点"
+    },
+    {
+      "name": "AISLE_W_02",
+      "pixel": {
+        "x": 163,
+        "y": 108
+      },
+      "ros_pose": {
+        "x": -6.7548,
+        "y": 4.8124,
+        "yaw": 0.0
+      },
+      "opentcs_position": {
+        "x": -6755,
+        "y": 4812,
+        "z": 0
+      },
+      "comment": "西侧主通道点"
+    },
+    {
+      "name": "JUNCTION_MID",
+      "pixel": {
+        "x": 261,
+        "y": 106
+      },
+      "ros_pose": {
+        "x": -1.8548,
+        "y": 4.9124,
+        "yaw": 0.0
+      },
+      "opentcs_position": {
+        "x": -1855,
+        "y": 4912,
+        "z": 0
+      },
+      "comment": "中部主路口"
+    },
+    {
+      "name": "AISLE_E_01",
+      "pixel": {
+        "x": 300,
+        "y": 107
+      },
+      "ros_pose": {
+        "x": 0.0952,
+        "y": 4.8624,
+        "yaw": 0.0
+      },
+      "opentcs_position": {
+        "x": 95,
+        "y": 4862,
+        "z": 0
+      },
+      "comment": "东侧主通道点"
+    },
+    {
+      "name": "AISLE_E_02",
+      "pixel": {
+        "x": 323,
+        "y": 107
+      },
+      "ros_pose": {
+        "x": 1.2452,
+        "y": 4.8624,
+        "yaw": 0.0
+      },
+      "opentcs_position": {
+        "x": 1245,
+        "y": 4862,
+        "z": 0
+      },
+      "comment": "东侧主通道点"
+    },
+    {
+      "name": "AISLE_E_03",
+      "pixel": {
+        "x": 384,
+        "y": 107
+      },
+      "ros_pose": {
+        "x": 4.2952,
+        "y": 4.8624,
+        "yaw": 0.0
+      },
+      "opentcs_position": {
+        "x": 4295,
+        "y": 4862,
+        "z": 0
+      },
+      "comment": "东侧主通道点"
+    },
+    {
+      "name": "WAIT_EAST",
+      "pixel": {
+        "x": 423,
+        "y": 107
+      },
+      "ros_pose": {
+        "x": 6.2452,
+        "y": 4.8624,
+        "yaw": 0.0
+      },
+      "opentcs_position": {
+        "x": 6245,
+        "y": 4862,
+        "z": 0
+      },
+      "comment": "候选东侧等待/端点"
+    },
+    {
+      "name": "NORTH_IN_01",
+      "pixel": {
+        "x": 298,
+        "y": 39
+      },
+      "ros_pose": {
+        "x": -0.0048,
+        "y": 8.2624,
+        "yaw": 0.0
+      },
+      "opentcs_position": {
+        "x": -5,
+        "y": 8262,
+        "z": 0
+      },
+      "comment": "候选北侧入口/工位"
+    },
+    {
+      "name": "NORTH_IN_02",
+      "pixel": {
+        "x": 355,
+        "y": 39
+      },
+      "ros_pose": {
+        "x": 2.8452,
+        "y": 8.2624,
+        "yaw": 0.0
+      },
+      "opentcs_position": {
+        "x": 2845,
+        "y": 8262,
+        "z": 0
+      },
+      "comment": "候选北侧入口/工位"
+    },
+    {
+      "name": "EAST_DOWN_01",
+      "pixel": {
+        "x": 371,
+        "y": 146
+      },
+      "ros_pose": {
+        "x": 3.6452,
+        "y": 2.9124,
+        "yaw": -1.5708
+      },
+      "opentcs_position": {
+        "x": 3645,
+        "y": 2912,
+        "z": 0
+      },
+      "comment": "东侧竖向通道"
+    },
+    {
+      "name": "EAST_DOWN_02",
+      "pixel": {
+        "x": 374,
+        "y": 194
+      },
+      "ros_pose": {
+        "x": 3.7952,
+        "y": 0.5124,
+        "yaw": -1.5708
+      },
+      "opentcs_position": {
+        "x": 3795,
+        "y": 512,
+        "z": 0
+      },
+      "comment": "东侧竖向通道"
+    },
+    {
+      "name": "EAST_DOWN_03",
+      "pixel": {
+        "x": 371,
+        "y": 272
+      },
+      "ros_pose": {
+        "x": 3.6452,
+        "y": -3.3876,
+        "yaw": -1.5708
+      },
+      "opentcs_position": {
+        "x": 3645,
+        "y": -3388,
+        "z": 0
+      },
+      "comment": "东侧竖向通道"
+    },
+    {
+      "name": "SOUTH_E_01",
+      "pixel": {
+        "x": 334,
+        "y": 396
+      },
+      "ros_pose": {
+        "x": 1.7952,
+        "y": -9.5876,
+        "yaw": 3.1416
+      },
+      "opentcs_position": {
+        "x": 1795,
+        "y": -9588,
+        "z": 0
+      },
+      "comment": "南侧通道点"
+    },
+    {
+      "name": "SOUTH_MID",
+      "pixel": {
+        "x": 292,
+        "y": 396
+      },
+      "ros_pose": {
+        "x": -0.3048,
+        "y": -9.5876,
+        "yaw": 3.1416
+      },
+      "opentcs_position": {
+        "x": -305,
+        "y": -9588,
+        "z": 0
+      },
+      "comment": "南侧通道点"
+    },
+    {
+      "name": "SOUTH_W_01",
+      "pixel": {
+        "x": 266,
+        "y": 398
+      },
+      "ros_pose": {
+        "x": -1.6048,
+        "y": -9.6876,
+        "yaw": 3.1416
+      },
+      "opentcs_position": {
+        "x": -1605,
+        "y": -9688,
+        "z": 0
+      },
+      "comment": "南侧通道点"
+    },
+    {
+      "name": "WEST_DOWN_01",
+      "pixel": {
+        "x": 135,
+        "y": 272
+      },
+      "ros_pose": {
+        "x": -8.1548,
+        "y": -3.3876,
+        "yaw": -1.5708
+      },
+      "opentcs_position": {
+        "x": -8155,
+        "y": -3388,
+        "z": 0
+      },
+      "comment": "西南竖向通道"
+    },
+    {
+      "name": "WEST_DOWN_02",
+      "pixel": {
+        "x": 135,
+        "y": 310
+      },
+      "ros_pose": {
+        "x": -8.1548,
+        "y": -5.2876,
+        "yaw": -1.5708
+      },
+      "opentcs_position": {
+        "x": -8155,
+        "y": -5288,
+        "z": 0
+      },
+      "comment": "西南竖向通道"
+    },
+    {
+      "name": "WEST_DOWN_03",
+      "pixel": {
+        "x": 175,
+        "y": 344
+      },
+      "ros_pose": {
+        "x": -6.1548,
+        "y": -6.9876,
+        "yaw": 0.0
+      },
+      "opentcs_position": {
+        "x": -6155,
+        "y": -6988,
+        "z": 0
+      },
+      "comment": "西南连接点"
+    }
+  ],
+  "paths": [
+    {
+      "name": "PATH_WAIT_WEST_TO_AISLE_W_01",
+      "srcPointName": "WAIT_WEST",
+      "destPointName": "AISLE_W_01",
+      "length_mm": 2550,
+      "bidirectional": true
+    },
+    {
+      "name": "PATH_AISLE_W_01_TO_AISLE_W_02",
+      "srcPointName": "AISLE_W_01",
+      "destPointName": "AISLE_W_02",
+      "length_mm": 1806,
+      "bidirectional": true
+    },
+    {
+      "name": "PATH_AISLE_W_02_TO_JUNCTION_MID",
+      "srcPointName": "AISLE_W_02",
+      "destPointName": "JUNCTION_MID",
+      "length_mm": 4901,
+      "bidirectional": true
+    },
+    {
+      "name": "PATH_JUNCTION_MID_TO_AISLE_E_01",
+      "srcPointName": "JUNCTION_MID",
+      "destPointName": "AISLE_E_01",
+      "length_mm": 1951,
+      "bidirectional": true
+    },
+    {
+      "name": "PATH_AISLE_E_01_TO_AISLE_E_02",
+      "srcPointName": "AISLE_E_01",
+      "destPointName": "AISLE_E_02",
+      "length_mm": 1150,
+      "bidirectional": true
+    },
+    {
+      "name": "PATH_AISLE_E_02_TO_AISLE_E_03",
+      "srcPointName": "AISLE_E_02",
+      "destPointName": "AISLE_E_03",
+      "length_mm": 3050,
+      "bidirectional": true
+    },
+    {
+      "name": "PATH_AISLE_E_03_TO_WAIT_EAST",
+      "srcPointName": "AISLE_E_03",
+      "destPointName": "WAIT_EAST",
+      "length_mm": 1950,
+      "bidirectional": true
+    },
+    {
+      "name": "PATH_NORTH_IN_01_TO_NORTH_IN_02",
+      "srcPointName": "NORTH_IN_01",
+      "destPointName": "NORTH_IN_02",
+      "length_mm": 2850,
+      "bidirectional": true
+    },
+    {
+      "name": "PATH_AISLE_E_03_TO_EAST_DOWN_01",
+      "srcPointName": "AISLE_E_03",
+      "destPointName": "EAST_DOWN_01",
+      "length_mm": 2055,
+      "bidirectional": true
+    },
+    {
+      "name": "PATH_EAST_DOWN_01_TO_EAST_DOWN_02",
+      "srcPointName": "EAST_DOWN_01",
+      "destPointName": "EAST_DOWN_02",
+      "length_mm": 2405,
+      "bidirectional": true
+    },
+    {
+      "name": "PATH_EAST_DOWN_02_TO_EAST_DOWN_03",
+      "srcPointName": "EAST_DOWN_02",
+      "destPointName": "EAST_DOWN_03",
+      "length_mm": 3903,
+      "bidirectional": true
+    },
+    {
+      "name": "PATH_EAST_DOWN_03_TO_SOUTH_E_01",
+      "srcPointName": "EAST_DOWN_03",
+      "destPointName": "SOUTH_E_01",
+      "length_mm": 6470,
+      "bidirectional": true
+    },
+    {
+      "name": "PATH_SOUTH_E_01_TO_SOUTH_MID",
+      "srcPointName": "SOUTH_E_01",
+      "destPointName": "SOUTH_MID",
+      "length_mm": 2100,
+      "bidirectional": true
+    },
+    {
+      "name": "PATH_SOUTH_MID_TO_SOUTH_W_01",
+      "srcPointName": "SOUTH_MID",
+      "destPointName": "SOUTH_W_01",
+      "length_mm": 1304,
+      "bidirectional": true
+    },
+    {
+      "name": "PATH_WEST_DOWN_01_TO_WEST_DOWN_02",
+      "srcPointName": "WEST_DOWN_01",
+      "destPointName": "WEST_DOWN_02",
+      "length_mm": 1900,
+      "bidirectional": true
+    },
+    {
+      "name": "PATH_WEST_DOWN_02_TO_WEST_DOWN_03",
+      "srcPointName": "WEST_DOWN_02",
+      "destPointName": "WEST_DOWN_03",
+      "length_mm": 2625,
+      "bidirectional": true
+    },
+    {
+      "name": "PATH_WEST_DOWN_03_TO_SOUTH_W_01",
+      "srcPointName": "WEST_DOWN_03",
+      "destPointName": "SOUTH_W_01",
+      "length_mm": 5291,
+      "bidirectional": true
+    }
+  ],
+  "notes": [
+    "This is a manually simplified draft, not a final site map.",
+    "Rename points according to real stations: ST_IN_01, ST_OUT_01, WAIT_01, CHARGE_01, etc.",
+    "Verify every ros_pose in RViz by sending low-speed navigation goals before openTCS control.",
+    "Add/remove paths according to actual one-way/two-way traffic rules."
+  ]
+}

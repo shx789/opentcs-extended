@@ -48,6 +48,9 @@ public class AgvMqttStatusPayloadParser {
           firstText(root, "point_id", "pointId", "current_point", "currentPoint"),
           firstInt(root, "battery", "battery_level", "batteryLevel"),
           firstBoolean(root, "online", "is_online", "isOnline"),
+          firstDouble(root, "x", "ros_x", "rosX"),
+          firstDouble(root, "y", "ros_y", "rosY"),
+          firstDouble(root, "yaw", "theta", "ros_yaw", "rosYaw"),
           firstText(root, "error_code", "errorCode", "reason_code", "reasonCode"),
           firstText(root, "error_msg", "errorMsg", "reason_msg", "reasonMsg"),
           firstLong(root, "seq", "sequence"),
@@ -102,6 +105,34 @@ public class AgvMqttStatusPayloadParser {
         }
         catch (NumberFormatException exc) {
           return null;
+        }
+      }
+    }
+    return null;
+  }
+
+  private Double firstDouble(JsonNode node, String... keys) {
+    for (String key : keys) {
+      JsonNode child = node.path(key);
+      if (child.isNumber()) {
+        return child.asDouble();
+      }
+      if (child.isTextual()) {
+        try {
+          return Double.parseDouble(child.asText());
+        }
+        catch (NumberFormatException exc) {
+          return null;
+        }
+      }
+    }
+    String[] parentKeys = {"pose", "current_pose", "currentPose", "ros_pose", "rosPose"};
+    for (String parentKey : parentKeys) {
+      JsonNode parent = node.path(parentKey);
+      if (parent.isObject()) {
+        Double value = firstDouble(parent, keys);
+        if (value != null) {
+          return value;
         }
       }
     }

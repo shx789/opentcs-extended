@@ -42,13 +42,19 @@ import org.opentcs.rcs.bridge.agv.AgvCommandPublisher;
 import org.opentcs.rcs.bridge.agv.AgvMqttStatusEventConsumer;
 import org.opentcs.rcs.bridge.agv.AgvMqttStatusPayloadParser;
 import org.opentcs.rcs.bridge.agv.AgvMqttStatusSubscriber;
+import org.opentcs.rcs.bridge.agv.AgvVehiclePositionSynchronizer;
 import org.opentcs.rcs.bridge.agv.MqttAgvRobotControlPublisher;
+import org.opentcs.rcs.bridge.agv.mapping.AgvPointMappingLoader;
+import org.opentcs.rcs.bridge.agv.mapping.AgvPointMappingStore;
+import org.opentcs.rcs.bridge.opentcs.HttpOpenTcsVehiclePositionClient;
 import org.opentcs.rcs.bridge.opentcs.HttpOpenTcsOrderClient;
 import org.opentcs.rcs.bridge.opentcs.InMemoryOpenTcsOrderClient;
+import org.opentcs.rcs.bridge.opentcs.NoopOpenTcsVehiclePositionClient;
 import org.opentcs.rcs.bridge.opentcs.OpenTcsClientException;
 import org.opentcs.rcs.bridge.opentcs.OpenTcsEventHttpHandlers;
 import org.opentcs.rcs.bridge.opentcs.OpenTcsEventProjector;
 import org.opentcs.rcs.bridge.opentcs.OpenTcsOrderClient;
+import org.opentcs.rcs.bridge.opentcs.OpenTcsVehiclePositionClient;
 import org.opentcs.rcs.bridge.opentcs.OpenTcsPayloadMapper;
 import org.opentcs.rcs.bridge.opentcs.OpenTcsSseEventConsumer;
 import org.opentcs.rcs.bridge.opentcs.OpenTcsSsePayloadParser;
@@ -131,7 +137,10 @@ public final class RcsIntegrationApplication {
     );
     OpenTcsSsePayloadParser ssePayloadParser = new OpenTcsSsePayloadParser(objectMapper);
     OpenTcsOrderClient orderClient = createOpenTcsOrderClient(objectMapper);
-    AgvCommandRuntime agvCommandRuntime = createAgvCommandRuntime(objectMapper, agvCommandOutboxStore);
+    AgvCommandRuntime agvCommandRuntime = createAgvCommandRuntime(
+        objectMapper,
+        agvCommandOutboxStore
+    );
     AgvCommandPublisher agvCommandPublisher = agvCommandRuntime.publisher();
     WcsMissionService missionService = new WcsMissionService(
         new IdempotencyService(idempotencyStore, objectMapper),
@@ -167,12 +176,15 @@ public final class RcsIntegrationApplication {
         callbackRetryProcessor,
         dispatchBatchSize
     );
+    AgvVehiclePositionSynchronizer vehiclePositionSynchronizer
+        = createAgvVehiclePositionSynchronizer(objectMapper);
     Optional<AgvMqttStatusSubscriber> agvMqttSubscriber = createAgvMqttSubscriber(
         objectMapper,
         callbackOutboxService,
         missionStore,
         taskStore,
         wmsTaskResultService,
+        vehiclePositionSynchronizer,
         callbackRetryProcessor,
         dispatchBatchSize
     );
@@ -315,7 +327,10 @@ public final class RcsIntegrationApplication {
   private static MissionStore createMissionStore(ObjectMapper objectMapper) {
     return switch (resolveStoreMode()) {
       case "memory" -> new InMemoryMissionStore();
-      case "file" -> new FileMissionStore(resolveStoreDirectory().resolve("mission-store.json"), objectMapper);
+      case "file" -> new FileMissionStore(
+          resolveStoreDirectory().resolve("mission-store.json"),
+          objectMapper
+      );
       default -> throw invalidStoreModeException();
     };
   }
@@ -334,7 +349,10 @@ public final class RcsIntegrationApplication {
   private static TaskStore createTaskStore(ObjectMapper objectMapper) {
     return switch (resolveStoreMode()) {
       case "memory" -> new InMemoryTaskStore();
-      case "file" -> new FileTaskStore(resolveStoreDirectory().resolve("task-store.json"), objectMapper);
+      case "file" -> new FileTaskStore(
+          resolveStoreDirectory().resolve("task-store.json"),
+          objectMapper
+      );
       default -> throw invalidStoreModeException();
     };
   }
@@ -390,6 +408,65 @@ public final class RcsIntegrationApplication {
             "rcs.openTcs.initialRetryDelayMillis",
             "RCS_OPENTCS_INITIAL_RETRY_DELAY_MILLIS",
             200L
+        )),
+        firstNonBlank(
+            System.getProperty("rcs.openTcs.token"),
+            System.getenv("RCS_OPENTCS_TOKEN")
+        ).orElse(null)
+    );
+  }
+
+  private static AgvVehiclePositionSynchronizer createAgvVehiclePositionSynchronizer(
+      ObjectMapper objectMapper
+  ) {
+    OpenTcsVehiclePositionClient positionClient = createOpenTcsVehiclePositionClient(objectMapper);
+    AgvPointMappingStore pointMappingStore = new AgvPointMappingStore(
+        firstNonBlank(
+            System.getProperty("rcs.agvPointMapping.file"),
+            System.getenv("RCS_AGV_POINT_MAPPING_FILE")
+        ).map(path -> new AgvPointMappingLoader(objectMapper).load(Paths.get(path)))
+            .orElse(List.of()),
+        resolveDouble(
+            "rcs.agvPointMapping.nearestThresholdMeters",
+            "RCS_AGV_POINT_MAPPING_NEAREST_THRESHOLD_METERS",
+            0.5
+        )
+    );
+    return new AgvVehiclePositionSynchronizer(
+        positionClient,
+        pointMappingStore,
+        parseStringMap(firstNonBlank(
+            System.getProperty("rcs.agvVehicle.map"),
+            System.getenv("RCS_AGV_VEHICLE_MAP")
+        ).orElse("AGV_01=Vehicle-01,*=Vehicle-01"))
+    );
+  }
+
+  private static OpenTcsVehiclePositionClient createOpenTcsVehiclePositionClient(
+      ObjectMapper objectMapper
+  ) {
+    if (!resolveBoolean(
+        "rcs.openTcs.positionSync.enabled",
+        "RCS_OPENTCS_POSITION_SYNC_ENABLED",
+        false
+    )) {
+      return new NoopOpenTcsVehiclePositionClient();
+    }
+    Optional<String> baseUrl = firstNonBlank(
+        System.getProperty("rcs.openTcs.baseUrl"),
+        System.getenv("RCS_OPENTCS_BASE_URL")
+    );
+    if (baseUrl.isEmpty()) {
+      return new NoopOpenTcsVehiclePositionClient();
+    }
+    return new HttpOpenTcsVehiclePositionClient(
+        HttpClient.newHttpClient(),
+        objectMapper,
+        URI.create(baseUrl.orElseThrow()),
+        Duration.ofMillis(resolveLong(
+            "rcs.openTcs.positionSync.timeoutMillis",
+            "RCS_OPENTCS_POSITION_SYNC_TIMEOUT_MILLIS",
+            3000L
         )),
         firstNonBlank(
             System.getProperty("rcs.openTcs.token"),
@@ -497,7 +574,9 @@ public final class RcsIntegrationApplication {
     );
   }
 
-  private static MqttAgvRobotControlPublisher createMqttAgvRobotControlPublisher(ObjectMapper objectMapper) {
+  private static MqttAgvRobotControlPublisher createMqttAgvRobotControlPublisher(
+      ObjectMapper objectMapper
+  ) {
     Map<String, Integer> pointIdMap = parsePointIdMap(
         firstNonBlank(
             System.getProperty("rcs.agvCommand.pointIdMap"),
@@ -542,6 +621,7 @@ public final class RcsIntegrationApplication {
       MissionStore missionStore,
       TaskStore taskStore,
       WmsTaskResultService wmsTaskResultService,
+      AgvVehiclePositionSynchronizer vehiclePositionSynchronizer,
       CallbackRetryProcessor callbackRetryProcessor,
       int dispatchBatchSize
   ) {
@@ -575,7 +655,8 @@ public final class RcsIntegrationApplication {
             callbackOutboxService,
             missionStore,
             taskStore,
-            wmsTaskResultService
+            wmsTaskResultService,
+            vehiclePositionSynchronizer
         ),
         callbackRetryProcessor,
         dispatchBatchSize
@@ -629,6 +710,24 @@ public final class RcsIntegrationApplication {
     }
     if (result.isEmpty()) {
       throw new IllegalArgumentException("AGV point id map must not be empty");
+    }
+    return result;
+  }
+
+  private static Map<String, String> parseStringMap(String value) {
+    Map<String, String> result = new LinkedHashMap<>();
+    for (String entry : value.split(",")) {
+      if (entry.isBlank()) {
+        continue;
+      }
+      String[] parts = entry.trim().split("[:=]", 2);
+      if (parts.length != 2 || parts[0].isBlank() || parts[1].isBlank()) {
+        throw new IllegalArgumentException("Invalid string map entry: " + entry);
+      }
+      result.put(parts[0].trim(), parts[1].trim());
+    }
+    if (result.isEmpty()) {
+      throw new IllegalArgumentException("String map must not be empty");
     }
     return result;
   }

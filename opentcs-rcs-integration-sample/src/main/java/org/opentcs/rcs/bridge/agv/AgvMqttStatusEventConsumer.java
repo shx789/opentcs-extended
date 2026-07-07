@@ -31,17 +31,29 @@ public class AgvMqttStatusEventConsumer {
   private final MissionStore missionStore;
   private final TaskStore taskStore;
   private final WmsTaskResultService wmsTaskResultService;
+  private final AgvVehiclePositionSynchronizer vehiclePositionSynchronizer;
 
   public AgvMqttStatusEventConsumer(
       CallbackOutboxService callbackOutboxService,
       MissionStore missionStore,
       TaskStore taskStore,
-      WmsTaskResultService wmsTaskResultService
+      WmsTaskResultService wmsTaskResultService,
+      AgvVehiclePositionSynchronizer vehiclePositionSynchronizer
   ) {
-    this.callbackOutboxService = Objects.requireNonNull(callbackOutboxService, "callbackOutboxService");
+    this.callbackOutboxService = Objects.requireNonNull(
+        callbackOutboxService,
+        "callbackOutboxService"
+    );
     this.missionStore = Objects.requireNonNull(missionStore, "missionStore");
     this.taskStore = Objects.requireNonNull(taskStore, "taskStore");
-    this.wmsTaskResultService = Objects.requireNonNull(wmsTaskResultService, "wmsTaskResultService");
+    this.wmsTaskResultService = Objects.requireNonNull(
+        wmsTaskResultService,
+        "wmsTaskResultService"
+    );
+    this.vehiclePositionSynchronizer = Objects.requireNonNull(
+        vehiclePositionSynchronizer,
+        "vehiclePositionSynchronizer"
+    );
   }
 
   public Optional<AgvEventCallbackReq> consume(
@@ -50,11 +62,13 @@ public class AgvMqttStatusEventConsumer {
   ) {
     Objects.requireNonNull(message, "message");
     Objects.requireNonNull(requestContext, "requestContext");
+    vehiclePositionSynchronizer.synchronize(message);
     if (message.missionNo() == null || message.missionNo().isBlank()) {
       return Optional.empty();
     }
 
-    Optional<MissionCallbackTarget> missionTargetOpt = missionStore.findByMissionNo(message.missionNo());
+    Optional<MissionCallbackTarget> missionTargetOpt
+        = missionStore.findByMissionNo(message.missionNo());
     if (missionTargetOpt.isEmpty()) {
       return Optional.empty();
     }
@@ -66,7 +80,12 @@ public class AgvMqttStatusEventConsumer {
 
     MissionCallbackTarget missionTarget = missionTargetOpt.orElseThrow();
     RequestContext effectiveContext = resolveContext(requestContext, missionTarget);
-    AgvEventCallbackReq callback = buildCallback(message, callbackEventType.orElseThrow(), missionTarget, effectiveContext);
+    AgvEventCallbackReq callback = buildCallback(
+        message,
+        callbackEventType.orElseThrow(),
+        missionTarget,
+        effectiveContext
+    );
     callbackOutboxService.enqueue(
         callback.missionNo(),
         missionTarget.callbackUrl(),
@@ -80,7 +99,9 @@ public class AgvMqttStatusEventConsumer {
 
   private Optional<String> callbackEventType(AgvMqttStatusMessage message) {
     return switch (message.eventType()) {
-      case "ARRIVED_FROM", "PICKED", "ARRIVED_TO", "DROPPED", "FAILED" -> Optional.of(message.eventType());
+      case "ARRIVED_FROM", "PICKED", "ARRIVED_TO", "DROPPED", "FAILED" -> Optional.of(
+          message.eventType()
+      );
       case "COMPLETED", "COMPLETE", "FINISHED" -> Optional.of("DROPPED");
       case "ERROR", "EXCEPTION", "FAULT" -> Optional.of("FAILED");
       case "ARRIVED" -> deriveArrivedEventType(message);
@@ -92,7 +113,8 @@ public class AgvMqttStatusEventConsumer {
     if (message.pointId() == null) {
       return Optional.empty();
     }
-    Optional<String> taskEventType = taskStore.findByMissionNo(message.missionNo()).flatMap(task -> {
+    Optional<String> taskEventType
+        = taskStore.findByMissionNo(message.missionNo()).flatMap(task -> {
       if (message.pointId().equals(task.fromPoint())) {
         return Optional.of("ARRIVED_FROM");
       }
@@ -207,7 +229,9 @@ public class AgvMqttStatusEventConsumer {
   private WcsTaskStatus mapTaskStatus(WcsTaskType taskType, String eventType) {
     return switch (eventType) {
       case "ARRIVED_FROM", "ARRIVED_TO", "PICKED" -> WcsTaskStatus.IN_PROGRESS;
-      case "DROPPED" -> taskType == WcsTaskType.INBOUND ? WcsTaskStatus.WAIT_PLC : WcsTaskStatus.DONE;
+      case "DROPPED" -> taskType == WcsTaskType.INBOUND
+          ? WcsTaskStatus.WAIT_PLC
+          : WcsTaskStatus.DONE;
       case "FAILED" -> WcsTaskStatus.FAILED;
       default -> null;
     };

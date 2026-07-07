@@ -36,6 +36,7 @@ import org.opentcs.kernel.extensions.servicewebapi.v1.binding.PostVehicleRoutesR
 import org.opentcs.kernel.extensions.servicewebapi.v1.binding.PutVehicleAcceptableOrderTypesTO;
 import org.opentcs.kernel.extensions.servicewebapi.v1.binding.PutVehicleAllowedOrderTypesTO;
 import org.opentcs.kernel.extensions.servicewebapi.v1.binding.PutVehicleEnergyLevelThresholdSetTO;
+import org.opentcs.kernel.extensions.servicewebapi.v1.binding.PutVehiclePositionRequestTO;
 import org.opentcs.kernel.extensions.servicewebapi.v1.binding.shared.AcceptableOrderTypeTO;
 import org.opentcs.kernel.extensions.servicewebapi.v1.converter.OrderSequenceConverter;
 import org.opentcs.kernel.extensions.servicewebapi.v1.converter.PeripheralAttachmentInformationConverter;
@@ -173,6 +174,7 @@ public class V1RequestHandler
           put("/vehicles/{NAME}/commAdapter/enabled", this::handlePutVehicleCommAdapterEnabled);
           post("/vehicles/{NAME}/commAdapter/message", this::handlePostVehicleCommAdapterMessage);
           put("/vehicles/{NAME}/paused", this::handlePutVehiclePaused);
+          put("/vehicles/{NAME}/position", this::handlePutVehiclePosition);
           put("/vehicles/{NAME}/integrationLevel", this::handlePutVehicleIntegrationLevel);
           post("/vehicles/{NAME}/withdrawal", this::handlePostWithdrawalByVehicle);
           post("/vehicles/{NAME}/rerouteRequest", this::handlePostVehicleRerouteRequest);
@@ -270,6 +272,17 @@ public class V1RequestHandler
       throws ObjectUnknownException,
         IllegalArgumentException {
     vehicleHandler.putVehicleCommAdapterEnabled(ctx.pathParam("NAME"), ctx.queryParam("newValue"));
+    ctx.contentType(HttpConstants.CONTENT_TYPE_TEXT_PLAIN_UTF8);
+    ctx.result("");
+  }
+
+  private void handlePutVehiclePosition(Context ctx)
+      throws ObjectUnknownException,
+        IllegalArgumentException {
+    vehicleHandler.putVehiclePosition(
+        ctx.pathParam("NAME"),
+        jsonBinder.fromJson(ctx.body(), PutVehiclePositionRequestTO.class)
+    );
     ctx.contentType(HttpConstants.CONTENT_TYPE_TEXT_PLAIN_UTF8);
     ctx.result("");
   }

@@ -6,6 +6,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.Instant;
+import java.util.List;
+import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.opentcs.rcs.api.dto.AgvEventCallbackReq;
 import org.opentcs.rcs.api.wcs.WmsTaskResultService;
@@ -17,6 +19,8 @@ import org.opentcs.rcs.core.task.InMemoryTaskStore;
 import org.opentcs.rcs.core.task.WcsTaskRecord;
 import org.opentcs.rcs.core.task.WcsTaskStatus;
 import org.opentcs.rcs.core.task.WcsTaskType;
+import org.opentcs.rcs.bridge.agv.mapping.AgvPointMappingStore;
+import org.opentcs.rcs.bridge.opentcs.NoopOpenTcsVehiclePositionClient;
 import org.opentcs.rcs.http.RequestContext;
 
 class AgvMqttStatusEventConsumerTest {
@@ -28,7 +32,13 @@ class AgvMqttStatusEventConsumerTest {
     CallbackOutboxService callbackOutboxService = new CallbackOutboxService(store, objectMapper);
     InMemoryMissionStore missionStore = new InMemoryMissionStore();
     InMemoryTaskStore taskStore = new InMemoryTaskStore();
-    missionStore.save(new MissionCallbackTarget("M1", "T1", "/api/wcs/agv/events", "trace-1", "request-1"));
+    missionStore.save(new MissionCallbackTarget(
+        "M1",
+        "T1",
+        "/api/wcs/agv/events",
+        "trace-1",
+        "request-1"
+    ));
     taskStore.save(new WcsTaskRecord(
         "BIZ-001",
         WcsTaskType.OUTBOUND,
@@ -50,7 +60,8 @@ class AgvMqttStatusEventConsumerTest {
         callbackOutboxService,
         missionStore,
         taskStore,
-        new WmsTaskResultService(callbackOutboxService, null)
+        new WmsTaskResultService(callbackOutboxService, null),
+        noopSynchronizer()
     );
     AgvMqttStatusMessage message = new AgvMqttStatusMessage(
         "MSG-1",
@@ -60,6 +71,9 @@ class AgvMqttStatusEventConsumerTest {
         "T1",
         "ST_OUT_01",
         87,
+        null,
+        null,
+        null,
         null,
         null,
         null,
@@ -76,7 +90,8 @@ class AgvMqttStatusEventConsumerTest {
     assertThat(callback.agvId()).isEqualTo("AGV_01");
     assertThat(callback.battery()).isEqualTo(87);
     assertThat(missionStore.findByMissionNo("M1").orElseThrow().rcsStatus()).isEqualTo("DONE");
-    assertThat(taskStore.findByBizTaskNo("BIZ-001").orElseThrow().rcsStatus()).isEqualTo(WcsTaskStatus.DONE);
+    assertThat(taskStore.findByBizTaskNo("BIZ-001").orElseThrow().rcsStatus())
+        .isEqualTo(WcsTaskStatus.DONE);
     assertThat(store.findDue(Instant.now().plusSeconds(1), 10))
         .anyMatch(entry -> "MSG-1".equals(entry.idemKey()));
   }
@@ -102,7 +117,8 @@ class AgvMqttStatusEventConsumerTest {
         callbackOutboxService,
         missionStore,
         new InMemoryTaskStore(),
-        new WmsTaskResultService(callbackOutboxService, null)
+        new WmsTaskResultService(callbackOutboxService, null),
+        noopSynchronizer()
     );
 
     AgvEventCallbackReq callback = consumer.consume(
@@ -117,6 +133,9 @@ class AgvMqttStatusEventConsumerTest {
             null,
             null,
             null,
+            null,
+            null,
+            null,
             3L,
             Instant.parse("2026-02-10T10:36:21Z")
         ),
@@ -124,7 +143,8 @@ class AgvMqttStatusEventConsumerTest {
     ).orElseThrow();
 
     assertThat(callback.eventType()).isEqualTo("ARRIVED_FROM");
-    assertThat(missionStore.findByMissionNo("M2").orElseThrow().rcsStatus()).isEqualTo("IN_PROGRESS");
+    assertThat(missionStore.findByMissionNo("M2").orElseThrow().rcsStatus())
+        .isEqualTo("IN_PROGRESS");
     assertThat(store.findDue(Instant.now().plusSeconds(1), 10))
         .anyMatch(entry -> "MSG-ARRIVED".equals(entry.idemKey()));
   }
@@ -132,12 +152,16 @@ class AgvMqttStatusEventConsumerTest {
   @Test
   void shouldIgnoreTelemetryOnlyEventForMissionCallbacks() {
     InMemoryCallbackOutboxStore store = new InMemoryCallbackOutboxStore();
-    CallbackOutboxService callbackOutboxService = new CallbackOutboxService(store, new ObjectMapper());
+    CallbackOutboxService callbackOutboxService = new CallbackOutboxService(
+        store,
+        new ObjectMapper()
+    );
     AgvMqttStatusEventConsumer consumer = new AgvMqttStatusEventConsumer(
         callbackOutboxService,
         new InMemoryMissionStore(),
         new InMemoryTaskStore(),
-        new WmsTaskResultService(callbackOutboxService, null)
+        new WmsTaskResultService(callbackOutboxService, null),
+        noopSynchronizer()
     );
 
     assertThat(
@@ -153,6 +177,9 @@ class AgvMqttStatusEventConsumerTest {
                 null,
                 null,
                 null,
+                null,
+                null,
+                null,
                 2L,
                 Instant.parse("2026-02-10T10:35:21Z")
             ),
@@ -160,4 +187,13 @@ class AgvMqttStatusEventConsumerTest {
         )
     ).isEmpty();
   }
+
+  private static AgvVehiclePositionSynchronizer noopSynchronizer() {
+    return new AgvVehiclePositionSynchronizer(
+        new NoopOpenTcsVehiclePositionClient(),
+        new AgvPointMappingStore(List.of(), 0.5),
+        Map.of("AGV_01", "Vehicle-01")
+    );
+  }
+
 }

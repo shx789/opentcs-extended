@@ -35,6 +35,7 @@ import org.opentcs.kernel.extensions.servicewebapi.v1.binding.PostVehicleCommAda
 import org.opentcs.kernel.extensions.servicewebapi.v1.binding.PostVehicleRoutesRequestTO;
 import org.opentcs.kernel.extensions.servicewebapi.v1.binding.PutVehicleAcceptableOrderTypesTO;
 import org.opentcs.kernel.extensions.servicewebapi.v1.binding.PutVehicleEnergyLevelThresholdSetTO;
+import org.opentcs.kernel.extensions.servicewebapi.v1.binding.PutVehiclePositionRequestTO;
 import org.opentcs.kernel.extensions.servicewebapi.v1.binding.shared.Property;
 import org.opentcs.kernel.extensions.servicewebapi.v1.converter.VehicleConverter;
 
@@ -127,6 +128,23 @@ public class VehicleHandler {
           vehicle.getReference(),
           Vehicle.IntegrationLevel.valueOf(value)
       );
+    });
+  }
+
+  public void putVehiclePosition(String name, PutVehiclePositionRequestTO request)
+      throws ObjectUnknownException {
+    requireNonNull(name, "name");
+    requireNonNull(request, "request");
+
+    executorWrapper.callAndWait(() -> {
+      Vehicle vehicle = vehicleService.fetch(Vehicle.class, name)
+          .orElseThrow(() -> new ObjectUnknownException("Unknown vehicle: " + name));
+      Point point = vehicleService.fetch(Point.class, request.getPointName())
+          .orElseThrow(
+              () -> new ObjectUnknownException("Unknown point: " + request.getPointName())
+          );
+
+      vehicleService.updateVehiclePosition(vehicle.getReference(), point.getReference());
     });
   }
 

@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AGV openTCS Config</title>
+  <link rel="stylesheet" href="app.css">
+</head>
+<body>
+  <main class="layout">
+    <section class="card">
+      <h1>AGV openTCS 配置页</h1>
+      <p class="muted">这个页面直接编辑 `config/runtime_config.json`，保存后 adapter 会按已有热加载逻辑自动重读。</p>
+      <div class="toolbar">
+        <button id="reloadBtn">重新加载</button>
+        <button id="saveBtn">保存配置</button>
+        <select id="templateSelect">
+          <option value="default">默认模板</option>
+          <option value="real_car">真实小车模板</option>
+          <option value="no_car">无车模板</option>
+        </select>
+        <button id="loadTemplateBtn">载入模板</button>
+      </div>
+      <textarea id="configEditor" spellcheck="false"></textarea>
+      <div id="validationBox" class="message"></div>
+    </section>
+    <section class="card">
+      <h2>运行状态</h2>
+      <div class="status-grid">
+        <div>
+          <h3>Adapter</h3>
+          <pre id="adapterStatus"></pre>
+        </div>
+        <div>
+          <h3>No-Car Simulator</h3>
+          <pre id="simStatus"></pre>
+        </div>
+        <div>
+          <h3>Web</h3>
+          <pre id="webStatus"></pre>
+        </div>
+      </div>
+    </section>
+  </main>
+  <script src="app.js"></script>
+</body>
+</html>
