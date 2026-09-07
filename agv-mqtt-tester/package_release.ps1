@@ -1,12 +1,19 @@
+param(
+  [string]$Version = "1.0.16"
+)
+
 $ErrorActionPreference = "Stop"
 $Root = Split-Path -Parent $MyInvocation.MyCommand.Path
 $Repo = Split-Path -Parent $Root
 $ReleaseDir = Join-Path $Repo "release"
 $Name = "agv-mqtt-tester"
-$Zip = Join-Path $ReleaseDir "$Name.zip"
-$OfflineZip = Join-Path $ReleaseDir "$Name-offline.zip"
-$Stage = Join-Path $ReleaseDir "$Name-package-stage"
-$OfflineStage = Join-Path $ReleaseDir "$Name-offline-package-stage"
+$VersionSuffix = if ([string]::IsNullOrWhiteSpace($Version)) { "" } else { "-v$Version" }
+$PackageName = "$Name$VersionSuffix"
+$OfflinePackageName = "$Name-offline$VersionSuffix"
+$Zip = Join-Path $ReleaseDir "$PackageName.zip"
+$OfflineZip = Join-Path $ReleaseDir "$OfflinePackageName.zip"
+$Stage = Join-Path $ReleaseDir "$PackageName-package-stage"
+$OfflineStage = Join-Path $ReleaseDir "$OfflinePackageName-package-stage"
 
 if (Test-Path $Stage) {
   Remove-Item -Recurse -Force $Stage
