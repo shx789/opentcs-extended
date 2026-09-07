@@ -36,12 +36,14 @@ public class AgvPointMappingLoader {
         if (name == null || !rosPose.isObject()) {
           continue;
         }
-        result.add(new AgvPointMapping(
-            name,
-            rosPose.path("x").asDouble(),
-            rosPose.path("y").asDouble(),
-            rosPose.path("yaw").asDouble(0.0)
-        ));
+        result.add(
+            new AgvPointMapping(
+                name,
+                rosPose.path("x").asDouble(),
+                rosPose.path("y").asDouble(),
+                rosPose.path("yaw").asDouble(0.0)
+            )
+        );
       }
       return result;
     }

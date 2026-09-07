@@ -23,6 +23,8 @@ class MqttAgvRobotControlPublisherTest {
         null,
         Map.of("Point-02", 2),
         0.5,
+        2,
+        0,
         new ObjectMapper()
     );
 
@@ -43,8 +45,8 @@ class MqttAgvRobotControlPublisherTest {
     assertThat(payload).containsEntry("id", 2);
     assertThat(payload).containsEntry("run_speed", 0.5);
     assertThat(payload).containsEntry("path_stop_time", 0);
-    assertThat(payload).containsEntry("path_mode", 0);
-    assertThat(payload).containsEntry("circulates", 1);
+    assertThat(payload).containsEntry("path_mode", 2);
+    assertThat(payload).containsEntry("circulates", 0);
     assertThat(payload).containsEntry("time", 0);
   }
 
@@ -59,6 +61,8 @@ class MqttAgvRobotControlPublisherTest {
         null,
         Map.of("Point-01", 1),
         0.5,
+        2,
+        0,
         new ObjectMapper()
     );
 
@@ -77,4 +81,5 @@ class MqttAgvRobotControlPublisherTest {
     ).isInstanceOf(IllegalArgumentException.class)
         .hasMessageContaining("No AGV point id mapping for to_point: Point-02");
   }
+
 }

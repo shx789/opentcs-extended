@@ -26,7 +26,9 @@ public class WmsTaskResultService {
       CallbackOutboxService callbackOutboxService,
       String wmsBaseUrl
   ) {
-    this.callbackOutboxService = Objects.requireNonNull(callbackOutboxService, "callbackOutboxService");
+    this.callbackOutboxService = Objects.requireNonNull(
+        callbackOutboxService, "callbackOutboxService"
+    );
     this.wmsBaseUrl = normalizeBaseUrl(wmsBaseUrl);
   }
 

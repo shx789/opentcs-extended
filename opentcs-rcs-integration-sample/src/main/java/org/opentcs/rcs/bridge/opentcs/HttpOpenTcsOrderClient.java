@@ -19,7 +19,8 @@ import org.opentcs.rcs.bridge.opentcs.dto.OpenTcsTransportOrderReq;
  * HTTP-based openTCS order client with timeout, retry and bearer authentication support.
  */
 public class HttpOpenTcsOrderClient
-    implements OpenTcsOrderClient {
+    implements
+      OpenTcsOrderClient {
 
   private static final long MAX_RETRY_DELAY_MILLIS = 60_000L;
 
@@ -98,7 +99,9 @@ public class HttpOpenTcsOrderClient
     String base = baseUri.toString().endsWith("/") ? baseUri.toString() : baseUri + "/";
     String encodedOrderName = URLEncoder.encode(orderName, StandardCharsets.UTF_8)
         .replace("+", "%20");
-    return URI.create(base + "v1/transportOrders/" + encodedOrderName + "/withdrawal?immediate=true");
+    return URI.create(
+        base + "v1/transportOrders/" + encodedOrderName + "/withdrawal?immediate=true"
+    );
   }
 
   private HttpRequest buildWithdrawalRequest(URI requestUri) {

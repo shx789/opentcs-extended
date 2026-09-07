@@ -12,7 +12,8 @@ import org.opentcs.rcs.bridge.agv.MqttAgvRobotControlPublisher;
  * Converts missions into idempotent AGV command outbox entries.
  */
 public class AgvCommandOutboxService
-    implements AgvCommandPublisher {
+    implements
+      AgvCommandPublisher {
 
   public static final String STAGE_MISSION_START = "MISSION_START";
 

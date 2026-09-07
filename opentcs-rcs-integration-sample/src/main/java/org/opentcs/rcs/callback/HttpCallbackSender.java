@@ -20,7 +20,8 @@ import javax.crypto.spec.SecretKeySpec;
  * HTTP callback sender with optional bearer auth and HMAC signature.
  */
 public class HttpCallbackSender
-    implements CallbackSender {
+    implements
+      CallbackSender {
 
   private static final String HMAC_ALGORITHM = "HmacSHA256";
   private static final String DEFAULT_TIMESTAMP_HEADER = "X-Callback-Timestamp";
@@ -75,7 +76,8 @@ public class HttpCallbackSender
   }
 
   @Override
-  public void send(String callbackUrl, String payloadJson) throws Exception {
+  public void send(String callbackUrl, String payloadJson)
+      throws Exception {
     URI requestUri = resolveCallbackUri(callbackUrl);
     String payload = requireNonBlank(payloadJson, "payloadJson");
     HttpRequest.Builder requestBuilder = HttpRequest.newBuilder(requestUri)
@@ -97,7 +99,9 @@ public class HttpCallbackSender
     HttpResponse<String> response = sendRequest(requestBuilder.build());
     if (response.statusCode() < 200 || response.statusCode() >= 300) {
       throw new IllegalStateException(
-          "WCS callback failed. status=" + response.statusCode() + ", body=" + safeBody(response.body())
+          "WCS callback failed. status=" + response.statusCode() + ", body=" + safeBody(
+              response.body()
+          )
       );
     }
   }
@@ -129,7 +133,8 @@ public class HttpCallbackSender
     return callbackBaseUri.resolve(uri);
   }
 
-  private String signPayload(String timestamp, String payloadJson) throws Exception {
+  private String signPayload(String timestamp, String payloadJson)
+      throws Exception {
     String content = timestamp + "." + payloadJson;
     Mac mac = Mac.getInstance(HMAC_ALGORITHM);
     mac.init(new SecretKeySpec(signatureSecret.getBytes(StandardCharsets.UTF_8), HMAC_ALGORITHM));

@@ -13,7 +13,8 @@ import java.util.concurrent.ConcurrentMap;
  * In-memory AGV command outbox storage for local runs/tests.
  */
 public class InMemoryAgvCommandOutboxStore
-    implements AgvCommandOutboxStore {
+    implements
+      AgvCommandOutboxStore {
 
   private final ConcurrentMap<String, AgvCommandOutboxEntry> entries = new ConcurrentHashMap<>();
 

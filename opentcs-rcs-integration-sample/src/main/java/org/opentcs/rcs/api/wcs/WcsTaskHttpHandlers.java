@@ -53,7 +53,8 @@ public final class WcsTaskHttpHandlers {
       Context ctx,
       WcsTaskService taskService,
       ObjectMapper objectMapper
-  ) throws Exception {
+  )
+      throws Exception {
     RequestContext requestContext = RequestContext.from(ctx);
     requestContext.writeToResponse(ctx);
     CreateWcsTaskReq request = objectMapper.readValue(ctx.body(), CreateWcsTaskReq.class);
@@ -65,7 +66,8 @@ public final class WcsTaskHttpHandlers {
       Context ctx,
       WcsTaskService taskService,
       ObjectMapper objectMapper
-  ) throws Exception {
+  )
+      throws Exception {
     RequestContext requestContext = RequestContext.from(ctx);
     requestContext.writeToResponse(ctx);
     CreateWcsTaskReq request = objectMapper.readValue(ctx.body(), CreateWcsTaskReq.class);

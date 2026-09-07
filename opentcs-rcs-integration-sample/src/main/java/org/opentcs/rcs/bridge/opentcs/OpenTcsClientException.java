@@ -8,7 +8,8 @@ import java.util.Objects;
  * Signals an unsuccessful interaction with openTCS HTTP APIs.
  */
 public class OpenTcsClientException
-    extends RuntimeException {
+    extends
+      RuntimeException {
 
   public OpenTcsClientException(String message) {
     super(Objects.requireNonNull(message, "message"));

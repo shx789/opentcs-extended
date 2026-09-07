@@ -36,17 +36,23 @@ public class OpenTcsSseEventConsumer {
       WmsTaskResultService wmsTaskResultService
   ) {
     this.eventProjector = Objects.requireNonNull(eventProjector, "eventProjector");
-    this.callbackOutboxService = Objects.requireNonNull(callbackOutboxService, "callbackOutboxService");
+    this.callbackOutboxService = Objects.requireNonNull(
+        callbackOutboxService, "callbackOutboxService"
+    );
     this.missionStore = Objects.requireNonNull(missionStore, "missionStore");
     this.taskStore = Objects.requireNonNull(taskStore, "taskStore");
-    this.wmsTaskResultService = Objects.requireNonNull(wmsTaskResultService, "wmsTaskResultService");
+    this.wmsTaskResultService = Objects.requireNonNull(
+        wmsTaskResultService, "wmsTaskResultService"
+    );
   }
 
   public Optional<AgvEventCallbackReq> consume(
       OpenTcsTransportOrderEvent event,
       RequestContext requestContext
   ) {
-    Optional<MissionCallbackTarget> missionTargetOpt = missionStore.findByMissionNo(event.missionNo());
+    Optional<MissionCallbackTarget> missionTargetOpt = missionStore.findByMissionNo(
+        event.missionNo()
+    );
     if (missionTargetOpt.isEmpty()) {
       return Optional.empty();
     }
@@ -119,7 +125,8 @@ public class OpenTcsSseEventConsumer {
   private WcsTaskStatus mapTaskStatus(WcsTaskType taskType, String eventType) {
     return switch (eventType) {
       case "ARRIVED_FROM", "ARRIVED_TO", "PICKED" -> WcsTaskStatus.IN_PROGRESS;
-      case "DROPPED" -> taskType == WcsTaskType.INBOUND ? WcsTaskStatus.WAIT_PLC : WcsTaskStatus.DONE;
+      case "DROPPED" -> taskType == WcsTaskType.INBOUND ? WcsTaskStatus.WAIT_PLC
+          : WcsTaskStatus.DONE;
       case "FAILED" -> WcsTaskStatus.FAILED;
       default -> null;
     };

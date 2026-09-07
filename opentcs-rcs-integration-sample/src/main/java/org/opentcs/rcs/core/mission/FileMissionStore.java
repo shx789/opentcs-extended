@@ -20,7 +20,8 @@ import java.util.Optional;
  * File-backed mission callback target store for local persistence.
  */
 public class FileMissionStore
-    implements MissionStore {
+    implements
+      MissionStore {
 
   private final Path storageFile;
   private final ObjectMapper objectMapper;
@@ -80,7 +81,9 @@ public class FileMissionStore
         Files.createDirectories(parentDir);
       }
       catch (IOException exc) {
-        throw new IllegalStateException("Could not create mission store directory: " + parentDir, exc);
+        throw new IllegalStateException(
+            "Could not create mission store directory: " + parentDir, exc
+        );
       }
     }
     Path tempFile = storageFile.resolveSibling(storageFile.getFileName() + ".tmp");
@@ -93,7 +96,8 @@ public class FileMissionStore
     }
   }
 
-  private void moveTempFile(Path source, Path target) throws IOException {
+  private void moveTempFile(Path source, Path target)
+      throws IOException {
     try {
       Files.move(
           source,

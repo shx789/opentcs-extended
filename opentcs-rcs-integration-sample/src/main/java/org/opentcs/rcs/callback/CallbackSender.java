@@ -7,5 +7,6 @@ package org.opentcs.rcs.callback;
  */
 public interface CallbackSender {
 
-  void send(String callbackUrl, String payloadJson) throws Exception;
+  void send(String callbackUrl, String payloadJson)
+      throws Exception;
 }

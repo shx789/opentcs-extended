@@ -21,7 +21,8 @@ import java.util.Optional;
  * File-backed callback outbox store for local persistence.
  */
 public class FileCallbackOutboxStore
-    implements CallbackOutboxStore {
+    implements
+      CallbackOutboxStore {
 
   private final Path storageFile;
   private final ObjectMapper objectMapper;
@@ -95,7 +96,9 @@ public class FileCallbackOutboxStore
         Files.createDirectories(parentDir);
       }
       catch (IOException exc) {
-        throw new IllegalStateException("Could not create callback store directory: " + parentDir, exc);
+        throw new IllegalStateException(
+            "Could not create callback store directory: " + parentDir, exc
+        );
       }
     }
     Path tempFile = storageFile.resolveSibling(storageFile.getFileName() + ".tmp");
@@ -108,11 +111,14 @@ public class FileCallbackOutboxStore
       moveTempFile(tempFile, storageFile);
     }
     catch (IOException exc) {
-      throw new IllegalStateException("Could not persist callback outbox store: " + storageFile, exc);
+      throw new IllegalStateException(
+          "Could not persist callback outbox store: " + storageFile, exc
+      );
     }
   }
 
-  private void moveTempFile(Path source, Path target) throws IOException {
+  private void moveTempFile(Path source, Path target)
+      throws IOException {
     try {
       Files.move(
           source,

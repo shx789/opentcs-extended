@@ -1,15 +1,11 @@
 @echo off
-setlocal
+setlocal EnableDelayedExpansion
 cd /d %~dp0
 if not exist logs mkdir logs
+set "APP_CMD=python -u bin\agv_native_feedback_adapter.py"
 if exist agv-native-feedback-adapter.exe (
-  start "agv-native-feedback-adapter" /b agv-native-feedback-adapter.exe 1>>logs\agv_native_feedback_adapter.log 2>>&1
-) else (
-  if defined PYTHON_EXE (
-    set "PY_CMD=%PYTHON_EXE%"
-  ) else (
-    set "PY_CMD=python"
-  )
-  start "agv-native-feedback-adapter" /b %PY_CMD% -u bin\agv_native_feedback_adapter.py 1>>logs\agv_native_feedback_adapter.log 2>>&1
+  set "APP_CMD=agv-native-feedback-adapter.exe"
 )
+if defined PYTHON_EXE if not exist agv-native-feedback-adapter.exe set "APP_CMD=""%PYTHON_EXE%"" -u bin\agv_native_feedback_adapter.py"
+start "AGV Adapter" /min /D "%CD%" cmd /c "!APP_CMD! ^> logs\agv_native_feedback_adapter.out.log 2^> logs\agv_native_feedback_adapter.err.log"
 echo adapter started

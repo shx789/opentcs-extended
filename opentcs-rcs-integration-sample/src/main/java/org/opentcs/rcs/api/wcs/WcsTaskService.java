@@ -53,11 +53,15 @@ public class WcsTaskService {
     this.objectMapper = Objects.requireNonNull(objectMapper, "objectMapper");
   }
 
-  public CreateWcsTaskResp createInboundTask(CreateWcsTaskReq request, RequestContext requestContext) {
+  public CreateWcsTaskResp createInboundTask(
+      CreateWcsTaskReq request, RequestContext requestContext
+  ) {
     return createTask(request, requestContext, WcsTaskType.INBOUND, BIZ_TYPE_INBOUND_CREATE);
   }
 
-  public CreateWcsTaskResp createOutboundTask(CreateWcsTaskReq request, RequestContext requestContext) {
+  public CreateWcsTaskResp createOutboundTask(
+      CreateWcsTaskReq request, RequestContext requestContext
+  ) {
     return createTask(request, requestContext, WcsTaskType.OUTBOUND, BIZ_TYPE_OUTBOUND_CREATE);
   }
 
@@ -113,7 +117,9 @@ public class WcsTaskService {
       );
     }
 
-    String missionNo = firstNonBlank(request.missionNo(), buildDefaultMissionNo(request.bizTaskNo()));
+    String missionNo = firstNonBlank(
+        request.missionNo(), buildDefaultMissionNo(request.bizTaskNo())
+    );
     String taskNo = firstNonBlank(request.taskNo(), buildDefaultTaskNo(request.bizTaskNo()));
     CreateMissionResp missionResp = missionService.createMission(
         new CreateMissionReq(
@@ -165,7 +171,8 @@ public class WcsTaskService {
   private WcsTaskRecord updateTaskStatus(WcsTaskRecord record, WcsTaskStatus targetStatus) {
     if (!WcsTaskStatusTransitions.canTransit(record.rcsStatus(), targetStatus)) {
       throw new TaskStateConflictException(
-          "Illegal task status transition: " + record.rcsStatus().name() + " -> " + targetStatus.name()
+          "Illegal task status transition: " + record.rcsStatus().name() + " -> " + targetStatus
+              .name()
       );
     }
     WcsTaskRecord updated = record.withStatus(targetStatus, Instant.now().toString());

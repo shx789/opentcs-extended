@@ -74,7 +74,8 @@ public class CallbackRetryScheduler {
   }
 
   private static final class DaemonThreadFactory
-      implements ThreadFactory {
+      implements
+        ThreadFactory {
 
     @Override
     public Thread newThread(Runnable runnable) {

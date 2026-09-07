@@ -24,7 +24,9 @@ import org.slf4j.LoggerFactory;
  */
 public class OpenTcsSseTransportOrderSubscriber {
 
-  private static final Logger LOG = LoggerFactory.getLogger(OpenTcsSseTransportOrderSubscriber.class);
+  private static final Logger LOG = LoggerFactory.getLogger(
+      OpenTcsSseTransportOrderSubscriber.class
+  );
   private static final String TARGET_EVENT = "/events/transportOrders";
 
   private final HttpClient httpClient;
@@ -62,13 +64,17 @@ public class OpenTcsSseTransportOrderSubscriber {
     this.reconnectInitialDelay = requirePositive(reconnectInitialDelay, "reconnectInitialDelay");
     this.reconnectMaxDelay = requirePositive(reconnectMaxDelay, "reconnectMaxDelay");
     if (reconnectInitialDelay.compareTo(reconnectMaxDelay) > 0) {
-      throw new IllegalArgumentException("reconnectInitialDelay must not be greater than reconnectMaxDelay");
+      throw new IllegalArgumentException(
+          "reconnectInitialDelay must not be greater than reconnectMaxDelay"
+      );
     }
     this.apiAccessKey = normalizeNullable(apiAccessKey);
     this.bearerToken = normalizeNullable(bearerToken);
     this.payloadParser = Objects.requireNonNull(payloadParser, "payloadParser");
     this.eventConsumer = Objects.requireNonNull(eventConsumer, "eventConsumer");
-    this.callbackRetryProcessor = Objects.requireNonNull(callbackRetryProcessor, "callbackRetryProcessor");
+    this.callbackRetryProcessor = Objects.requireNonNull(
+        callbackRetryProcessor, "callbackRetryProcessor"
+    );
     if (callbackDispatchBatchSize < 1) {
       throw new IllegalArgumentException("callbackDispatchBatchSize must be greater than 0");
     }
@@ -123,7 +129,8 @@ public class OpenTcsSseTransportOrderSubscriber {
     return delay;
   }
 
-  void consumeEventStream(InputStream inputStream) throws IOException {
+  void consumeEventStream(InputStream inputStream)
+      throws IOException {
     try (BufferedReader reader = new BufferedReader(
         new InputStreamReader(inputStream, StandardCharsets.UTF_8)
     )) {
@@ -162,7 +169,9 @@ public class OpenTcsSseTransportOrderSubscriber {
       }
       catch (RuntimeException exc) {
         failedAttempts++;
-        LOG.warn("openTCS SSE stream disconnected (attempt={}): {}", failedAttempts, exc.getMessage());
+        LOG.warn(
+            "openTCS SSE stream disconnected (attempt={}): {}", failedAttempts, exc.getMessage()
+        );
       }
       sleepBeforeReconnect(failedAttempts + 1);
     }
@@ -176,7 +185,9 @@ public class OpenTcsSseTransportOrderSubscriber {
           HttpResponse.BodyHandlers.ofInputStream()
       );
       if (response.statusCode() < 200 || response.statusCode() >= 300) {
-        throw new IllegalStateException("openTCS SSE request failed. status=" + response.statusCode());
+        throw new IllegalStateException(
+            "openTCS SSE request failed. status=" + response.statusCode()
+        );
       }
       consumeEventStream(response.body());
     }

@@ -19,7 +19,9 @@ import org.opentcs.rcs.api.dto.Mission;
  * Publishes legacy AGV robot_control commands over MQTT.
  */
 public class MqttAgvRobotControlPublisher
-    implements AgvCommandPublisher, AgvCommandSender {
+    implements
+      AgvCommandPublisher,
+      AgvCommandSender {
 
   private final String brokerUri;
   private final String clientId;
@@ -29,6 +31,8 @@ public class MqttAgvRobotControlPublisher
   private final String password;
   private final Map<String, Integer> pointIdsByName;
   private final double runSpeed;
+  private final int pathMode;
+  private final int circulates;
   private final ObjectMapper objectMapper;
 
   public MqttAgvRobotControlPublisher(
@@ -40,6 +44,8 @@ public class MqttAgvRobotControlPublisher
       String password,
       Map<String, Integer> pointIdsByName,
       double runSpeed,
+      int pathMode,
+      int circulates,
       ObjectMapper objectMapper
   ) {
     this.brokerUri = requireNonBlank(brokerUri, "brokerUri");
@@ -53,12 +59,22 @@ public class MqttAgvRobotControlPublisher
     this.password = normalizeNullable(password);
     this.pointIdsByName = Map.copyOf(Objects.requireNonNull(pointIdsByName, "pointIdsByName"));
     if (pointIdsByName.isEmpty()) {
-      throw new IllegalArgumentException("pointIdsByName must not be empty when AGV command publishing is enabled");
+      throw new IllegalArgumentException(
+          "pointIdsByName must not be empty when AGV command publishing is enabled"
+      );
     }
     if (runSpeed <= 0.0) {
       throw new IllegalArgumentException("runSpeed must be positive");
     }
     this.runSpeed = runSpeed;
+    if (pathMode < 0) {
+      throw new IllegalArgumentException("pathMode must not be negative");
+    }
+    this.pathMode = pathMode;
+    if (circulates < 0) {
+      throw new IllegalArgumentException("circulates must not be negative");
+    }
+    this.circulates = circulates;
     this.objectMapper = Objects.requireNonNull(objectMapper, "objectMapper");
   }
 
@@ -80,7 +96,9 @@ public class MqttAgvRobotControlPublisher
     Objects.requireNonNull(mission, "mission");
     Integer pointId = pointIdsByName.get(mission.toPoint());
     if (pointId == null) {
-      throw new IllegalArgumentException("No AGV point id mapping for to_point: " + mission.toPoint());
+      throw new IllegalArgumentException(
+          "No AGV point id mapping for to_point: " + mission.toPoint()
+      );
     }
     return Map.of(
         "cmd_type", "interest_point_control",
@@ -88,8 +106,8 @@ public class MqttAgvRobotControlPublisher
         "id", pointId,
         "run_speed", runSpeed,
         "path_stop_time", 0,
-        "path_mode", 0,
-        "circulates", 1,
+        "path_mode", pathMode,
+        "circulates", circulates,
         "time", 0
     );
   }
@@ -103,6 +121,12 @@ public class MqttAgvRobotControlPublisher
       message.setQos(qos);
       message.setRetained(false);
       client.publish(topic, message);
+      System.out.printf(
+          "Published AGV robot_control command topic=%s qos=%d payload=%s%n",
+          topic,
+          qos,
+          payloadJson
+      );
     }
     catch (MqttException exc) {
       throw new IllegalStateException("Could not publish AGV robot_control command", exc);

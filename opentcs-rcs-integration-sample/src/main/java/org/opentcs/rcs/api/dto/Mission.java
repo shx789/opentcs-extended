@@ -12,6 +12,20 @@ public record Mission(
     String toPoint,
     String palletNo,
     int priority,
-    String callbackUrl
+    String callbackUrl,
+    String missionType,
+    String fromOperation,
+    String toOperation
 ) {
+  public Mission(
+      String missionNo,
+      String taskNo,
+      String fromPoint,
+      String toPoint,
+      String palletNo,
+      int priority,
+      String callbackUrl
+  ) {
+    this(missionNo, taskNo, fromPoint, toPoint, palletNo, priority, callbackUrl, null, null, null);
+  }
 }

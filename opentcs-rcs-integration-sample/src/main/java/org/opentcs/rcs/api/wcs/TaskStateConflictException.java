@@ -6,7 +6,8 @@ package org.opentcs.rcs.api.wcs;
  * Exception for invalid task status transitions.
  */
 public class TaskStateConflictException
-    extends IllegalStateException {
+    extends
+      IllegalStateException {
 
   public TaskStateConflictException(String message) {
     super(message);

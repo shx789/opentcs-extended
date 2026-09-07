@@ -2,7 +2,7 @@
 
 ## 入口
 
-- 实时控制台：`http://127.0.0.1:8090`
+- 实时控制台：`http://127.0.0.1:8092`
 - openTCS Kernel HTTP：`http://127.0.0.1:55200`
 - RCS 示例服务：`http://127.0.0.1:8080`
 - MQTT：`127.0.0.1:1883`
@@ -55,15 +55,15 @@
 ## 常用接口
 
 ```bash
-curl -sS http://127.0.0.1:8090/api/health
-curl -sS http://127.0.0.1:8090/api/state
-curl -sS http://127.0.0.1:8090/api/report
+curl -sS http://127.0.0.1:8092/api/health
+curl -sS http://127.0.0.1:8092/api/state
+curl -sS http://127.0.0.1:8092/api/report
 
-curl -sS -X POST http://127.0.0.1:8090/api/run-demo \
+curl -sS -X POST http://127.0.0.1:8092/api/run-demo \
   -H 'Content-Type: application/json' \
   -d '{"from_point":"JUNCTION_MID","to_point":"WAIT_EAST","complete":true}'
 
-curl -sS -X POST http://127.0.0.1:8090/api/set-position \
+curl -sS -X POST http://127.0.0.1:8092/api/set-position \
   -H 'Content-Type: application/json' \
   -d '{"point":"WAIT_WEST"}'
 ```

@@ -25,7 +25,8 @@ import org.opentcs.rcs.bridge.opentcs.dto.OpenTcsTransportOrderReq;
 class HttpOpenTcsOrderClientTest {
 
   @Test
-  void shouldSendOrderWithBearerToken() throws Exception {
+  void shouldSendOrderWithBearerToken()
+      throws Exception {
     HttpServer server = HttpServer.create(new InetSocketAddress(0), 0);
     AtomicReference<String> methodRef = new AtomicReference<>();
     AtomicReference<String> rawPathRef = new AtomicReference<>();
@@ -64,7 +65,8 @@ class HttpOpenTcsOrderClientTest {
   }
 
   @Test
-  void shouldRetryWhenServerReturns5xx() throws Exception {
+  void shouldRetryWhenServerReturns5xx()
+      throws Exception {
     HttpServer server = HttpServer.create(new InetSocketAddress(0), 0);
     AtomicInteger attempts = new AtomicInteger();
     server.createContext(
@@ -101,7 +103,8 @@ class HttpOpenTcsOrderClientTest {
   }
 
   @Test
-  void shouldNotRetryWhenServerReturns4xx() throws Exception {
+  void shouldNotRetryWhenServerReturns4xx()
+      throws Exception {
     HttpServer server = HttpServer.create(new InetSocketAddress(0), 0);
     AtomicInteger attempts = new AtomicInteger();
     server.createContext(
@@ -140,14 +143,16 @@ class HttpOpenTcsOrderClientTest {
       AtomicReference<String> rawPathRef,
       AtomicReference<String> authHeaderRef,
       AtomicReference<String> bodyRef
-  ) throws IOException {
+  )
+      throws IOException {
     methodRef.set(exchange.getRequestMethod());
     rawPathRef.set(exchange.getRequestURI().getRawPath());
     authHeaderRef.set(exchange.getRequestHeaders().getFirst("Authorization"));
     bodyRef.set(new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.UTF_8));
   }
 
-  private void respond(HttpExchange exchange, int statusCode, String body) throws IOException {
+  private void respond(HttpExchange exchange, int statusCode, String body)
+      throws IOException {
     byte[] bytes = body.getBytes(StandardCharsets.UTF_8);
     exchange.getResponseHeaders().add("Content-Type", "application/json");
     exchange.sendResponseHeaders(statusCode, bytes.length);

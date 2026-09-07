@@ -10,7 +10,8 @@ import org.opentcs.rcs.bridge.opentcs.dto.OpenTcsTransportOrderReq;
  * In-memory openTCS order client implementation for local runs/tests.
  */
 public class InMemoryOpenTcsOrderClient
-    implements OpenTcsOrderClient {
+    implements
+      OpenTcsOrderClient {
 
   private final Map<String, OpenTcsTransportOrderReq> orders = new ConcurrentHashMap<>();
 

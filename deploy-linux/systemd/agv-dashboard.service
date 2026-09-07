@@ -1,0 +1,18 @@
+[Unit]
+Description=AGV openTCS dashboard
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=opentcs
+Group=opentcs
+WorkingDirectory=/opt/opentcs-agv
+Environment=AGV_SUITE_ENV=/opt/opentcs-agv/deploy-linux/config/agv-suite.env
+Environment=AGV_FOREGROUND=1
+ExecStart=/opt/opentcs-agv/deploy-linux/scripts/start-dashboard.sh
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

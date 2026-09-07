@@ -26,7 +26,9 @@ class OpenTcsSseEventConsumerTest {
     InMemoryCallbackOutboxStore store = new InMemoryCallbackOutboxStore();
     InMemoryMissionStore missionStore = new InMemoryMissionStore();
     InMemoryTaskStore taskStore = new InMemoryTaskStore();
-    missionStore.save(new MissionCallbackTarget("M1", "T1", "/api/v1/wcs/agv/events", "trace-m1", "request-m1"));
+    missionStore.save(
+        new MissionCallbackTarget("M1", "T1", "/api/v1/wcs/agv/events", "trace-m1", "request-m1")
+    );
     OpenTcsSseEventConsumer consumer = new OpenTcsSseEventConsumer(
         new OpenTcsEventProjector(),
         new CallbackOutboxService(store, new ObjectMapper()),
@@ -64,24 +66,28 @@ class OpenTcsSseEventConsumerTest {
     CallbackOutboxService callbackOutboxService = new CallbackOutboxService(store, objectMapper);
     InMemoryMissionStore missionStore = new InMemoryMissionStore();
     InMemoryTaskStore taskStore = new InMemoryTaskStore();
-    missionStore.save(new MissionCallbackTarget("M2", "T2", "/api/v1/wcs/agv/events", "trace-m2", "request-m2"));
-    taskStore.save(new WcsTaskRecord(
-        "BIZ-OUT-002",
-        WcsTaskType.OUTBOUND,
-        "M2",
-        "T2",
-        null,
-        WcsTaskStatus.RECEIVED,
-        "Point-0026",
-        "Point-0020",
-        "PLT002",
-        60,
-        "/api/v1/wcs/agv/events",
-        "trace-m2",
-        "request-m2",
-        Instant.now().toString(),
-        Instant.now().toString()
-    ));
+    missionStore.save(
+        new MissionCallbackTarget("M2", "T2", "/api/v1/wcs/agv/events", "trace-m2", "request-m2")
+    );
+    taskStore.save(
+        new WcsTaskRecord(
+            "BIZ-OUT-002",
+            WcsTaskType.OUTBOUND,
+            "M2",
+            "T2",
+            null,
+            WcsTaskStatus.RECEIVED,
+            "Point-0026",
+            "Point-0020",
+            "PLT002",
+            60,
+            "/api/v1/wcs/agv/events",
+            "trace-m2",
+            "request-m2",
+            Instant.now().toString(),
+            Instant.now().toString()
+        )
+    );
     OpenTcsSseEventConsumer consumer = new OpenTcsSseEventConsumer(
         new OpenTcsEventProjector(),
         callbackOutboxService,
@@ -102,10 +108,16 @@ class OpenTcsSseEventConsumerTest {
 
     consumer.consume(event, new RequestContext("trace-evt", "request-evt"));
 
-    assertThat(taskStore.findByBizTaskNo("BIZ-OUT-002").orElseThrow().rcsStatus()).isEqualTo(WcsTaskStatus.DONE);
+    assertThat(taskStore.findByBizTaskNo("BIZ-OUT-002").orElseThrow().rcsStatus()).isEqualTo(
+        WcsTaskStatus.DONE
+    );
     assertThat(store.findDue(Instant.now().plusSeconds(1), 10)).hasSize(2);
     assertThat(store.findDue(Instant.now().plusSeconds(1), 10))
-        .anyMatch(entry -> "http://127.0.0.1:18081/api/v1/wms/outbound-results".equals(entry.callbackUrl())
-            && "BIZ-OUT-002|DONE".equals(entry.idemKey()));
+        .anyMatch(
+            entry -> "http://127.0.0.1:18081/api/v1/wms/outbound-results".equals(
+                entry.callbackUrl()
+            )
+                && "BIZ-OUT-002|DONE".equals(entry.idemKey())
+        );
   }
 }

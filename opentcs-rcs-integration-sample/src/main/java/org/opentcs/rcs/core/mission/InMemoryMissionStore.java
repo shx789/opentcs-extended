@@ -12,7 +12,8 @@ import java.util.concurrent.ConcurrentMap;
  * In-memory mission store for local runs/tests.
  */
 public class InMemoryMissionStore
-    implements MissionStore {
+    implements
+      MissionStore {
 
   private final ConcurrentMap<String, MissionCallbackTarget> targets = new ConcurrentHashMap<>();
 

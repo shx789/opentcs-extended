@@ -46,6 +46,8 @@ class AgvCommandOutboxServiceTest {
         null,
         Map.of("Point-02", 2),
         0.5,
+        2,
+        0,
         new ObjectMapper()
     );
   }

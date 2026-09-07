@@ -6,7 +6,8 @@ package org.opentcs.rcs.bridge.opentcs;
  * A position client that intentionally does not update openTCS.
  */
 public class NoopOpenTcsVehiclePositionClient
-    implements OpenTcsVehiclePositionClient {
+    implements
+      OpenTcsVehiclePositionClient {
 
   public NoopOpenTcsVehiclePositionClient() {
   }

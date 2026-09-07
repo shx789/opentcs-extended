@@ -12,6 +12,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -19,7 +20,8 @@ import java.util.Objects;
  * Updates a vehicle's current point position through the openTCS service web API.
  */
 public class HttpOpenTcsVehiclePositionClient
-    implements OpenTcsVehiclePositionClient {
+    implements
+      OpenTcsVehiclePositionClient {
 
   private final HttpClient httpClient;
   private final ObjectMapper objectMapper;
@@ -45,22 +47,12 @@ public class HttpOpenTcsVehiclePositionClient
   public void updateVehiclePosition(String vehicleName, String pointName) {
     Objects.requireNonNull(vehicleName, "vehicleName");
     Objects.requireNonNull(pointName, "pointName");
-    HttpRequest.Builder requestBuilder = HttpRequest.newBuilder(positionUri(vehicleName))
-        .timeout(timeout)
-        .header("Content-Type", "application/json")
-        .PUT(HttpRequest.BodyPublishers.ofString(toJson(pointName), StandardCharsets.UTF_8));
-    if (bearerToken != null) {
-      requestBuilder.header("Authorization", "Bearer " + bearerToken);
-    }
 
     try {
-      HttpResponse<String> response = httpClient.send(
-          requestBuilder.build(),
-          HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8)
-      );
+      HttpResponse<String> response = send(commAdapterMessageRequest(vehicleName, pointName));
       if (response.statusCode() < 200 || response.statusCode() >= 300) {
         throw new OpenTcsClientException(
-            "openTCS vehicle position update failed: HTTP "
+            "openTCS commAdapter position update failed: HTTP "
                 + response.statusCode()
                 + " body="
                 + response.body()
@@ -76,17 +68,71 @@ public class HttpOpenTcsVehiclePositionClient
     }
   }
 
+  private HttpResponse<String> send(HttpRequest request)
+      throws IOException,
+        InterruptedException {
+    return httpClient.send(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
+  }
+
+  private HttpRequest positionRequest(String vehicleName, String pointName) {
+    return requestBuilder(positionUri(vehicleName))
+        .PUT(HttpRequest.BodyPublishers.ofString(toPositionJson(pointName), StandardCharsets.UTF_8))
+        .build();
+  }
+
+  private HttpRequest commAdapterMessageRequest(String vehicleName, String pointName) {
+    return requestBuilder(commAdapterMessageUri(vehicleName))
+        .POST(
+            HttpRequest.BodyPublishers.ofString(
+                toCommAdapterMessageJson(pointName),
+                StandardCharsets.UTF_8
+            )
+        )
+        .build();
+  }
+
+  private HttpRequest.Builder requestBuilder(URI uri) {
+    HttpRequest.Builder requestBuilder = HttpRequest.newBuilder(uri)
+        .timeout(timeout)
+        .header("Content-Type", "application/json");
+    if (bearerToken != null) {
+      requestBuilder.header("Authorization", "Bearer " + bearerToken);
+    }
+    return requestBuilder;
+  }
+
   private URI positionUri(String vehicleName) {
     String encodedVehicleName = URLEncoder.encode(vehicleName, StandardCharsets.UTF_8);
     return baseUri.resolve("v1/vehicles/" + encodedVehicleName + "/position");
   }
 
-  private String toJson(String pointName) {
+  private URI commAdapterMessageUri(String vehicleName) {
+    String encodedVehicleName = URLEncoder.encode(vehicleName, StandardCharsets.UTF_8);
+    return baseUri.resolve("v1/vehicles/" + encodedVehicleName + "/commAdapter/message");
+  }
+
+  private String toPositionJson(String pointName) {
     try {
       return objectMapper.writeValueAsString(Map.of("pointName", pointName));
     }
     catch (JsonProcessingException exc) {
       throw new OpenTcsClientException("Could not serialize vehicle position update", exc);
+    }
+  }
+
+  private String toCommAdapterMessageJson(String pointName) {
+    try {
+      return objectMapper.writeValueAsString(
+          Map.of(
+              "type",
+              "tcs:virtualVehicle:setPosition",
+              "parameters",
+              List.of(Map.of("key", "position", "value", pointName))
+          )
+      );
+    }
+    catch (JsonProcessingException exc) {
+      throw new OpenTcsClientException("Could not serialize vehicle position fallback update", exc);
     }
   }
 

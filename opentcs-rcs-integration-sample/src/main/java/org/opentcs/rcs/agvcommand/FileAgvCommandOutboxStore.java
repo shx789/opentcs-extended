@@ -21,7 +21,8 @@ import java.util.Optional;
  * File-backed AGV command outbox store for local persistence.
  */
 public class FileAgvCommandOutboxStore
-    implements AgvCommandOutboxStore {
+    implements
+      AgvCommandOutboxStore {
 
   private final Path storageFile;
   private final ObjectMapper objectMapper;
@@ -85,7 +86,9 @@ public class FileAgvCommandOutboxStore
       }
     }
     catch (IOException exc) {
-      throw new IllegalStateException("Could not read AGV command outbox store: " + storageFile, exc);
+      throw new IllegalStateException(
+          "Could not read AGV command outbox store: " + storageFile, exc
+      );
     }
   }
 
@@ -96,7 +99,9 @@ public class FileAgvCommandOutboxStore
         Files.createDirectories(parentDir);
       }
       catch (IOException exc) {
-        throw new IllegalStateException("Could not create AGV command store directory: " + parentDir, exc);
+        throw new IllegalStateException(
+            "Could not create AGV command store directory: " + parentDir, exc
+        );
       }
     }
     Path tempFile = storageFile.resolveSibling(storageFile.getFileName() + ".tmp");
@@ -109,11 +114,14 @@ public class FileAgvCommandOutboxStore
       moveTempFile(tempFile, storageFile);
     }
     catch (IOException exc) {
-      throw new IllegalStateException("Could not persist AGV command outbox store: " + storageFile, exc);
+      throw new IllegalStateException(
+          "Could not persist AGV command outbox store: " + storageFile, exc
+      );
     }
   }
 
-  private void moveTempFile(Path source, Path target) throws IOException {
+  private void moveTempFile(Path source, Path target)
+      throws IOException {
     try {
       Files.move(
           source,

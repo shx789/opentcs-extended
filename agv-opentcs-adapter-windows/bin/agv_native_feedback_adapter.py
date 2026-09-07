@@ -14,6 +14,7 @@ import signal
 import time
 from datetime import datetime, timezone
 import urllib.error
+import urllib.parse
 import urllib.request
 from dataclasses import dataclass
 from pathlib import Path
@@ -23,11 +24,13 @@ import sys
 
 try:
     from amqtt.client import MQTTClient
+    from amqtt.plugins.logging_amqtt import PacketLoggerPlugin as _PacketLoggerPlugin
 except Exception as exc:  # pragma: no cover - runtime dependency check
     MQTTClient = None
     MQTT_IMPORT_ERROR = exc
 else:
     MQTT_IMPORT_ERROR = None
+    _AMQTT_CLIENT_PLUGIN_IMPORTS = (_PacketLoggerPlugin,)
 
 if getattr(sys, 'frozen', False):
     ROOT_DIR = Path(sys.executable).resolve().parent
@@ -39,7 +42,7 @@ DEFAULT_STATUS_FILE = str(ROOT / 'logs' / 'agv_native_feedback_adapter_status.js
 DEFAULT_AGV_POINT_FILE = str(ROOT / 'config' / 'interest_point.sample.json')
 RUNTIME_CONFIG_FILE = Path(os.environ.get(
     'AGV_ADAPTER_RUNTIME_CONFIG_FILE',
-    str(Path(__file__).resolve().parents[1] / 'config' / 'runtime_config.json'),
+    str(ROOT / 'config' / 'runtime_config.json'),
 ))
 ADAPTER_CLIENT_ID = f'agv-native-feedback-adapter-{os.getpid()}'
 
@@ -144,7 +147,7 @@ def read_runtime_config(path: Path = RUNTIME_CONFIG_FILE) -> Tuple[Dict[str, Any
     if mtime is None:
         return {}, None, None
     try:
-        return json.loads(path.read_text()), mtime, None
+        return json.loads(path.read_text(encoding='utf-8')), mtime, None
     except Exception as exc:
         return {}, mtime, repr(exc)
 
@@ -157,7 +160,7 @@ def load_config(previous: Optional[AdapterConfig] = None) -> Tuple[AdapterConfig
     config = AdapterConfig(
         mapping_file=resolve_path(runtime_value(raw, 'AGV_ADAPTER_MAPPING_FILE', 'mapping_file', DEFAULT_MAPPING_FILE), config_file),
         open_tcs_base_url=runtime_value(raw, 'AGV_ADAPTER_OPENTCS_URL', 'open_tcs_base_url', 'http://127.0.0.1:55200'),
-        rcs_base_url=runtime_value(raw, 'AGV_ADAPTER_RCS_URL', 'rcs_base_url', 'http://127.0.0.1:8080'),
+        rcs_base_url=runtime_value(raw, 'AGV_ADAPTER_RCS_URL', 'rcs_base_url', 'http://127.0.0.1:8090'),
         mqtt_uri=runtime_value(raw, 'AGV_ADAPTER_MQTT_URI', 'mqtt_uri', 'mqtt://127.0.0.1:1883/'),
         source_topic=runtime_value(raw, 'AGV_ADAPTER_SOURCE_TOPIC', 'source_topic', 'task_feedback'),
         command_topic=runtime_value(raw, 'AGV_ADAPTER_COMMAND_TOPIC', 'command_topic', 'robot_control'),
@@ -217,7 +220,7 @@ def now_iso() -> str:
 
 
 def load_mappings() -> List[PointMapping]:
-    raw = json.loads(MAPPING_FILE.read_text())
+    raw = json.loads(MAPPING_FILE.read_text(encoding='utf-8'))
     mappings: List[PointMapping] = []
     for index, point in enumerate(raw.get('points') or []):
         name = point.get('name')
@@ -283,7 +286,7 @@ def load_point_id_map(mappings: List[PointMapping]) -> Dict[str, str]:
     if not AGV_POINT_FILE.exists():
         return result
     try:
-        raw = json.loads(AGV_POINT_FILE.read_text())
+        raw = json.loads(AGV_POINT_FILE.read_text(encoding='utf-8'))
         for index, point in enumerate(raw.get('point') or []):
             x = float(point.get('x'))
             y = float(point.get('y'))
@@ -420,7 +423,7 @@ def http_json(url: str, method: str = 'GET', body: Optional[Dict[str, Any]] = No
     req = urllib.request.Request(url, data=data, headers=headers, method=method)
     try:
         with urllib.request.urlopen(req, timeout=timeout) as resp:
-            raw = resp.read().decode()
+            raw = resp.read().decode('utf-8', errors='replace')
             parsed = json.loads(raw) if raw else {}
             if isinstance(parsed, dict):
                 parsed.setdefault('_ok', True)
@@ -519,11 +522,28 @@ def infer_context_from_command(raw_command: str, command: Dict[str, Any]) -> Dic
 
 
 def update_open_tcs(point_name: str) -> Dict[str, Any]:
-    return http_json(
-        f'{OPENTCS_BASE_URL}/v1/vehicles/{VEHICLE_NAME}/position',
+    vehicle_name = urllib.parse.quote(VEHICLE_NAME, safe='')
+    primary_response = http_json(
+        f'{OPENTCS_BASE_URL}/v1/vehicles/{vehicle_name}/position',
         method='PUT',
         body={'pointName': point_name},
     )
+    if primary_response.get('_ok') or primary_response.get('_status') != 404:
+        return primary_response
+
+    fallback_response = http_json(
+        f'{OPENTCS_BASE_URL}/v1/vehicles/{vehicle_name}/commAdapter/message',
+        method='POST',
+        body={
+            'type': 'tcs:virtualVehicle:setPosition',
+            'parameters': [
+                {'key': 'position', 'value': point_name},
+            ],
+        },
+    )
+    fallback_response['fallbackFrom'] = primary_response
+    fallback_response['fallbackMethod'] = 'commAdapter/message:setPosition'
+    return fallback_response
 
 
 def build_rcs_event(
@@ -633,6 +653,9 @@ async def run() -> None:
     config, mappings, point_id_map = await load_runtime_state(status, CONFIG)
     write_status(status)
     while not STOP:
+        config, mappings, point_id_map, _ = await maybe_reload_config(
+            config, mappings, point_id_map, status
+        )
         client = MQTTClient(client_id=ADAPTER_CLIENT_ID)
         try:
             apply_config(config)
@@ -683,7 +706,8 @@ async def run() -> None:
                             status['lastCommand']['forwardedTo'] = config.forward_command_topic
                         write_status(status)
                         continue
-                    if payload.get('cmd_type') != 'task_feedback':
+                    cmd_type = str(payload.get('cmd_type') or '').strip().lower()
+                    if cmd_type and cmd_type != 'task_feedback':
                         status['ignored'] += 1
                         status['lastIgnoredReason'] = 'cmd_type is not task_feedback'
                         write_status(status)

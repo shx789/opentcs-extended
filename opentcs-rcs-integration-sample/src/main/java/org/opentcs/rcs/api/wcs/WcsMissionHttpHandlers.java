@@ -49,7 +49,8 @@ public final class WcsMissionHttpHandlers {
       Context ctx,
       WcsMissionService missionService,
       ObjectMapper objectMapper
-  ) throws Exception {
+  )
+      throws Exception {
     RequestContext requestContext = RequestContext.from(ctx);
     requestContext.writeToResponse(ctx);
     CreateMissionReq request = objectMapper.readValue(ctx.body(), CreateMissionReq.class);

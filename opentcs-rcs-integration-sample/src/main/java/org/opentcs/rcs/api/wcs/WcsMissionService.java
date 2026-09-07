@@ -13,9 +13,9 @@ import org.opentcs.rcs.api.dto.CreateMissionResp;
 import org.opentcs.rcs.api.dto.Mission;
 import org.opentcs.rcs.api.dto.MissionSummaryResp;
 import org.opentcs.rcs.api.dto.QueryMissionResp;
+import org.opentcs.rcs.bridge.agv.AgvCommandPublisher;
 import org.opentcs.rcs.bridge.opentcs.OpenTcsOrderClient;
 import org.opentcs.rcs.bridge.opentcs.OpenTcsPayloadMapper;
-import org.opentcs.rcs.bridge.agv.AgvCommandPublisher;
 import org.opentcs.rcs.bridge.opentcs.dto.OpenTcsTransportOrderReq;
 import org.opentcs.rcs.core.idem.IdempotencyResult;
 import org.opentcs.rcs.core.idem.IdempotencyService;
@@ -83,7 +83,10 @@ public class WcsMissionService {
         request.toPoint(),
         request.palletNo(),
         request.priority() == null ? 50 : request.priority(),
-        request.callbackUrl()
+        request.callbackUrl(),
+        request.missionType(),
+        request.fromOperation(),
+        request.toOperation()
     );
     OpenTcsTransportOrderReq payload = payloadMapper.toTransportOrderReq(mission);
     MissionCallbackTarget callbackTarget = new MissionCallbackTarget(
@@ -122,15 +125,17 @@ public class WcsMissionService {
   public List<MissionSummaryResp> listMissions() {
     return missionStore.findAll().stream()
         .sorted(Comparator.comparing(MissionCallbackTarget::missionNo))
-        .map(target -> new MissionSummaryResp(
-            target.missionNo(),
-            target.taskNo(),
-            target.rcsStatus(),
-            target.fromPoint(),
-            target.toPoint(),
-            target.palletNo(),
-            target.priority()
-        ))
+        .map(
+            target -> new MissionSummaryResp(
+                target.missionNo(),
+                target.taskNo(),
+                target.rcsStatus(),
+                target.fromPoint(),
+                target.toPoint(),
+                target.palletNo(),
+                target.priority()
+            )
+        )
         .toList();
   }
 

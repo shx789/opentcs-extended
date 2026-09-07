@@ -13,7 +13,8 @@ import java.util.concurrent.ConcurrentMap;
  * In-memory callback outbox storage for local runs/tests.
  */
 public class InMemoryCallbackOutboxStore
-    implements CallbackOutboxStore {
+    implements
+      CallbackOutboxStore {
 
   private final ConcurrentMap<String, CallbackOutboxEntry> entries = new ConcurrentHashMap<>();
 

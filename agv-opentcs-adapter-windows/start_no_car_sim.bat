@@ -1,15 +1,11 @@
 @echo off
-setlocal
+setlocal EnableDelayedExpansion
 cd /d %~dp0
 if not exist logs mkdir logs
+set "APP_CMD=python -u bin\agv_no_car_feedback_simulator.py"
 if exist agv-no-car-feedback-simulator.exe (
-  start "agv-no-car-feedback-simulator" /b agv-no-car-feedback-simulator.exe 1>>logs\agv_no_car_feedback_simulator.log 2>>&1
-) else (
-  if defined PYTHON_EXE (
-    set "PY_CMD=%PYTHON_EXE%"
-  ) else (
-    set "PY_CMD=python"
-  )
-  start "agv-no-car-feedback-simulator" /b %PY_CMD% -u bin\agv_no_car_feedback_simulator.py 1>>logs\agv_no_car_feedback_simulator.log 2>>&1
+  set "APP_CMD=agv-no-car-feedback-simulator.exe"
 )
+if defined PYTHON_EXE if not exist agv-no-car-feedback-simulator.exe set "APP_CMD=""%PYTHON_EXE%"" -u bin\agv_no_car_feedback_simulator.py"
+start "AGV No-Car Simulator" /min /D "%CD%" cmd /c "!APP_CMD! ^> logs\agv_no_car_feedback_simulator.out.log 2^> logs\agv_no_car_feedback_simulator.err.log"
 echo no-car simulator started

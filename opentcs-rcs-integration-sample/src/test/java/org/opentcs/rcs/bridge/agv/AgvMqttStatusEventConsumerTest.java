@@ -11,6 +11,8 @@ import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.opentcs.rcs.api.dto.AgvEventCallbackReq;
 import org.opentcs.rcs.api.wcs.WmsTaskResultService;
+import org.opentcs.rcs.bridge.agv.mapping.AgvPointMappingStore;
+import org.opentcs.rcs.bridge.opentcs.NoopOpenTcsVehiclePositionClient;
 import org.opentcs.rcs.callback.CallbackOutboxService;
 import org.opentcs.rcs.callback.InMemoryCallbackOutboxStore;
 import org.opentcs.rcs.core.mission.InMemoryMissionStore;
@@ -19,8 +21,6 @@ import org.opentcs.rcs.core.task.InMemoryTaskStore;
 import org.opentcs.rcs.core.task.WcsTaskRecord;
 import org.opentcs.rcs.core.task.WcsTaskStatus;
 import org.opentcs.rcs.core.task.WcsTaskType;
-import org.opentcs.rcs.bridge.agv.mapping.AgvPointMappingStore;
-import org.opentcs.rcs.bridge.opentcs.NoopOpenTcsVehiclePositionClient;
 import org.opentcs.rcs.http.RequestContext;
 
 class AgvMqttStatusEventConsumerTest {
@@ -32,30 +32,34 @@ class AgvMqttStatusEventConsumerTest {
     CallbackOutboxService callbackOutboxService = new CallbackOutboxService(store, objectMapper);
     InMemoryMissionStore missionStore = new InMemoryMissionStore();
     InMemoryTaskStore taskStore = new InMemoryTaskStore();
-    missionStore.save(new MissionCallbackTarget(
-        "M1",
-        "T1",
-        "/api/wcs/agv/events",
-        "trace-1",
-        "request-1"
-    ));
-    taskStore.save(new WcsTaskRecord(
-        "BIZ-001",
-        WcsTaskType.OUTBOUND,
-        "M1",
-        "T1",
-        null,
-        WcsTaskStatus.IN_PROGRESS,
-        "P_WAIT_OUT_01",
-        "ST_OUT_01",
-        "PLT001",
-        50,
-        "/api/wcs/agv/events",
-        "trace-1",
-        "request-1",
-        Instant.now().toString(),
-        Instant.now().toString()
-    ));
+    missionStore.save(
+        new MissionCallbackTarget(
+            "M1",
+            "T1",
+            "/api/wcs/agv/events",
+            "trace-1",
+            "request-1"
+        )
+    );
+    taskStore.save(
+        new WcsTaskRecord(
+            "BIZ-001",
+            WcsTaskType.OUTBOUND,
+            "M1",
+            "T1",
+            null,
+            WcsTaskStatus.IN_PROGRESS,
+            "P_WAIT_OUT_01",
+            "ST_OUT_01",
+            "PLT001",
+            50,
+            "/api/wcs/agv/events",
+            "trace-1",
+            "request-1",
+            Instant.now().toString(),
+            Instant.now().toString()
+        )
+    );
     AgvMqttStatusEventConsumer consumer = new AgvMqttStatusEventConsumer(
         callbackOutboxService,
         missionStore,
@@ -102,17 +106,19 @@ class AgvMqttStatusEventConsumerTest {
     ObjectMapper objectMapper = new ObjectMapper();
     CallbackOutboxService callbackOutboxService = new CallbackOutboxService(store, objectMapper);
     InMemoryMissionStore missionStore = new InMemoryMissionStore();
-    missionStore.save(new MissionCallbackTarget(
-        "M2",
-        "T2",
-        "/api/wcs/agv/events",
-        "trace-2",
-        "request-2",
-        "P_WAIT_IN_01",
-        "ST_IN_01",
-        "PLT002",
-        50
-    ));
+    missionStore.save(
+        new MissionCallbackTarget(
+            "M2",
+            "T2",
+            "/api/wcs/agv/events",
+            "trace-2",
+            "request-2",
+            "P_WAIT_IN_01",
+            "ST_IN_01",
+            "PLT002",
+            50
+        )
+    );
     AgvMqttStatusEventConsumer consumer = new AgvMqttStatusEventConsumer(
         callbackOutboxService,
         missionStore,

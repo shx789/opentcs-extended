@@ -1,0 +1,10 @@
+{
+  "mqtt_uri": "mqtt://192.168.10.100:1883/",
+  "client_id": "agv-mqtt-tester",
+  "username": "",
+  "password": "",
+  "subscribe_topics": "task_feedback\nrobot_control\nbase_status\ninterest_point\n#",
+  "command_topic": "robot_control",
+  "qos": 0,
+  "retain": false
+}

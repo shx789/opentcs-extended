@@ -14,8 +14,8 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.nio.file.Path;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.Test;
@@ -27,7 +27,8 @@ class RcsIntegrationApplicationTest {
   Path tempDir;
 
   @Test
-  void shouldAcceptMissionCreationRequest() throws Exception {
+  void shouldAcceptMissionCreationRequest()
+      throws Exception {
     Javalin app = RcsIntegrationApplication.createApp();
     app.start(0);
     try {
@@ -58,7 +59,8 @@ class RcsIntegrationApplicationTest {
   }
 
   @Test
-  void shouldDispatchMappedCallbackWhenOpenTcsEventIsPosted() throws Exception {
+  void shouldDispatchMappedCallbackWhenOpenTcsEventIsPosted()
+      throws Exception {
     AtomicInteger callbackCalls = new AtomicInteger();
     AtomicReference<String> callbackPayload = new AtomicReference<>();
     HttpServer callbackServer = HttpServer.create(new InetSocketAddress(0), 0);
@@ -66,7 +68,9 @@ class RcsIntegrationApplicationTest {
         "/api/v1/wcs/agv/events",
         exchange -> {
           callbackCalls.incrementAndGet();
-          callbackPayload.set(new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.UTF_8));
+          callbackPayload.set(
+              new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.UTF_8)
+          );
           byte[] bytes = "{}".getBytes(StandardCharsets.UTF_8);
           exchange.sendResponseHeaders(200, bytes.length);
           exchange.getResponseBody().write(bytes);
@@ -130,7 +134,8 @@ class RcsIntegrationApplicationTest {
   }
 
   @Test
-  void shouldExposeCallbackOutboxRecords() throws Exception {
+  void shouldExposeCallbackOutboxRecords()
+      throws Exception {
     HttpServer callbackServer = HttpServer.create(new InetSocketAddress(0), 0);
     callbackServer.createContext(
         "/api/v1/wcs/agv/events",
@@ -210,7 +215,8 @@ class RcsIntegrationApplicationTest {
   }
 
   @Test
-  void shouldKeepMissionCallbackTargetAfterRestartWhenFileStoreModeEnabled() throws Exception {
+  void shouldKeepMissionCallbackTargetAfterRestartWhenFileStoreModeEnabled()
+      throws Exception {
     AtomicInteger callbackCalls = new AtomicInteger();
     HttpServer callbackServer = HttpServer.create(new InetSocketAddress(0), 0);
     callbackServer.createContext(
@@ -293,7 +299,8 @@ class RcsIntegrationApplicationTest {
   }
 
   @Test
-  void shouldQueryAndCancelMission() throws Exception {
+  void shouldQueryAndCancelMission()
+      throws Exception {
     Javalin app = RcsIntegrationApplication.createApp();
     app.start(0);
     try {
@@ -318,7 +325,9 @@ class RcsIntegrationApplicationTest {
       );
       assertThat(queryBeforeCancel.statusCode()).isEqualTo(200);
       JsonNode queryBeforeCancelJson = new ObjectMapper().readTree(queryBeforeCancel.body());
-      assertThat(queryBeforeCancelJson.get("data").get("rcs_status").asText()).isEqualTo("RECEIVED");
+      assertThat(queryBeforeCancelJson.get("data").get("rcs_status").asText()).isEqualTo(
+          "RECEIVED"
+      );
 
       HttpResponse<String> cancelResp = postJson(
           port,
@@ -344,7 +353,8 @@ class RcsIntegrationApplicationTest {
   }
 
   @Test
-  void shouldReturnIdempotencyConflictCodeForDifferentPayloadOnSameMission() throws Exception {
+  void shouldReturnIdempotencyConflictCodeForDifferentPayloadOnSameMission()
+      throws Exception {
     Javalin app = RcsIntegrationApplication.createApp();
     app.start(0);
     try {
@@ -389,7 +399,8 @@ class RcsIntegrationApplicationTest {
   }
 
   @Test
-  void shouldAcceptInboundTaskAndSupportQueryAndCancel() throws Exception {
+  void shouldAcceptInboundTaskAndSupportQueryAndCancel()
+      throws Exception {
     Javalin app = RcsIntegrationApplication.createApp();
     app.start(0);
     try {
@@ -407,7 +418,9 @@ class RcsIntegrationApplicationTest {
       HttpResponse<String> createResp = postJson(port, "/api/v1/wcs/inbound/tasks", createBody);
       assertThat(createResp.statusCode()).isEqualTo(200);
       JsonNode createJson = new ObjectMapper().readTree(createResp.body());
-      assertThat(createJson.get("data").get("biz_task_no").asText()).isEqualTo("BIZ-IN-202604210001");
+      assertThat(createJson.get("data").get("biz_task_no").asText()).isEqualTo(
+          "BIZ-IN-202604210001"
+      );
       assertThat(createJson.get("data").get("rcs_status").asText()).isEqualTo("RECEIVED");
       assertThat(createJson.get("data").get("idem_hit").asBoolean()).isFalse();
 
@@ -437,7 +450,8 @@ class RcsIntegrationApplicationTest {
   }
 
   @Test
-  void shouldReturnWaitPlcForInboundTaskAfterFinishedEvent() throws Exception {
+  void shouldReturnWaitPlcForInboundTaskAfterFinishedEvent()
+      throws Exception {
     Javalin app = RcsIntegrationApplication.createApp();
     app.start(0);
     try {
@@ -489,7 +503,8 @@ class RcsIntegrationApplicationTest {
   }
 
   @Test
-  void shouldCallbackOutboundTaskResultToConfiguredWmsEndpoint() throws Exception {
+  void shouldCallbackOutboundTaskResultToConfiguredWmsEndpoint()
+      throws Exception {
     AtomicInteger missionCallbackCalls = new AtomicInteger();
     AtomicInteger resultCallbackCalls = new AtomicInteger();
     AtomicReference<String> resultPayload = new AtomicReference<>();
@@ -508,7 +523,9 @@ class RcsIntegrationApplicationTest {
         "/api/v1/wms/outbound-results",
         exchange -> {
           resultCallbackCalls.incrementAndGet();
-          resultPayload.set(new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.UTF_8));
+          resultPayload.set(
+              new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.UTF_8)
+          );
           byte[] bytes = "{}".getBytes(StandardCharsets.UTF_8);
           exchange.sendResponseHeaders(200, bytes.length);
           exchange.getResponseBody().write(bytes);
@@ -577,7 +594,8 @@ class RcsIntegrationApplicationTest {
     }
   }
 
-  private void waitUntil(Condition condition, long timeoutMillis) throws InterruptedException {
+  private void waitUntil(Condition condition, long timeoutMillis)
+      throws InterruptedException {
     long deadline = System.currentTimeMillis() + timeoutMillis;
     while (System.currentTimeMillis() < deadline) {
       if (condition.matches()) {
@@ -595,7 +613,8 @@ class RcsIntegrationApplicationTest {
   }
 
   private HttpResponse<String> postJson(int port, String path, String body)
-      throws IOException, InterruptedException {
+      throws IOException,
+        InterruptedException {
     HttpClient client = HttpClient.newHttpClient();
     HttpRequest request = HttpRequest.newBuilder()
         .uri(URI.create("http://127.0.0.1:" + port + path))
@@ -606,7 +625,8 @@ class RcsIntegrationApplicationTest {
   }
 
   private HttpResponse<String> getJson(int port, String path)
-      throws IOException, InterruptedException {
+      throws IOException,
+        InterruptedException {
     HttpClient client = HttpClient.newHttpClient();
     HttpRequest request = HttpRequest.newBuilder()
         .uri(URI.create("http://127.0.0.1:" + port + path))

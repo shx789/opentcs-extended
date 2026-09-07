@@ -13,8 +13,8 @@ import org.opentcs.rcs.api.dto.CancelMissionResp;
 import org.opentcs.rcs.api.dto.CreateMissionReq;
 import org.opentcs.rcs.api.dto.CreateMissionResp;
 import org.opentcs.rcs.api.dto.QueryMissionResp;
-import org.opentcs.rcs.bridge.opentcs.OpenTcsOrderClient;
 import org.opentcs.rcs.bridge.agv.AgvCommandPublisher;
+import org.opentcs.rcs.bridge.opentcs.OpenTcsOrderClient;
 import org.opentcs.rcs.bridge.opentcs.OpenTcsPayloadMapper;
 import org.opentcs.rcs.bridge.opentcs.dto.OpenTcsTransportOrderReq;
 import org.opentcs.rcs.core.idem.IdempotencyService;
@@ -102,6 +102,7 @@ class WcsMissionServiceTest {
     QueryMissionResp afterCancel = service.queryMission(req.missionNo());
     assertThat(afterCancel.rcsStatus()).isEqualTo("CANCELED");
   }
+
   @Test
   void shouldListMissionSummaries() {
     CreateMissionReq req = new CreateMissionReq(
@@ -146,8 +147,11 @@ class WcsMissionServiceTest {
         },
         new ObjectMapper(),
         missionStore,
-        mission -> {
-          throw new IllegalStateException("MQTT publish failed");
+        new AgvCommandPublisher() {
+          @Override
+          public void publishMissionStart(org.opentcs.rcs.api.dto.Mission mission) {
+            throw new IllegalStateException("MQTT publish failed");
+          }
         }
     );
     CreateMissionReq req = new CreateMissionReq(

@@ -11,11 +11,13 @@ from typing import Any, Dict, Optional, Tuple
 
 try:
     from amqtt.client import MQTTClient
+    from amqtt.plugins.logging_amqtt import PacketLoggerPlugin as _PacketLoggerPlugin
 except Exception as exc:
     MQTTClient = None
     MQTT_IMPORT_ERROR = exc
 else:
     MQTT_IMPORT_ERROR = None
+    _AMQTT_CLIENT_PLUGIN_IMPORTS = (_PacketLoggerPlugin,)
 
 if getattr(sys, "frozen", False):
     ROOT_DIR = Path(sys.executable).resolve().parent
@@ -69,13 +71,13 @@ def write_status(status: Dict[str, Any]) -> None:
 def load_runtime_config() -> Dict[str, Any]:
     if not RUNTIME_CONFIG_FILE.exists():
         return {}
-    return json.loads(RUNTIME_CONFIG_FILE.read_text())
+    return json.loads(RUNTIME_CONFIG_FILE.read_text(encoding='utf-8'))
 
 
 def load_interest_points(point_file: Path) -> Dict[int, Dict[str, float]]:
     if not point_file.exists():
         return {}
-    raw = json.loads(point_file.read_text())
+    raw = json.loads(point_file.read_text(encoding='utf-8'))
     result: Dict[int, Dict[str, float]] = {}
     for index, point in enumerate(raw.get("point") or []):
         try:

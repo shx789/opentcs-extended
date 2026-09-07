@@ -19,7 +19,8 @@ import java.util.Optional;
  * File-backed idempotency store for local persistence.
  */
 public class FileIdempotencyStore
-    implements IdempotencyStore {
+    implements
+      IdempotencyStore {
 
   private final Path storageFile;
   private final ObjectMapper objectMapper;
@@ -32,7 +33,9 @@ public class FileIdempotencyStore
   }
 
   @Override
-  public synchronized Optional<IdempotencyRecord> findByBizTypeAndBizKey(String bizType, String bizKey) {
+  public synchronized Optional<IdempotencyRecord> findByBizTypeAndBizKey(
+      String bizType, String bizKey
+  ) {
     return Optional.ofNullable(recordsByKey.get(makeKey(bizType, bizKey)));
   }
 
@@ -88,7 +91,8 @@ public class FileIdempotencyStore
     }
   }
 
-  private void moveTempFile(Path source, Path target) throws IOException {
+  private void moveTempFile(Path source, Path target)
+      throws IOException {
     try {
       Files.move(
           source,

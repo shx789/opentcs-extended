@@ -1,8 +1,8 @@
 @echo off
 setlocal
 cd /d %~dp0
-if exist logs\agv_config_web_status.json (
-  type logs\agv_config_web_status.json
+if exist config\agv_config_web_status.json (
+  type config\agv_config_web_status.json
 ) else (
-  echo status file not found: logs\agv_config_web_status.json
+  echo status file not found: config\agv_config_web_status.json
 )

@@ -22,31 +22,55 @@ public final class AgvMonitorHttpHandlers {
   public static Handler runtimeStatusHandler() {
     return ctx -> {
       Map<String, Object> data = new LinkedHashMap<>();
-      data.put("agv_command_enabled", resolveBoolean(
-          "rcs.agv.command.enabled",
-          "RCS_AGV_COMMAND_ENABLED",
-          false
-      ));
-      data.put("agv_command_broker_uri", resolveValue(
-          "rcs.agv.command.brokerUri",
-          "RCS_AGV_COMMAND_BROKER_URI",
-          "tcp://127.0.0.1:1883"
-      ));
-      data.put("agv_command_topic", resolveValue(
-          "rcs.agv.command.topic",
-          "RCS_AGV_COMMAND_TOPIC",
-          "robot_control"
-      ));
-      data.put("agv_status_enabled", resolveBoolean(
-          "rcs.agv.mqtt.enabled",
-          "RCS_AGV_MQTT_ENABLED",
-          false
-      ));
-      data.put("agv_status_broker_uri", resolveValue(
-          "rcs.agv.mqtt.brokerUri",
-          "RCS_AGV_MQTT_BROKER_URI",
-          "tcp://127.0.0.1:1883"
-      ));
+      data.put(
+          "agv_command_enabled", resolveBoolean(
+              "rcs.agv.command.enabled",
+              "RCS_AGV_COMMAND_ENABLED",
+              false
+          )
+      );
+      data.put(
+          "agv_command_broker_uri", resolveValue(
+              "rcs.agv.command.brokerUri",
+              "RCS_AGV_COMMAND_BROKER_URI",
+              "tcp://127.0.0.1:1883"
+          )
+      );
+      data.put(
+          "agv_command_topic", resolveValue(
+              "rcs.agv.command.topic",
+              "RCS_AGV_COMMAND_TOPIC",
+              "robot_control"
+          )
+      );
+      data.put(
+          "agv_status_enabled", resolveBoolean(
+              "rcs.agv.mqtt.enabled",
+              "RCS_AGV_MQTT_ENABLED",
+              false
+          )
+      );
+      data.put(
+          "agv_status_broker_uri", resolveValue(
+              "rcs.agv.mqtt.brokerUri",
+              "RCS_AGV_MQTT_BROKER_URI",
+              "tcp://127.0.0.1:1883"
+          )
+      );
+      data.put(
+          "open_tcs_sse_enabled", resolveBoolean(
+              "rcs.openTcs.sse.enabled",
+              "RCS_OPENTCS_SSE_ENABLED",
+              false
+          )
+      );
+      data.put(
+          "open_tcs_sse_url", resolveValue(
+              "rcs.openTcs.sse.url",
+              "RCS_OPENTCS_SSE_URL",
+              "<openTCS base URL>/v1/sse?/events/transportOrders=true"
+          )
+      );
       ctx.json(ApiResponse.success(data));
     };
   }
@@ -163,11 +187,11 @@ public final class AgvMonitorHttpHandlers {
                   <div><label>mission_no</label><input id="missionNo" value="M-MONITOR-001"/></div>
                   <div><label>task_no</label><input id="taskNo" value="T-MONITOR-001"/></div>
                   <div class="two">
-                    <div><label>from_point</label><input id="fromPoint" value="Point-01"/></div>
-                    <div><label>to_point</label><input id="toPoint" value="Point-02"/></div>
+                    <div><label>from_point</label><input id="fromPoint" value="ST_IN_01"/></div>
+                    <div><label>to_point</label><input id="toPoint" value="P_WAIT_IN_01"/></div>
                   </div>
                   <div class="two">
-                    <div><label>pallet_no</label><input id="palletNo" value="PLT-MONITOR-001"/></div>
+                    <div><label>pallet_no</label><input id="palletNo" value="0001"/></div>
                     <div><label>priority</label><input id="priority" value="50"/></div>
                   </div>
                   <div><label>callback_url</label><input id="callbackUrl" value="/demo/wcs/callback"/></div>
@@ -469,7 +493,7 @@ public final class AgvMonitorHttpHandlers {
             const stamp = new Date().toISOString().replace(/[-:.TZ]/g, '').slice(0, 14);
             $('missionNo').value = `M-MON-${stamp}`;
             $('taskNo').value = `T-MON-${stamp}`;
-            $('palletNo').value = `PLT-${stamp}`;
+            $('palletNo').value = '0001';
           }
 
           function escapeHtml(value) {

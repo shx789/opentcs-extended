@@ -83,7 +83,8 @@ public final class WcsDemoHttpHandlers {
   }
 
   private static String buildPage(boolean openTcsHttpEnabled, String defaultOpenTcsBaseUrl) {
-    String mode = openTcsHttpEnabled ? "LIVE openTCS HTTP mode" : "SIMULATION mode (in-memory order client)";
+    String mode = openTcsHttpEnabled ? "LIVE openTCS HTTP mode"
+        : "SIMULATION mode (in-memory order client)";
     String openTcsBaseUrlValue = defaultOpenTcsBaseUrl == null || defaultOpenTcsBaseUrl.isBlank()
         ? "http://127.0.0.1:55200"
         : defaultOpenTcsBaseUrl.trim();
@@ -284,12 +285,12 @@ public final class WcsDemoHttpHandlers {
                   <div><label>biz_task_no（WMS 任务用）</label><input id="bizTaskNo" value="BIZ-202604210001"/></div>
                 </div>
                 <div class="row">
-                  <div><label>from_point</label><input id="fromPoint" list="pointOptions" value="Point-0020"/></div>
-                  <div><label>to_point</label><input id="toPoint" list="pointOptions" value="Point-0026"/></div>
+                  <div><label>from_point</label><input id="fromPoint" list="pointOptions" value="ST_IN_01"/></div>
+                  <div><label>to_point</label><input id="toPoint" list="pointOptions" value="P_WAIT_IN_01"/></div>
                 </div>
                 <datalist id="pointOptions"></datalist>
                 <div class="row">
-                  <div><label>pallet_no</label><input id="palletNo" value="PLT000000123"/></div>
+                  <div><label>pallet_no</label><input id="palletNo" value="0001"/></div>
                   <div><label>priority（1-100）</label><input id="priority" value="80"/></div>
                 </div>
                 <div class="row single">

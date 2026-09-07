@@ -2,35 +2,27 @@
 // SPDX-License-Identifier: MIT
 package org.opentcs.rcs;
 
+import static io.javalin.apibuilder.ApiBuilder.get;
+import static io.javalin.apibuilder.ApiBuilder.post;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import io.javalin.Javalin;
 import io.javalin.config.JavalinConfig;
-import static io.javalin.apibuilder.ApiBuilder.get;
-import static io.javalin.apibuilder.ApiBuilder.post;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
-import java.util.Locale;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.function.Consumer;
-import org.opentcs.rcs.api.wcs.WcsDemoHttpHandlers;
-import org.opentcs.rcs.api.wcs.WcsMissionHttpHandlers;
-import org.opentcs.rcs.api.wcs.WcsMissionService;
-import org.opentcs.rcs.api.wcs.WcsTaskHttpHandlers;
-import org.opentcs.rcs.api.wcs.WcsTaskService;
-import org.opentcs.rcs.api.wcs.WmsTaskResultService;
-import org.opentcs.rcs.api.wcs.ResourceNotFoundException;
-import org.opentcs.rcs.api.wcs.TaskStateConflictException;
-import org.opentcs.rcs.api.wcs.AgvMonitorHttpHandlers;
 import org.opentcs.rcs.agvcommand.AgvCommandHttpHandlers;
 import org.opentcs.rcs.agvcommand.AgvCommandOutboxService;
 import org.opentcs.rcs.agvcommand.AgvCommandOutboxStore;
@@ -38,6 +30,16 @@ import org.opentcs.rcs.agvcommand.AgvCommandRetryProcessor;
 import org.opentcs.rcs.agvcommand.AgvCommandRetryScheduler;
 import org.opentcs.rcs.agvcommand.FileAgvCommandOutboxStore;
 import org.opentcs.rcs.agvcommand.InMemoryAgvCommandOutboxStore;
+import org.opentcs.rcs.api.dto.ApiResponse;
+import org.opentcs.rcs.api.wcs.AgvMonitorHttpHandlers;
+import org.opentcs.rcs.api.wcs.ResourceNotFoundException;
+import org.opentcs.rcs.api.wcs.TaskStateConflictException;
+import org.opentcs.rcs.api.wcs.WcsDemoHttpHandlers;
+import org.opentcs.rcs.api.wcs.WcsMissionHttpHandlers;
+import org.opentcs.rcs.api.wcs.WcsMissionService;
+import org.opentcs.rcs.api.wcs.WcsTaskHttpHandlers;
+import org.opentcs.rcs.api.wcs.WcsTaskService;
+import org.opentcs.rcs.api.wcs.WmsTaskResultService;
 import org.opentcs.rcs.bridge.agv.AgvCommandPublisher;
 import org.opentcs.rcs.bridge.agv.AgvMqttStatusEventConsumer;
 import org.opentcs.rcs.bridge.agv.AgvMqttStatusPayloadParser;
@@ -46,29 +48,28 @@ import org.opentcs.rcs.bridge.agv.AgvVehiclePositionSynchronizer;
 import org.opentcs.rcs.bridge.agv.MqttAgvRobotControlPublisher;
 import org.opentcs.rcs.bridge.agv.mapping.AgvPointMappingLoader;
 import org.opentcs.rcs.bridge.agv.mapping.AgvPointMappingStore;
-import org.opentcs.rcs.bridge.opentcs.HttpOpenTcsVehiclePositionClient;
 import org.opentcs.rcs.bridge.opentcs.HttpOpenTcsOrderClient;
+import org.opentcs.rcs.bridge.opentcs.HttpOpenTcsVehiclePositionClient;
 import org.opentcs.rcs.bridge.opentcs.InMemoryOpenTcsOrderClient;
 import org.opentcs.rcs.bridge.opentcs.NoopOpenTcsVehiclePositionClient;
 import org.opentcs.rcs.bridge.opentcs.OpenTcsClientException;
 import org.opentcs.rcs.bridge.opentcs.OpenTcsEventHttpHandlers;
 import org.opentcs.rcs.bridge.opentcs.OpenTcsEventProjector;
 import org.opentcs.rcs.bridge.opentcs.OpenTcsOrderClient;
-import org.opentcs.rcs.bridge.opentcs.OpenTcsVehiclePositionClient;
 import org.opentcs.rcs.bridge.opentcs.OpenTcsPayloadMapper;
 import org.opentcs.rcs.bridge.opentcs.OpenTcsSseEventConsumer;
 import org.opentcs.rcs.bridge.opentcs.OpenTcsSsePayloadParser;
 import org.opentcs.rcs.bridge.opentcs.OpenTcsSseTransportOrderSubscriber;
+import org.opentcs.rcs.bridge.opentcs.OpenTcsVehiclePositionClient;
+import org.opentcs.rcs.callback.CallbackOutboxHttpHandlers;
 import org.opentcs.rcs.callback.CallbackOutboxService;
 import org.opentcs.rcs.callback.CallbackOutboxStore;
-import org.opentcs.rcs.callback.CallbackOutboxHttpHandlers;
 import org.opentcs.rcs.callback.CallbackRetryProcessor;
 import org.opentcs.rcs.callback.CallbackRetryScheduler;
 import org.opentcs.rcs.callback.CallbackSender;
 import org.opentcs.rcs.callback.FileCallbackOutboxStore;
 import org.opentcs.rcs.callback.HttpCallbackSender;
 import org.opentcs.rcs.callback.InMemoryCallbackOutboxStore;
-import org.opentcs.rcs.api.dto.ApiResponse;
 import org.opentcs.rcs.core.idem.FileIdempotencyStore;
 import org.opentcs.rcs.core.idem.IdempotencyConflictException;
 import org.opentcs.rcs.core.idem.IdempotencyService;
@@ -164,11 +165,13 @@ public final class RcsIntegrationApplication {
     CallbackRetryScheduler callbackRetryScheduler = new CallbackRetryScheduler(
         callbackRetryProcessor,
         dispatchBatchSize,
-        Duration.ofMillis(resolveLong(
-            "rcs.callback.retryTickMillis",
-            "RCS_CALLBACK_RETRY_TICK_MILLIS",
-            1000L
-        ))
+        Duration.ofMillis(
+            resolveLong(
+                "rcs.callback.retryTickMillis",
+                "RCS_CALLBACK_RETRY_TICK_MILLIS",
+                1000L
+            )
+        )
     );
     Optional<OpenTcsSseTransportOrderSubscriber> sseSubscriber = createOpenTcsSseSubscriber(
         ssePayloadParser,
@@ -398,17 +401,21 @@ public final class RcsIntegrationApplication {
         HttpClient.newHttpClient(),
         objectMapper,
         URI.create(baseUrl.orElseThrow()),
-        Duration.ofMillis(resolveLong(
-            "rcs.openTcs.timeoutMillis",
-            "RCS_OPENTCS_TIMEOUT_MILLIS",
-            3000L
-        )),
+        Duration.ofMillis(
+            resolveLong(
+                "rcs.openTcs.timeoutMillis",
+                "RCS_OPENTCS_TIMEOUT_MILLIS",
+                3000L
+            )
+        ),
         resolveInt("rcs.openTcs.maxAttempts", "RCS_OPENTCS_MAX_ATTEMPTS", 3),
-        Duration.ofMillis(resolveLong(
-            "rcs.openTcs.initialRetryDelayMillis",
-            "RCS_OPENTCS_INITIAL_RETRY_DELAY_MILLIS",
-            200L
-        )),
+        Duration.ofMillis(
+            resolveLong(
+                "rcs.openTcs.initialRetryDelayMillis",
+                "RCS_OPENTCS_INITIAL_RETRY_DELAY_MILLIS",
+                200L
+            )
+        ),
         firstNonBlank(
             System.getProperty("rcs.openTcs.token"),
             System.getenv("RCS_OPENTCS_TOKEN")
@@ -435,10 +442,12 @@ public final class RcsIntegrationApplication {
     return new AgvVehiclePositionSynchronizer(
         positionClient,
         pointMappingStore,
-        parseStringMap(firstNonBlank(
-            System.getProperty("rcs.agvVehicle.map"),
-            System.getenv("RCS_AGV_VEHICLE_MAP")
-        ).orElse("AGV_01=Vehicle-01,*=Vehicle-01"))
+        parseStringMap(
+            firstNonBlank(
+                System.getProperty("rcs.agvVehicle.map"),
+                System.getenv("RCS_AGV_VEHICLE_MAP")
+            ).orElse("AGV_01=Vehicle-01,*=Vehicle-01")
+        )
     );
   }
 
@@ -463,11 +472,13 @@ public final class RcsIntegrationApplication {
         HttpClient.newHttpClient(),
         objectMapper,
         URI.create(baseUrl.orElseThrow()),
-        Duration.ofMillis(resolveLong(
-            "rcs.openTcs.positionSync.timeoutMillis",
-            "RCS_OPENTCS_POSITION_SYNC_TIMEOUT_MILLIS",
-            3000L
-        )),
+        Duration.ofMillis(
+            resolveLong(
+                "rcs.openTcs.positionSync.timeoutMillis",
+                "RCS_OPENTCS_POSITION_SYNC_TIMEOUT_MILLIS",
+                3000L
+            )
+        ),
         firstNonBlank(
             System.getProperty("rcs.openTcs.token"),
             System.getenv("RCS_OPENTCS_TOKEN")
@@ -483,11 +494,13 @@ public final class RcsIntegrationApplication {
     return new HttpCallbackSender(
         HttpClient.newHttpClient(),
         callbackBaseUrl.map(URI::create).orElse(null),
-        Duration.ofMillis(resolveLong(
-            "rcs.callback.timeoutMillis",
-            "RCS_CALLBACK_TIMEOUT_MILLIS",
-            3000L
-        )),
+        Duration.ofMillis(
+            resolveLong(
+                "rcs.callback.timeoutMillis",
+                "RCS_CALLBACK_TIMEOUT_MILLIS",
+                3000L
+            )
+        ),
         firstNonBlank(
             System.getProperty("rcs.callback.token"),
             System.getenv("RCS_CALLBACK_TOKEN")
@@ -516,21 +529,27 @@ public final class RcsIntegrationApplication {
     OpenTcsSseTransportOrderSubscriber subscriber = new OpenTcsSseTransportOrderSubscriber(
         HttpClient.newHttpClient(),
         sseUri,
-        Duration.ofMillis(resolveLong(
-            "rcs.openTcs.sse.requestTimeoutMillis",
-            "RCS_OPENTCS_SSE_REQUEST_TIMEOUT_MILLIS",
-            600000L
-        )),
-        Duration.ofMillis(resolveLong(
-            "rcs.openTcs.sse.reconnectInitialDelayMillis",
-            "RCS_OPENTCS_SSE_RECONNECT_INITIAL_DELAY_MILLIS",
-            1000L
-        )),
-        Duration.ofMillis(resolveLong(
-            "rcs.openTcs.sse.reconnectMaxDelayMillis",
-            "RCS_OPENTCS_SSE_RECONNECT_MAX_DELAY_MILLIS",
-            30000L
-        )),
+        Duration.ofMillis(
+            resolveLong(
+                "rcs.openTcs.sse.requestTimeoutMillis",
+                "RCS_OPENTCS_SSE_REQUEST_TIMEOUT_MILLIS",
+                600000L
+            )
+        ),
+        Duration.ofMillis(
+            resolveLong(
+                "rcs.openTcs.sse.reconnectInitialDelayMillis",
+                "RCS_OPENTCS_SSE_RECONNECT_INITIAL_DELAY_MILLIS",
+                1000L
+            )
+        ),
+        Duration.ofMillis(
+            resolveLong(
+                "rcs.openTcs.sse.reconnectMaxDelayMillis",
+                "RCS_OPENTCS_SSE_RECONNECT_MAX_DELAY_MILLIS",
+                30000L
+            )
+        ),
         firstNonBlank(
             System.getProperty("rcs.openTcs.apiAccessKey"),
             System.getenv("RCS_OPENTCS_API_ACCESS_KEY")
@@ -562,11 +581,13 @@ public final class RcsIntegrationApplication {
     AgvCommandRetryScheduler retryScheduler = new AgvCommandRetryScheduler(
         retryProcessor,
         resolveInt("rcs.agvCommand.dispatchBatchSize", "RCS_AGV_COMMAND_DISPATCH_BATCH_SIZE", 100),
-        Duration.ofMillis(resolveLong(
-            "rcs.agvCommand.retryTickMillis",
-            "RCS_AGV_COMMAND_RETRY_TICK_MILLIS",
-            1000L
-        ))
+        Duration.ofMillis(
+            resolveLong(
+                "rcs.agvCommand.retryTickMillis",
+                "RCS_AGV_COMMAND_RETRY_TICK_MILLIS",
+                1000L
+            )
+        )
     );
     return new AgvCommandRuntime(
         new AgvCommandOutboxService(commandOutboxStore, mqttPublisher),
@@ -600,7 +621,7 @@ public final class RcsIntegrationApplication {
             System.getProperty("rcs.agvCommand.topic"),
             System.getenv("RCS_AGV_COMMAND_TOPIC")
         ).orElse("robot_control"),
-        resolveInt("rcs.agvCommand.qos", "RCS_AGV_COMMAND_QOS", 1),
+        resolveInt("rcs.agvCommand.qos", "RCS_AGV_COMMAND_QOS", 0),
         firstNonBlank(
             System.getProperty("rcs.agvCommand.username"),
             System.getenv("RCS_AGV_COMMAND_USERNAME")
@@ -611,6 +632,8 @@ public final class RcsIntegrationApplication {
         ).orElse(null),
         pointIdMap,
         resolveDouble("rcs.agvCommand.defaultRunSpeed", "RCS_AGV_DEFAULT_RUN_SPEED", 0.5),
+        resolveInt("rcs.agvCommand.pathMode", "RCS_AGV_PATH_MODE", 2),
+        resolveInt("rcs.agvCommand.circulates", "RCS_AGV_CIRCULATES", 0),
         objectMapper
     );
   }

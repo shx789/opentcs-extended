@@ -14,6 +14,7 @@ dependencies {
   implementation libs.jackson.datatype.jsr310
   implementation libs.javalin
   implementation libs.mqtt.client
+  implementation 'org.slf4j:slf4j-simple:2.0.17'
 }
 
 shadowJar {

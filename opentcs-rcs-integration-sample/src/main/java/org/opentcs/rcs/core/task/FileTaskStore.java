@@ -19,7 +19,8 @@ import java.util.Optional;
  * File-backed task store for local persistence.
  */
 public class FileTaskStore
-    implements TaskStore {
+    implements
+      TaskStore {
 
   private final Path storageFile;
   private final ObjectMapper objectMapper;
@@ -97,7 +98,8 @@ public class FileTaskStore
     }
   }
 
-  private void moveTempFile(Path source, Path target) throws IOException {
+  private void moveTempFile(Path source, Path target)
+      throws IOException {
     try {
       Files.move(
           source,

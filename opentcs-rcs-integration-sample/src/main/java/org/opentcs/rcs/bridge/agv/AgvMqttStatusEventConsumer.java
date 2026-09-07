@@ -115,14 +115,14 @@ public class AgvMqttStatusEventConsumer {
     }
     Optional<String> taskEventType
         = taskStore.findByMissionNo(message.missionNo()).flatMap(task -> {
-      if (message.pointId().equals(task.fromPoint())) {
-        return Optional.of("ARRIVED_FROM");
-      }
-      if (message.pointId().equals(task.toPoint())) {
-        return Optional.of("ARRIVED_TO");
-      }
-      return Optional.empty();
-    });
+          if (message.pointId().equals(task.fromPoint())) {
+            return Optional.of("ARRIVED_FROM");
+          }
+          if (message.pointId().equals(task.toPoint())) {
+            return Optional.of("ARRIVED_TO");
+          }
+          return Optional.empty();
+        });
     if (taskEventType.isPresent()) {
       return taskEventType;
     }

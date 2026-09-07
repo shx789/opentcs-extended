@@ -6,7 +6,12 @@ param(
 
 $ErrorActionPreference = "Stop"
 $Root = Split-Path -Parent $MyInvocation.MyCommand.Path
-$OutputDir = [System.IO.Path]::GetFullPath((Join-Path $Root $OutputDir))
+if ([System.IO.Path]::IsPathRooted($OutputDir)) {
+  $OutputDir = [System.IO.Path]::GetFullPath($OutputDir)
+}
+else {
+  $OutputDir = [System.IO.Path]::GetFullPath((Join-Path $Root $OutputDir))
+}
 $BuildDir = Join-Path $Root "build"
 $WorkDir = Join-Path $BuildDir "pyinstaller-work"
 $SpecDir = Join-Path $BuildDir "pyinstaller-spec"
@@ -26,6 +31,7 @@ try {
     --distpath $OutputDir `
     --workpath $WorkDir `
     --specpath $SpecDir `
+    --hidden-import amqtt.plugins.logging_amqtt `
     --name agv-native-feedback-adapter `
     .\bin\agv_native_feedback_adapter.py
 
@@ -49,6 +55,28 @@ try {
     --name agv-config-web `
     .\bin\agv_config_web.py
 
+  & $PythonExe -m PyInstaller `
+    --noconfirm `
+    --clean `
+    --onefile `
+    --distpath $OutputDir `
+    --workpath $WorkDir `
+    --specpath $SpecDir `
+    --name generate-map-topology `
+    .\bin\generate_map_topology.py
+
+  & $PythonExe -m PyInstaller `
+    --noconfirm `
+    --clean `
+    --onefile `
+    --distpath $OutputDir `
+    --workpath $WorkDir `
+    --specpath $SpecDir `
+    --hidden-import amqtt.plugins.authentication `
+    --hidden-import amqtt.plugins.sys.broker `
+    --name local-mqtt-broker `
+    .\bin\local_mqtt_broker.py
+
   if ($IncludeNoCarSimulator) {
     & $PythonExe -m PyInstaller `
       --noconfirm `
@@ -57,6 +85,7 @@ try {
       --distpath $OutputDir `
       --workpath $WorkDir `
       --specpath $SpecDir `
+      --hidden-import amqtt.plugins.logging_amqtt `
       --name agv-no-car-feedback-simulator `
       .\bin\agv_no_car_feedback_simulator.py
   }

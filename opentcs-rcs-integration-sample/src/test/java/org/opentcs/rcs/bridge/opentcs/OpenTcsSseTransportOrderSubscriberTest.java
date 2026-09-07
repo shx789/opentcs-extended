@@ -24,10 +24,13 @@ import org.opentcs.rcs.core.task.InMemoryTaskStore;
 class OpenTcsSseTransportOrderSubscriberTest {
 
   @Test
-  void shouldConsumeTransportOrderSseEventAndDispatchCallback() throws Exception {
+  void shouldConsumeTransportOrderSseEventAndDispatchCallback()
+      throws Exception {
     AtomicInteger callbackCalls = new AtomicInteger();
     TestFixture fixture = createFixture((url, payload) -> callbackCalls.incrementAndGet());
-    fixture.missionStore.save(new MissionCallbackTarget("M1", "T1", "/api/v1/wcs/agv/events", "trace-1", "request-1"));
+    fixture.missionStore.save(
+        new MissionCallbackTarget("M1", "T1", "/api/v1/wcs/agv/events", "trace-1", "request-1")
+    );
     OpenTcsSseTransportOrderSubscriber subscriber = fixture.subscriber(
         null,
         null,
@@ -42,7 +45,9 @@ class OpenTcsSseTransportOrderSubscriberTest {
         data: {"eventTime":"2026-04-14T10:35:21Z","currentObjectState":{"name":"M1","state":"FINISHED","currentDriveOrderIndex":1,"processingVehicle":"AGV_01","properties":{"task_no":"T1"}}}
 
         """;
-    subscriber.consumeEventStream(new ByteArrayInputStream(ssePayload.getBytes(StandardCharsets.UTF_8)));
+    subscriber.consumeEventStream(
+        new ByteArrayInputStream(ssePayload.getBytes(StandardCharsets.UTF_8))
+    );
 
     assertThat(callbackCalls.get()).isEqualTo(1);
     assertThat(subscriber.lastEventId()).isEqualTo("100");
@@ -50,7 +55,8 @@ class OpenTcsSseTransportOrderSubscriberTest {
   }
 
   @Test
-  void shouldIncludeResumeAndAuthHeadersWhenBuildingSseRequest() throws Exception {
+  void shouldIncludeResumeAndAuthHeadersWhenBuildingSseRequest()
+      throws Exception {
     TestFixture fixture = createFixture((url, payload) -> {
     });
     OpenTcsSseTransportOrderSubscriber subscriber = fixture.subscriber(
@@ -66,7 +72,9 @@ class OpenTcsSseTransportOrderSubscriberTest {
         data: {}
 
         """;
-    subscriber.consumeEventStream(new ByteArrayInputStream(ssePayload.getBytes(StandardCharsets.UTF_8)));
+    subscriber.consumeEventStream(
+        new ByteArrayInputStream(ssePayload.getBytes(StandardCharsets.UTF_8))
+    );
 
     assertThat(subscriber.buildRequest().headers().firstValue("Last-Event-ID"))
         .contains("42");

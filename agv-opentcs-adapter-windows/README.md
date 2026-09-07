@@ -36,10 +36,13 @@
 - `validate_config.bat`：配置校验入口
 - `bin/validate_runtime_config.py`：配置校验程序
 - `bin/agv_config_web.py`：配置网页服务
+- `bin/generate_map_topology.py`：从 ROS `map.yaml`/PGM 生成 openTCS 候选拓扑
 - `web/`：网页静态资源
+- `docs/FIELD_OPERATION_FLOW.md`：Windows 现场接车流程说明
 - `start_config_web.bat`：启动配置网页
 - `stop_config_web.ps1`：停止配置网页
 - `status_config_web.bat`：查看配置网页状态
+- `generate_map_topology.bat`：地图拓扑生成入口
 
 ## 两种使用方式
 
@@ -110,6 +113,38 @@ start_config_web.bat
 打开浏览器：
 
 - `http://127.0.0.1:8091`
+
+## 地图拓扑生成
+
+配置网页中有“地图拓扑生成”区域，可输入 ROS `map.yaml` 路径并生成候选拓扑。
+
+也可以用命令行：
+
+```bat
+generate_map_topology.bat --map-yaml D:\maps\map.yaml --mode blackline-skeleton
+```
+
+可选模式：
+
+- `blackline-skeleton`：按 PGM 中深色路线骨架生成拓扑，适合已有路线线条的地图
+- `free-space-skeleton`：按白色可通行区域骨架生成拓扑
+- `hough-line`：按深色线段 Hough 检测生成拓扑
+- `free-space`：按白色可通行区域连通域生成粗略候选点
+
+默认输出到：
+
+```text
+config\generated\
+```
+
+主要文件：
+
+- `agv_opentcs_mapping.json`：AGV/ROS 坐标到 openTCS 点位的映射
+- `opentcs_plant_model_candidate.json`：openTCS 候选拓扑 JSON
+- `plant_model.xml`：openTCS plant model XML 候选文件
+- `preview.png`：生成结果预览图
+
+生成结果是候选拓扑，真实接车前需要在 RViz/现场低速验证点位和路径，并按实际业务重命名点位、调整单向/双向规则、库位、block 和车辆包络。
 
 查看状态：
 

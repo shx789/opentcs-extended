@@ -29,11 +29,13 @@ public class AgvPointMappingStore {
       );
     }
     this.mappingsByName = mappings.stream()
-        .collect(Collectors.toUnmodifiableMap(
-            mapping -> normalize(mapping.pointName()),
-            Function.identity(),
-            (left, right) -> right
-        ));
+        .collect(
+            Collectors.toUnmodifiableMap(
+                mapping -> normalize(mapping.pointName()),
+                Function.identity(),
+                (left, right) -> right
+            )
+        );
     this.nearestPointThresholdMeters = nearestPointThresholdMeters;
   }
 

@@ -6,7 +6,8 @@ package org.opentcs.rcs.api.wcs;
  * Exception for not-found business resources.
  */
 public class ResourceNotFoundException
-    extends IllegalArgumentException {
+    extends
+      IllegalArgumentException {
 
   public ResourceNotFoundException(String message) {
     super(message);

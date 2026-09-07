@@ -25,7 +25,8 @@ import org.junit.jupiter.api.Test;
 class HttpCallbackSenderTest {
 
   @Test
-  void shouldResolveRelativeUrlAndAttachAuthAndSignatureHeaders() throws Exception {
+  void shouldResolveRelativeUrlAndAttachAuthAndSignatureHeaders()
+      throws Exception {
     HttpServer server = HttpServer.create(new InetSocketAddress(0), 0);
     AtomicReference<String> path = new AtomicReference<>();
     AtomicReference<String> authorization = new AtomicReference<>();
@@ -70,7 +71,8 @@ class HttpCallbackSenderTest {
   }
 
   @Test
-  void shouldSupportAbsoluteCallbackUrlWithoutBaseUri() throws Exception {
+  void shouldSupportAbsoluteCallbackUrlWithoutBaseUri()
+      throws Exception {
     HttpServer server = HttpServer.create(new InetSocketAddress(0), 0);
     AtomicInteger calls = new AtomicInteger();
     server.createContext(
@@ -101,7 +103,8 @@ class HttpCallbackSenderTest {
   }
 
   @Test
-  void shouldThrowWhenWcsReturnsErrorStatus() throws Exception {
+  void shouldThrowWhenWcsReturnsErrorStatus()
+      throws Exception {
     HttpServer server = HttpServer.create(new InetSocketAddress(0), 0);
     server.createContext("/callback", exchange -> respond(exchange, 500, "{\"error\":\"down\"}"));
     server.start();
@@ -131,7 +134,8 @@ class HttpCallbackSenderTest {
       AtomicReference<String> timestamp,
       AtomicReference<String> signature,
       AtomicReference<String> body
-  ) throws IOException {
+  )
+      throws IOException {
     path.set(exchange.getRequestURI().getRawPath());
     authorization.set(exchange.getRequestHeaders().getFirst("Authorization"));
     timestamp.set(exchange.getRequestHeaders().getFirst("X-Test-Timestamp"));
@@ -139,7 +143,8 @@ class HttpCallbackSenderTest {
     body.set(new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.UTF_8));
   }
 
-  private void respond(HttpExchange exchange, int statusCode, String responseBody) throws IOException {
+  private void respond(HttpExchange exchange, int statusCode, String responseBody)
+      throws IOException {
     byte[] bytes = responseBody.getBytes(StandardCharsets.UTF_8);
     exchange.getResponseHeaders().add("Content-Type", "application/json");
     exchange.sendResponseHeaders(statusCode, bytes.length);
@@ -147,10 +152,13 @@ class HttpCallbackSenderTest {
     exchange.close();
   }
 
-  private String expectedSignature(String timestamp, String payload, String secret) throws Exception {
+  private String expectedSignature(String timestamp, String payload, String secret)
+      throws Exception {
     String content = timestamp + "." + payload;
     Mac mac = Mac.getInstance("HmacSHA256");
     mac.init(new SecretKeySpec(secret.getBytes(StandardCharsets.UTF_8), "HmacSHA256"));
-    return java.util.HexFormat.of().formatHex(mac.doFinal(content.getBytes(StandardCharsets.UTF_8)));
+    return java.util.HexFormat.of().formatHex(
+        mac.doFinal(content.getBytes(StandardCharsets.UTF_8))
+    );
   }
 }

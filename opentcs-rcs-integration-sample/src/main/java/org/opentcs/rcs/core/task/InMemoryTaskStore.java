@@ -10,7 +10,8 @@ import java.util.concurrent.ConcurrentMap;
  * In-memory task store for local runs/tests.
  */
 public class InMemoryTaskStore
-    implements TaskStore {
+    implements
+      TaskStore {
 
   private final ConcurrentMap<String, WcsTaskRecord> recordsByBizTaskNo = new ConcurrentHashMap<>();
   private final ConcurrentMap<String, String> bizTaskNoByMissionNo = new ConcurrentHashMap<>();

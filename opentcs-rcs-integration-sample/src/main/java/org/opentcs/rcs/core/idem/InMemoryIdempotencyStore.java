@@ -10,7 +10,8 @@ import java.util.concurrent.ConcurrentMap;
  * In-memory idempotency storage for local runs/tests.
  */
 public class InMemoryIdempotencyStore
-    implements IdempotencyStore {
+    implements
+      IdempotencyStore {
 
   private final ConcurrentMap<String, IdempotencyRecord> records = new ConcurrentHashMap<>();
 

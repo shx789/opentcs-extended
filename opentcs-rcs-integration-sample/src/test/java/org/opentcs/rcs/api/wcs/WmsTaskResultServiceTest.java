@@ -18,7 +18,8 @@ import org.opentcs.rcs.http.RequestContext;
 class WmsTaskResultServiceTest {
 
   @Test
-  void shouldEnqueueOutboundDoneResultWhenConfigured() throws Exception {
+  void shouldEnqueueOutboundDoneResultWhenConfigured()
+      throws Exception {
     InMemoryCallbackOutboxStore outboxStore = new InMemoryCallbackOutboxStore();
     ObjectMapper objectMapper = new ObjectMapper();
     WmsTaskResultService service = new WmsTaskResultService(
@@ -37,7 +38,9 @@ class WmsTaskResultServiceTest {
 
     var entries = outboxStore.findDue(Instant.now().plusSeconds(1), 10);
     assertThat(entries).hasSize(1);
-    assertThat(entries.get(0).callbackUrl()).isEqualTo("http://127.0.0.1:18081/api/v1/wms/outbound-results");
+    assertThat(entries.get(0).callbackUrl()).isEqualTo(
+        "http://127.0.0.1:18081/api/v1/wms/outbound-results"
+    );
     assertThat(entries.get(0).idemKey()).isEqualTo("BIZ-OUT-001|DONE");
     JsonNode payload = objectMapper.readTree(entries.get(0).payloadJson());
     assertThat(payload.get("biz_task_no").asText()).isEqualTo("BIZ-OUT-001");

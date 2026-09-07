@@ -59,7 +59,9 @@ public class AgvMqttStatusSubscriber {
     this.password = normalizeNullable(password);
     this.payloadParser = Objects.requireNonNull(payloadParser, "payloadParser");
     this.eventConsumer = Objects.requireNonNull(eventConsumer, "eventConsumer");
-    this.callbackRetryProcessor = Objects.requireNonNull(callbackRetryProcessor, "callbackRetryProcessor");
+    this.callbackRetryProcessor = Objects.requireNonNull(
+        callbackRetryProcessor, "callbackRetryProcessor"
+    );
     if (callbackDispatchBatchSize < 1) {
       throw new IllegalArgumentException("callbackDispatchBatchSize must be greater than 0");
     }
@@ -129,7 +131,8 @@ public class AgvMqttStatusSubscriber {
   }
 
   private class StatusCallback
-      implements MqttCallback {
+      implements
+        MqttCallback {
 
     @Override
     public void connectionLost(Throwable cause) {
