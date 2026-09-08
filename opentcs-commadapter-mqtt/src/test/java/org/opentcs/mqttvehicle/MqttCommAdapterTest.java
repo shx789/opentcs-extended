@@ -76,8 +76,9 @@ class MqttCommAdapterTest {
             + "\"id\":0,\"status\":\"success\"}"
     );
 
-    assertThat(adapter.getProcessModel().getPosition()).isEqualTo(destinationPoint.getName());
-    assertThat(adapter.getSentCommands()).isEmpty();
+    assertThat(adapter.getProcessModel().getPosition()).isEqualTo(sourcePoint.getName());
+    // Navigation success starts DROP; completion waits for lift feedback.
+    assertThat(adapter.getSentCommands()).contains(command);
   }
 
   @Test
@@ -105,8 +106,8 @@ class MqttCommAdapterTest {
             + "\"id\":1,\"status\":\"success\"}"
     );
 
-    assertThat(adapter.getProcessModel().getPosition()).isEqualTo(destinationPoint.getName());
-    assertThat(adapter.getSentCommands()).isEmpty();
+    assertThat(adapter.getProcessModel().getPosition()).isEqualTo(sourcePoint.getName());
+    assertThat(adapter.getSentCommands()).contains(command);
   }
 
   @Test

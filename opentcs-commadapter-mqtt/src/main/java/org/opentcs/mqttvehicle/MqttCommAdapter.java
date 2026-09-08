@@ -407,6 +407,10 @@ public class MqttCommAdapter
   }
 
   private void publishCommand(String payloadJson) {
+    if (mqttClient == null) {
+      LOG.warn("{}: MQTT client is not connected; cannot publish command yet.", getName());
+      return;
+    }
     try {
       MqttMessage message = new MqttMessage(payloadJson.getBytes(StandardCharsets.UTF_8));
       message.setQos(settings.qos());
