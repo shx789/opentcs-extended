@@ -1,0 +1,5 @@
+# Shell scripts must use LF on all platforms (avoid "command not found" on Linux).
+*.sh text eol=lf
+deploy/docker/scripts/** text eol=lf
+deploy/docker/.env.example text eol=lf
+deploy/docker/mosquitto.conf text eol=lf

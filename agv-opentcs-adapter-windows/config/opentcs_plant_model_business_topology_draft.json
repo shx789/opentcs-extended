@@ -1,0 +1,1566 @@
+{
+  "name": "agv-business-topology-draft",
+  "points": [
+    {
+      "name": "WAIT_WEST",
+      "position": {
+        "x": -11105,
+        "y": 4962,
+        "z": 0
+      },
+      "vehicleOrientationAngle": 0.0,
+      "type": "HALT_POSITION",
+      "layout": {
+        "position": {
+          "x": -11105,
+          "y": 4962
+        },
+        "labelOffset": {
+          "x": 0,
+          "y": 0
+        },
+        "layerId": 0
+      },
+      "vehicleEnvelopes": [],
+      "maxVehicleBoundingBox": {
+        "length": 1000,
+        "width": 800,
+        "height": 600,
+        "referenceOffset": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      "properties": [
+        {
+          "name": "ros.x",
+          "value": "-11.1048"
+        },
+        {
+          "name": "ros.y",
+          "value": "4.9624"
+        },
+        {
+          "name": "ros.yaw",
+          "value": "0.0"
+        },
+        {
+          "name": "comment",
+          "value": "候选西侧等待/端点"
+        }
+      ]
+    },
+    {
+      "name": "AISLE_W_01",
+      "position": {
+        "x": -8555,
+        "y": 4962,
+        "z": 0
+      },
+      "vehicleOrientationAngle": 0.0,
+      "type": "HALT_POSITION",
+      "layout": {
+        "position": {
+          "x": -8555,
+          "y": 4962
+        },
+        "labelOffset": {
+          "x": 0,
+          "y": 0
+        },
+        "layerId": 0
+      },
+      "vehicleEnvelopes": [],
+      "maxVehicleBoundingBox": {
+        "length": 1000,
+        "width": 800,
+        "height": 600,
+        "referenceOffset": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      "properties": [
+        {
+          "name": "ros.x",
+          "value": "-8.5548"
+        },
+        {
+          "name": "ros.y",
+          "value": "4.9624"
+        },
+        {
+          "name": "ros.yaw",
+          "value": "0.0"
+        },
+        {
+          "name": "comment",
+          "value": "西侧主通道点"
+        }
+      ]
+    },
+    {
+      "name": "AISLE_W_02",
+      "position": {
+        "x": -6755,
+        "y": 4812,
+        "z": 0
+      },
+      "vehicleOrientationAngle": 0.0,
+      "type": "HALT_POSITION",
+      "layout": {
+        "position": {
+          "x": -6755,
+          "y": 4812
+        },
+        "labelOffset": {
+          "x": 0,
+          "y": 0
+        },
+        "layerId": 0
+      },
+      "vehicleEnvelopes": [],
+      "maxVehicleBoundingBox": {
+        "length": 1000,
+        "width": 800,
+        "height": 600,
+        "referenceOffset": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      "properties": [
+        {
+          "name": "ros.x",
+          "value": "-6.7548"
+        },
+        {
+          "name": "ros.y",
+          "value": "4.8124"
+        },
+        {
+          "name": "ros.yaw",
+          "value": "0.0"
+        },
+        {
+          "name": "comment",
+          "value": "西侧主通道点"
+        }
+      ]
+    },
+    {
+      "name": "JUNCTION_MID",
+      "position": {
+        "x": -1855,
+        "y": 4912,
+        "z": 0
+      },
+      "vehicleOrientationAngle": 0.0,
+      "type": "HALT_POSITION",
+      "layout": {
+        "position": {
+          "x": -1855,
+          "y": 4912
+        },
+        "labelOffset": {
+          "x": 0,
+          "y": 0
+        },
+        "layerId": 0
+      },
+      "vehicleEnvelopes": [],
+      "maxVehicleBoundingBox": {
+        "length": 1000,
+        "width": 800,
+        "height": 600,
+        "referenceOffset": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      "properties": [
+        {
+          "name": "ros.x",
+          "value": "-1.8548"
+        },
+        {
+          "name": "ros.y",
+          "value": "4.9124"
+        },
+        {
+          "name": "ros.yaw",
+          "value": "0.0"
+        },
+        {
+          "name": "comment",
+          "value": "中部主路口"
+        }
+      ]
+    },
+    {
+      "name": "AISLE_E_01",
+      "position": {
+        "x": 95,
+        "y": 4862,
+        "z": 0
+      },
+      "vehicleOrientationAngle": 0.0,
+      "type": "HALT_POSITION",
+      "layout": {
+        "position": {
+          "x": 95,
+          "y": 4862
+        },
+        "labelOffset": {
+          "x": 0,
+          "y": 0
+        },
+        "layerId": 0
+      },
+      "vehicleEnvelopes": [],
+      "maxVehicleBoundingBox": {
+        "length": 1000,
+        "width": 800,
+        "height": 600,
+        "referenceOffset": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      "properties": [
+        {
+          "name": "ros.x",
+          "value": "0.0952"
+        },
+        {
+          "name": "ros.y",
+          "value": "4.8624"
+        },
+        {
+          "name": "ros.yaw",
+          "value": "0.0"
+        },
+        {
+          "name": "comment",
+          "value": "东侧主通道点"
+        }
+      ]
+    },
+    {
+      "name": "AISLE_E_02",
+      "position": {
+        "x": 1245,
+        "y": 4862,
+        "z": 0
+      },
+      "vehicleOrientationAngle": 0.0,
+      "type": "HALT_POSITION",
+      "layout": {
+        "position": {
+          "x": 1245,
+          "y": 4862
+        },
+        "labelOffset": {
+          "x": 0,
+          "y": 0
+        },
+        "layerId": 0
+      },
+      "vehicleEnvelopes": [],
+      "maxVehicleBoundingBox": {
+        "length": 1000,
+        "width": 800,
+        "height": 600,
+        "referenceOffset": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      "properties": [
+        {
+          "name": "ros.x",
+          "value": "1.2452"
+        },
+        {
+          "name": "ros.y",
+          "value": "4.8624"
+        },
+        {
+          "name": "ros.yaw",
+          "value": "0.0"
+        },
+        {
+          "name": "comment",
+          "value": "东侧主通道点"
+        }
+      ]
+    },
+    {
+      "name": "AISLE_E_03",
+      "position": {
+        "x": 4295,
+        "y": 4862,
+        "z": 0
+      },
+      "vehicleOrientationAngle": 0.0,
+      "type": "HALT_POSITION",
+      "layout": {
+        "position": {
+          "x": 4295,
+          "y": 4862
+        },
+        "labelOffset": {
+          "x": 0,
+          "y": 0
+        },
+        "layerId": 0
+      },
+      "vehicleEnvelopes": [],
+      "maxVehicleBoundingBox": {
+        "length": 1000,
+        "width": 800,
+        "height": 600,
+        "referenceOffset": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      "properties": [
+        {
+          "name": "ros.x",
+          "value": "4.2952"
+        },
+        {
+          "name": "ros.y",
+          "value": "4.8624"
+        },
+        {
+          "name": "ros.yaw",
+          "value": "0.0"
+        },
+        {
+          "name": "comment",
+          "value": "东侧主通道点"
+        }
+      ]
+    },
+    {
+      "name": "WAIT_EAST",
+      "position": {
+        "x": 6245,
+        "y": 4862,
+        "z": 0
+      },
+      "vehicleOrientationAngle": 0.0,
+      "type": "HALT_POSITION",
+      "layout": {
+        "position": {
+          "x": 6245,
+          "y": 4862
+        },
+        "labelOffset": {
+          "x": 0,
+          "y": 0
+        },
+        "layerId": 0
+      },
+      "vehicleEnvelopes": [],
+      "maxVehicleBoundingBox": {
+        "length": 1000,
+        "width": 800,
+        "height": 600,
+        "referenceOffset": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      "properties": [
+        {
+          "name": "ros.x",
+          "value": "6.2452"
+        },
+        {
+          "name": "ros.y",
+          "value": "4.8624"
+        },
+        {
+          "name": "ros.yaw",
+          "value": "0.0"
+        },
+        {
+          "name": "comment",
+          "value": "候选东侧等待/端点"
+        }
+      ]
+    },
+    {
+      "name": "NORTH_IN_01",
+      "position": {
+        "x": -5,
+        "y": 8262,
+        "z": 0
+      },
+      "vehicleOrientationAngle": 0.0,
+      "type": "HALT_POSITION",
+      "layout": {
+        "position": {
+          "x": -5,
+          "y": 8262
+        },
+        "labelOffset": {
+          "x": 0,
+          "y": 0
+        },
+        "layerId": 0
+      },
+      "vehicleEnvelopes": [],
+      "maxVehicleBoundingBox": {
+        "length": 1000,
+        "width": 800,
+        "height": 600,
+        "referenceOffset": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      "properties": [
+        {
+          "name": "ros.x",
+          "value": "-0.0048"
+        },
+        {
+          "name": "ros.y",
+          "value": "8.2624"
+        },
+        {
+          "name": "ros.yaw",
+          "value": "0.0"
+        },
+        {
+          "name": "comment",
+          "value": "候选北侧入口/工位"
+        }
+      ]
+    },
+    {
+      "name": "NORTH_IN_02",
+      "position": {
+        "x": 2845,
+        "y": 8262,
+        "z": 0
+      },
+      "vehicleOrientationAngle": 0.0,
+      "type": "HALT_POSITION",
+      "layout": {
+        "position": {
+          "x": 2845,
+          "y": 8262
+        },
+        "labelOffset": {
+          "x": 0,
+          "y": 0
+        },
+        "layerId": 0
+      },
+      "vehicleEnvelopes": [],
+      "maxVehicleBoundingBox": {
+        "length": 1000,
+        "width": 800,
+        "height": 600,
+        "referenceOffset": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      "properties": [
+        {
+          "name": "ros.x",
+          "value": "2.8452"
+        },
+        {
+          "name": "ros.y",
+          "value": "8.2624"
+        },
+        {
+          "name": "ros.yaw",
+          "value": "0.0"
+        },
+        {
+          "name": "comment",
+          "value": "候选北侧入口/工位"
+        }
+      ]
+    },
+    {
+      "name": "EAST_DOWN_01",
+      "position": {
+        "x": 3645,
+        "y": 2912,
+        "z": 0
+      },
+      "vehicleOrientationAngle": -1.5708,
+      "type": "HALT_POSITION",
+      "layout": {
+        "position": {
+          "x": 3645,
+          "y": 2912
+        },
+        "labelOffset": {
+          "x": 0,
+          "y": 0
+        },
+        "layerId": 0
+      },
+      "vehicleEnvelopes": [],
+      "maxVehicleBoundingBox": {
+        "length": 1000,
+        "width": 800,
+        "height": 600,
+        "referenceOffset": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      "properties": [
+        {
+          "name": "ros.x",
+          "value": "3.6452"
+        },
+        {
+          "name": "ros.y",
+          "value": "2.9124"
+        },
+        {
+          "name": "ros.yaw",
+          "value": "-1.5708"
+        },
+        {
+          "name": "comment",
+          "value": "东侧竖向通道"
+        }
+      ]
+    },
+    {
+      "name": "EAST_DOWN_02",
+      "position": {
+        "x": 3795,
+        "y": 512,
+        "z": 0
+      },
+      "vehicleOrientationAngle": -1.5708,
+      "type": "HALT_POSITION",
+      "layout": {
+        "position": {
+          "x": 3795,
+          "y": 512
+        },
+        "labelOffset": {
+          "x": 0,
+          "y": 0
+        },
+        "layerId": 0
+      },
+      "vehicleEnvelopes": [],
+      "maxVehicleBoundingBox": {
+        "length": 1000,
+        "width": 800,
+        "height": 600,
+        "referenceOffset": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      "properties": [
+        {
+          "name": "ros.x",
+          "value": "3.7952"
+        },
+        {
+          "name": "ros.y",
+          "value": "0.5124"
+        },
+        {
+          "name": "ros.yaw",
+          "value": "-1.5708"
+        },
+        {
+          "name": "comment",
+          "value": "东侧竖向通道"
+        }
+      ]
+    },
+    {
+      "name": "EAST_DOWN_03",
+      "position": {
+        "x": 3645,
+        "y": -3388,
+        "z": 0
+      },
+      "vehicleOrientationAngle": -1.5708,
+      "type": "HALT_POSITION",
+      "layout": {
+        "position": {
+          "x": 3645,
+          "y": -3388
+        },
+        "labelOffset": {
+          "x": 0,
+          "y": 0
+        },
+        "layerId": 0
+      },
+      "vehicleEnvelopes": [],
+      "maxVehicleBoundingBox": {
+        "length": 1000,
+        "width": 800,
+        "height": 600,
+        "referenceOffset": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      "properties": [
+        {
+          "name": "ros.x",
+          "value": "3.6452"
+        },
+        {
+          "name": "ros.y",
+          "value": "-3.3876"
+        },
+        {
+          "name": "ros.yaw",
+          "value": "-1.5708"
+        },
+        {
+          "name": "comment",
+          "value": "东侧竖向通道"
+        }
+      ]
+    },
+    {
+      "name": "SOUTH_E_01",
+      "position": {
+        "x": 1795,
+        "y": -9588,
+        "z": 0
+      },
+      "vehicleOrientationAngle": 3.1416,
+      "type": "HALT_POSITION",
+      "layout": {
+        "position": {
+          "x": 1795,
+          "y": -9588
+        },
+        "labelOffset": {
+          "x": 0,
+          "y": 0
+        },
+        "layerId": 0
+      },
+      "vehicleEnvelopes": [],
+      "maxVehicleBoundingBox": {
+        "length": 1000,
+        "width": 800,
+        "height": 600,
+        "referenceOffset": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      "properties": [
+        {
+          "name": "ros.x",
+          "value": "1.7952"
+        },
+        {
+          "name": "ros.y",
+          "value": "-9.5876"
+        },
+        {
+          "name": "ros.yaw",
+          "value": "3.1416"
+        },
+        {
+          "name": "comment",
+          "value": "南侧通道点"
+        }
+      ]
+    },
+    {
+      "name": "SOUTH_MID",
+      "position": {
+        "x": -305,
+        "y": -9588,
+        "z": 0
+      },
+      "vehicleOrientationAngle": 3.1416,
+      "type": "HALT_POSITION",
+      "layout": {
+        "position": {
+          "x": -305,
+          "y": -9588
+        },
+        "labelOffset": {
+          "x": 0,
+          "y": 0
+        },
+        "layerId": 0
+      },
+      "vehicleEnvelopes": [],
+      "maxVehicleBoundingBox": {
+        "length": 1000,
+        "width": 800,
+        "height": 600,
+        "referenceOffset": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      "properties": [
+        {
+          "name": "ros.x",
+          "value": "-0.3048"
+        },
+        {
+          "name": "ros.y",
+          "value": "-9.5876"
+        },
+        {
+          "name": "ros.yaw",
+          "value": "3.1416"
+        },
+        {
+          "name": "comment",
+          "value": "南侧通道点"
+        }
+      ]
+    },
+    {
+      "name": "SOUTH_W_01",
+      "position": {
+        "x": -1605,
+        "y": -9688,
+        "z": 0
+      },
+      "vehicleOrientationAngle": 3.1416,
+      "type": "HALT_POSITION",
+      "layout": {
+        "position": {
+          "x": -1605,
+          "y": -9688
+        },
+        "labelOffset": {
+          "x": 0,
+          "y": 0
+        },
+        "layerId": 0
+      },
+      "vehicleEnvelopes": [],
+      "maxVehicleBoundingBox": {
+        "length": 1000,
+        "width": 800,
+        "height": 600,
+        "referenceOffset": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      "properties": [
+        {
+          "name": "ros.x",
+          "value": "-1.6048"
+        },
+        {
+          "name": "ros.y",
+          "value": "-9.6876"
+        },
+        {
+          "name": "ros.yaw",
+          "value": "3.1416"
+        },
+        {
+          "name": "comment",
+          "value": "南侧通道点"
+        }
+      ]
+    },
+    {
+      "name": "WEST_DOWN_01",
+      "position": {
+        "x": -8155,
+        "y": -3388,
+        "z": 0
+      },
+      "vehicleOrientationAngle": -1.5708,
+      "type": "HALT_POSITION",
+      "layout": {
+        "position": {
+          "x": -8155,
+          "y": -3388
+        },
+        "labelOffset": {
+          "x": 0,
+          "y": 0
+        },
+        "layerId": 0
+      },
+      "vehicleEnvelopes": [],
+      "maxVehicleBoundingBox": {
+        "length": 1000,
+        "width": 800,
+        "height": 600,
+        "referenceOffset": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      "properties": [
+        {
+          "name": "ros.x",
+          "value": "-8.1548"
+        },
+        {
+          "name": "ros.y",
+          "value": "-3.3876"
+        },
+        {
+          "name": "ros.yaw",
+          "value": "-1.5708"
+        },
+        {
+          "name": "comment",
+          "value": "西南竖向通道"
+        }
+      ]
+    },
+    {
+      "name": "WEST_DOWN_02",
+      "position": {
+        "x": -8155,
+        "y": -5288,
+        "z": 0
+      },
+      "vehicleOrientationAngle": -1.5708,
+      "type": "HALT_POSITION",
+      "layout": {
+        "position": {
+          "x": -8155,
+          "y": -5288
+        },
+        "labelOffset": {
+          "x": 0,
+          "y": 0
+        },
+        "layerId": 0
+      },
+      "vehicleEnvelopes": [],
+      "maxVehicleBoundingBox": {
+        "length": 1000,
+        "width": 800,
+        "height": 600,
+        "referenceOffset": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      "properties": [
+        {
+          "name": "ros.x",
+          "value": "-8.1548"
+        },
+        {
+          "name": "ros.y",
+          "value": "-5.2876"
+        },
+        {
+          "name": "ros.yaw",
+          "value": "-1.5708"
+        },
+        {
+          "name": "comment",
+          "value": "西南竖向通道"
+        }
+      ]
+    },
+    {
+      "name": "WEST_DOWN_03",
+      "position": {
+        "x": -6155,
+        "y": -6988,
+        "z": 0
+      },
+      "vehicleOrientationAngle": 0.0,
+      "type": "HALT_POSITION",
+      "layout": {
+        "position": {
+          "x": -6155,
+          "y": -6988
+        },
+        "labelOffset": {
+          "x": 0,
+          "y": 0
+        },
+        "layerId": 0
+      },
+      "vehicleEnvelopes": [],
+      "maxVehicleBoundingBox": {
+        "length": 1000,
+        "width": 800,
+        "height": 600,
+        "referenceOffset": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      "properties": [
+        {
+          "name": "ros.x",
+          "value": "-6.1548"
+        },
+        {
+          "name": "ros.y",
+          "value": "-6.9876"
+        },
+        {
+          "name": "ros.yaw",
+          "value": "0.0"
+        },
+        {
+          "name": "comment",
+          "value": "西南连接点"
+        }
+      ]
+    }
+  ],
+  "paths": [
+    {
+      "name": "PATH_WAIT_WEST_TO_AISLE_W_01",
+      "srcPointName": "WAIT_WEST",
+      "destPointName": "AISLE_W_01",
+      "length": 2550,
+      "maxVelocity": 1000,
+      "maxReverseVelocity": 1000,
+      "peripheralOperations": [],
+      "locked": false,
+      "layout": {
+        "connectionType": "DIRECT",
+        "controlPoints": [],
+        "layerId": 0
+      },
+      "vehicleEnvelopes": [],
+      "properties": []
+    },
+    {
+      "name": "PATH_WAIT_WEST_TO_AISLE_W_01_REV",
+      "srcPointName": "AISLE_W_01",
+      "destPointName": "WAIT_WEST",
+      "length": 2550,
+      "maxVelocity": 1000,
+      "maxReverseVelocity": 1000,
+      "peripheralOperations": [],
+      "locked": false,
+      "layout": {
+        "connectionType": "DIRECT",
+        "controlPoints": [],
+        "layerId": 0
+      },
+      "vehicleEnvelopes": [],
+      "properties": []
+    },
+    {
+      "name": "PATH_AISLE_W_01_TO_AISLE_W_02",
+      "srcPointName": "AISLE_W_01",
+      "destPointName": "AISLE_W_02",
+      "length": 1806,
+      "maxVelocity": 1000,
+      "maxReverseVelocity": 1000,
+      "peripheralOperations": [],
+      "locked": false,
+      "layout": {
+        "connectionType": "DIRECT",
+        "controlPoints": [],
+        "layerId": 0
+      },
+      "vehicleEnvelopes": [],
+      "properties": []
+    },
+    {
+      "name": "PATH_AISLE_W_01_TO_AISLE_W_02_REV",
+      "srcPointName": "AISLE_W_02",
+      "destPointName": "AISLE_W_01",
+      "length": 1806,
+      "maxVelocity": 1000,
+      "maxReverseVelocity": 1000,
+      "peripheralOperations": [],
+      "locked": false,
+      "layout": {
+        "connectionType": "DIRECT",
+        "controlPoints": [],
+        "layerId": 0
+      },
+      "vehicleEnvelopes": [],
+      "properties": []
+    },
+    {
+      "name": "PATH_AISLE_W_02_TO_JUNCTION_MID",
+      "srcPointName": "AISLE_W_02",
+      "destPointName": "JUNCTION_MID",
+      "length": 4901,
+      "maxVelocity": 1000,
+      "maxReverseVelocity": 1000,
+      "peripheralOperations": [],
+      "locked": false,
+      "layout": {
+        "connectionType": "DIRECT",
+        "controlPoints": [],
+        "layerId": 0
+      },
+      "vehicleEnvelopes": [],
+      "properties": []
+    },
+    {
+      "name": "PATH_AISLE_W_02_TO_JUNCTION_MID_REV",
+      "srcPointName": "JUNCTION_MID",
+      "destPointName": "AISLE_W_02",
+      "length": 4901,
+      "maxVelocity": 1000,
+      "maxReverseVelocity": 1000,
+      "peripheralOperations": [],
+      "locked": false,
+      "layout": {
+        "connectionType": "DIRECT",
+        "controlPoints": [],
+        "layerId": 0
+      },
+      "vehicleEnvelopes": [],
+      "properties": []
+    },
+    {
+      "name": "PATH_JUNCTION_MID_TO_AISLE_E_01",
+      "srcPointName": "JUNCTION_MID",
+      "destPointName": "AISLE_E_01",
+      "length": 1951,
+      "maxVelocity": 1000,
+      "maxReverseVelocity": 1000,
+      "peripheralOperations": [],
+      "locked": false,
+      "layout": {
+        "connectionType": "DIRECT",
+        "controlPoints": [],
+        "layerId": 0
+      },
+      "vehicleEnvelopes": [],
+      "properties": []
+    },
+    {
+      "name": "PATH_JUNCTION_MID_TO_AISLE_E_01_REV",
+      "srcPointName": "AISLE_E_01",
+      "destPointName": "JUNCTION_MID",
+      "length": 1951,
+      "maxVelocity": 1000,
+      "maxReverseVelocity": 1000,
+      "peripheralOperations": [],
+      "locked": false,
+      "layout": {
+        "connectionType": "DIRECT",
+        "controlPoints": [],
+        "layerId": 0
+      },
+      "vehicleEnvelopes": [],
+      "properties": []
+    },
+    {
+      "name": "PATH_AISLE_E_01_TO_AISLE_E_02",
+      "srcPointName": "AISLE_E_01",
+      "destPointName": "AISLE_E_02",
+      "length": 1150,
+      "maxVelocity": 1000,
+      "maxReverseVelocity": 1000,
+      "peripheralOperations": [],
+      "locked": false,
+      "layout": {
+        "connectionType": "DIRECT",
+        "controlPoints": [],
+        "layerId": 0
+      },
+      "vehicleEnvelopes": [],
+      "properties": []
+    },
+    {
+      "name": "PATH_AISLE_E_01_TO_AISLE_E_02_REV",
+      "srcPointName": "AISLE_E_02",
+      "destPointName": "AISLE_E_01",
+      "length": 1150,
+      "maxVelocity": 1000,
+      "maxReverseVelocity": 1000,
+      "peripheralOperations": [],
+      "locked": false,
+      "layout": {
+        "connectionType": "DIRECT",
+        "controlPoints": [],
+        "layerId": 0
+      },
+      "vehicleEnvelopes": [],
+      "properties": []
+    },
+    {
+      "name": "PATH_AISLE_E_02_TO_AISLE_E_03",
+      "srcPointName": "AISLE_E_02",
+      "destPointName": "AISLE_E_03",
+      "length": 3050,
+      "maxVelocity": 1000,
+      "maxReverseVelocity": 1000,
+      "peripheralOperations": [],
+      "locked": false,
+      "layout": {
+        "connectionType": "DIRECT",
+        "controlPoints": [],
+        "layerId": 0
+      },
+      "vehicleEnvelopes": [],
+      "properties": []
+    },
+    {
+      "name": "PATH_AISLE_E_02_TO_AISLE_E_03_REV",
+      "srcPointName": "AISLE_E_03",
+      "destPointName": "AISLE_E_02",
+      "length": 3050,
+      "maxVelocity": 1000,
+      "maxReverseVelocity": 1000,
+      "peripheralOperations": [],
+      "locked": false,
+      "layout": {
+        "connectionType": "DIRECT",
+        "controlPoints": [],
+        "layerId": 0
+      },
+      "vehicleEnvelopes": [],
+      "properties": []
+    },
+    {
+      "name": "PATH_AISLE_E_03_TO_WAIT_EAST",
+      "srcPointName": "AISLE_E_03",
+      "destPointName": "WAIT_EAST",
+      "length": 1950,
+      "maxVelocity": 1000,
+      "maxReverseVelocity": 1000,
+      "peripheralOperations": [],
+      "locked": false,
+      "layout": {
+        "connectionType": "DIRECT",
+        "controlPoints": [],
+        "layerId": 0
+      },
+      "vehicleEnvelopes": [],
+      "properties": []
+    },
+    {
+      "name": "PATH_AISLE_E_03_TO_WAIT_EAST_REV",
+      "srcPointName": "WAIT_EAST",
+      "destPointName": "AISLE_E_03",
+      "length": 1950,
+      "maxVelocity": 1000,
+      "maxReverseVelocity": 1000,
+      "peripheralOperations": [],
+      "locked": false,
+      "layout": {
+        "connectionType": "DIRECT",
+        "controlPoints": [],
+        "layerId": 0
+      },
+      "vehicleEnvelopes": [],
+      "properties": []
+    },
+    {
+      "name": "PATH_NORTH_IN_01_TO_NORTH_IN_02",
+      "srcPointName": "NORTH_IN_01",
+      "destPointName": "NORTH_IN_02",
+      "length": 2850,
+      "maxVelocity": 1000,
+      "maxReverseVelocity": 1000,
+      "peripheralOperations": [],
+      "locked": false,
+      "layout": {
+        "connectionType": "DIRECT",
+        "controlPoints": [],
+        "layerId": 0
+      },
+      "vehicleEnvelopes": [],
+      "properties": []
+    },
+    {
+      "name": "PATH_NORTH_IN_01_TO_NORTH_IN_02_REV",
+      "srcPointName": "NORTH_IN_02",
+      "destPointName": "NORTH_IN_01",
+      "length": 2850,
+      "maxVelocity": 1000,
+      "maxReverseVelocity": 1000,
+      "peripheralOperations": [],
+      "locked": false,
+      "layout": {
+        "connectionType": "DIRECT",
+        "controlPoints": [],
+        "layerId": 0
+      },
+      "vehicleEnvelopes": [],
+      "properties": []
+    },
+    {
+      "name": "PATH_AISLE_E_03_TO_EAST_DOWN_01",
+      "srcPointName": "AISLE_E_03",
+      "destPointName": "EAST_DOWN_01",
+      "length": 2055,
+      "maxVelocity": 1000,
+      "maxReverseVelocity": 1000,
+      "peripheralOperations": [],
+      "locked": false,
+      "layout": {
+        "connectionType": "DIRECT",
+        "controlPoints": [],
+        "layerId": 0
+      },
+      "vehicleEnvelopes": [],
+      "properties": []
+    },
+    {
+      "name": "PATH_AISLE_E_03_TO_EAST_DOWN_01_REV",
+      "srcPointName": "EAST_DOWN_01",
+      "destPointName": "AISLE_E_03",
+      "length": 2055,
+      "maxVelocity": 1000,
+      "maxReverseVelocity": 1000,
+      "peripheralOperations": [],
+      "locked": false,
+      "layout": {
+        "connectionType": "DIRECT",
+        "controlPoints": [],
+        "layerId": 0
+      },
+      "vehicleEnvelopes": [],
+      "properties": []
+    },
+    {
+      "name": "PATH_EAST_DOWN_01_TO_EAST_DOWN_02",
+      "srcPointName": "EAST_DOWN_01",
+      "destPointName": "EAST_DOWN_02",
+      "length": 2405,
+      "maxVelocity": 1000,
+      "maxReverseVelocity": 1000,
+      "peripheralOperations": [],
+      "locked": false,
+      "layout": {
+        "connectionType": "DIRECT",
+        "controlPoints": [],
+        "layerId": 0
+      },
+      "vehicleEnvelopes": [],
+      "properties": []
+    },
+    {
+      "name": "PATH_EAST_DOWN_01_TO_EAST_DOWN_02_REV",
+      "srcPointName": "EAST_DOWN_02",
+      "destPointName": "EAST_DOWN_01",
+      "length": 2405,
+      "maxVelocity": 1000,
+      "maxReverseVelocity": 1000,
+      "peripheralOperations": [],
+      "locked": false,
+      "layout": {
+        "connectionType": "DIRECT",
+        "controlPoints": [],
+        "layerId": 0
+      },
+      "vehicleEnvelopes": [],
+      "properties": []
+    },
+    {
+      "name": "PATH_EAST_DOWN_02_TO_EAST_DOWN_03",
+      "srcPointName": "EAST_DOWN_02",
+      "destPointName": "EAST_DOWN_03",
+      "length": 3903,
+      "maxVelocity": 1000,
+      "maxReverseVelocity": 1000,
+      "peripheralOperations": [],
+      "locked": false,
+      "layout": {
+        "connectionType": "DIRECT",
+        "controlPoints": [],
+        "layerId": 0
+      },
+      "vehicleEnvelopes": [],
+      "properties": []
+    },
+    {
+      "name": "PATH_EAST_DOWN_02_TO_EAST_DOWN_03_REV",
+      "srcPointName": "EAST_DOWN_03",
+      "destPointName": "EAST_DOWN_02",
+      "length": 3903,
+      "maxVelocity": 1000,
+      "maxReverseVelocity": 1000,
+      "peripheralOperations": [],
+      "locked": false,
+      "layout": {
+        "connectionType": "DIRECT",
+        "controlPoints": [],
+        "layerId": 0
+      },
+      "vehicleEnvelopes": [],
+      "properties": []
+    },
+    {
+      "name": "PATH_EAST_DOWN_03_TO_SOUTH_E_01",
+      "srcPointName": "EAST_DOWN_03",
+      "destPointName": "SOUTH_E_01",
+      "length": 6470,
+      "maxVelocity": 1000,
+      "maxReverseVelocity": 1000,
+      "peripheralOperations": [],
+      "locked": false,
+      "layout": {
+        "connectionType": "DIRECT",
+        "controlPoints": [],
+        "layerId": 0
+      },
+      "vehicleEnvelopes": [],
+      "properties": []
+    },
+    {
+      "name": "PATH_EAST_DOWN_03_TO_SOUTH_E_01_REV",
+      "srcPointName": "SOUTH_E_01",
+      "destPointName": "EAST_DOWN_03",
+      "length": 6470,
+      "maxVelocity": 1000,
+      "maxReverseVelocity": 1000,
+      "peripheralOperations": [],
+      "locked": false,
+      "layout": {
+        "connectionType": "DIRECT",
+        "controlPoints": [],
+        "layerId": 0
+      },
+      "vehicleEnvelopes": [],
+      "properties": []
+    },
+    {
+      "name": "PATH_SOUTH_E_01_TO_SOUTH_MID",
+      "srcPointName": "SOUTH_E_01",
+      "destPointName": "SOUTH_MID",
+      "length": 2100,
+      "maxVelocity": 1000,
+      "maxReverseVelocity": 1000,
+      "peripheralOperations": [],
+      "locked": false,
+      "layout": {
+        "connectionType": "DIRECT",
+        "controlPoints": [],
+        "layerId": 0
+      },
+      "vehicleEnvelopes": [],
+      "properties": []
+    },
+    {
+      "name": "PATH_SOUTH_E_01_TO_SOUTH_MID_REV",
+      "srcPointName": "SOUTH_MID",
+      "destPointName": "SOUTH_E_01",
+      "length": 2100,
+      "maxVelocity": 1000,
+      "maxReverseVelocity": 1000,
+      "peripheralOperations": [],
+      "locked": false,
+      "layout": {
+        "connectionType": "DIRECT",
+        "controlPoints": [],
+        "layerId": 0
+      },
+      "vehicleEnvelopes": [],
+      "properties": []
+    },
+    {
+      "name": "PATH_SOUTH_MID_TO_SOUTH_W_01",
+      "srcPointName": "SOUTH_MID",
+      "destPointName": "SOUTH_W_01",
+      "length": 1304,
+      "maxVelocity": 1000,
+      "maxReverseVelocity": 1000,
+      "peripheralOperations": [],
+      "locked": false,
+      "layout": {
+        "connectionType": "DIRECT",
+        "controlPoints": [],
+        "layerId": 0
+      },
+      "vehicleEnvelopes": [],
+      "properties": []
+    },
+    {
+      "name": "PATH_SOUTH_MID_TO_SOUTH_W_01_REV",
+      "srcPointName": "SOUTH_W_01",
+      "destPointName": "SOUTH_MID",
+      "length": 1304,
+      "maxVelocity": 1000,
+      "maxReverseVelocity": 1000,
+      "peripheralOperations": [],
+      "locked": false,
+      "layout": {
+        "connectionType": "DIRECT",
+        "controlPoints": [],
+        "layerId": 0
+      },
+      "vehicleEnvelopes": [],
+      "properties": []
+    },
+    {
+      "name": "PATH_WEST_DOWN_01_TO_WEST_DOWN_02",
+      "srcPointName": "WEST_DOWN_01",
+      "destPointName": "WEST_DOWN_02",
+      "length": 1900,
+      "maxVelocity": 1000,
+      "maxReverseVelocity": 1000,
+      "peripheralOperations": [],
+      "locked": false,
+      "layout": {
+        "connectionType": "DIRECT",
+        "controlPoints": [],
+        "layerId": 0
+      },
+      "vehicleEnvelopes": [],
+      "properties": []
+    },
+    {
+      "name": "PATH_WEST_DOWN_01_TO_WEST_DOWN_02_REV",
+      "srcPointName": "WEST_DOWN_02",
+      "destPointName": "WEST_DOWN_01",
+      "length": 1900,
+      "maxVelocity": 1000,
+      "maxReverseVelocity": 1000,
+      "peripheralOperations": [],
+      "locked": false,
+      "layout": {
+        "connectionType": "DIRECT",
+        "controlPoints": [],
+        "layerId": 0
+      },
+      "vehicleEnvelopes": [],
+      "properties": []
+    },
+    {
+      "name": "PATH_WEST_DOWN_02_TO_WEST_DOWN_03",
+      "srcPointName": "WEST_DOWN_02",
+      "destPointName": "WEST_DOWN_03",
+      "length": 2625,
+      "maxVelocity": 1000,
+      "maxReverseVelocity": 1000,
+      "peripheralOperations": [],
+      "locked": false,
+      "layout": {
+        "connectionType": "DIRECT",
+        "controlPoints": [],
+        "layerId": 0
+      },
+      "vehicleEnvelopes": [],
+      "properties": []
+    },
+    {
+      "name": "PATH_WEST_DOWN_02_TO_WEST_DOWN_03_REV",
+      "srcPointName": "WEST_DOWN_03",
+      "destPointName": "WEST_DOWN_02",
+      "length": 2625,
+      "maxVelocity": 1000,
+      "maxReverseVelocity": 1000,
+      "peripheralOperations": [],
+      "locked": false,
+      "layout": {
+        "connectionType": "DIRECT",
+        "controlPoints": [],
+        "layerId": 0
+      },
+      "vehicleEnvelopes": [],
+      "properties": []
+    },
+    {
+      "name": "PATH_WEST_DOWN_03_TO_SOUTH_W_01",
+      "srcPointName": "WEST_DOWN_03",
+      "destPointName": "SOUTH_W_01",
+      "length": 5291,
+      "maxVelocity": 1000,
+      "maxReverseVelocity": 1000,
+      "peripheralOperations": [],
+      "locked": false,
+      "layout": {
+        "connectionType": "DIRECT",
+        "controlPoints": [],
+        "layerId": 0
+      },
+      "vehicleEnvelopes": [],
+      "properties": []
+    },
+    {
+      "name": "PATH_WEST_DOWN_03_TO_SOUTH_W_01_REV",
+      "srcPointName": "SOUTH_W_01",
+      "destPointName": "WEST_DOWN_03",
+      "length": 5291,
+      "maxVelocity": 1000,
+      "maxReverseVelocity": 1000,
+      "peripheralOperations": [],
+      "locked": false,
+      "layout": {
+        "connectionType": "DIRECT",
+        "controlPoints": [],
+        "layerId": 0
+      },
+      "vehicleEnvelopes": [],
+      "properties": []
+    }
+  ],
+  "locationTypes": [],
+  "locations": [],
+  "blocks": [],
+  "vehicles": [
+    {
+      "name": "Vehicle-01",
+      "boundingBox": {
+        "length": 1000,
+        "width": 800,
+        "height": 600,
+        "referenceOffset": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      "energyLevelCritical": 30,
+      "energyLevelGood": 90,
+      "energyLevelFullyRecharged": 90,
+      "energyLevelSufficientlyRecharged": 30,
+      "maxVelocity": 1000,
+      "maxReverseVelocity": 1000,
+      "layout": {
+        "routeColor": "#00FF00"
+      },
+      "properties": []
+    }
+  ],
+  "visualLayout": {
+    "name": "VLayout",
+    "scaleX": 50.0,
+    "scaleY": 50.0,
+    "layers": [
+      {
+        "id": 0,
+        "ordinal": 0,
+        "visible": true,
+        "name": "Default layer",
+        "groupId": 0
+      }
+    ],
+    "layerGroups": [
+      {
+        "id": 0,
+        "name": "Default layer group",
+        "visible": true
+      }
+    ],
+    "properties": []
+  },
+  "properties": []
+}

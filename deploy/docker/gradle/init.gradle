@@ -1,0 +1,25 @@
+// SPDX-FileCopyrightText: The openTCS Authors
+// SPDX-License-Identifier: MIT
+//
+// Optional Maven mirrors for Docker builds in restricted networks.
+// Enabled when GRADLE_USE_MAVEN_MIRROR=true (default in docker-gradle-build.sh).
+
+if ('true' == System.getenv('GRADLE_USE_MAVEN_MIRROR')) {
+  def mirror = 'https://maven.aliyun.com/repository/public'
+
+  allprojects {
+    buildscript {
+      repositories {
+        maven { url mirror }
+        maven { url 'https://maven.aliyun.com/repository/gradle-plugin' }
+        mavenCentral()
+        mavenLocal()
+      }
+    }
+    repositories {
+      maven { url mirror }
+      mavenCentral()
+      mavenLocal()
+    }
+  }
+}

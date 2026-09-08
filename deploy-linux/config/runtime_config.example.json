@@ -1,0 +1,17 @@
+{
+  "mqtt_uri": "mqtt://192.168.10.100:1883/",
+  "source_topic": "task_feedback",
+  "command_topic": "robot_control",
+  "forward_command_topic": "",
+  "open_tcs_base_url": "http://127.0.0.1:55200",
+  "rcs_base_url": "http://127.0.0.1:8090",
+  "vehicle_name": "Vehicle-01",
+  "agv_id": "AGV_01",
+  "mapping_file": "generated/agv_opentcs_business_mapping.json",
+  "point_id_map": "nav:0=ST_IN_01,point:0=ST_IN_01,nav:1=P_WAIT_IN_01,point:1=P_WAIT_IN_01",
+  "distance_tolerance_m": 1.2,
+  "publish_rcs_event": true,
+  "rcs_event_topic_template": "agv/{agv_id}/task/events",
+  "status_file": "../logs/agv_native_feedback_adapter_status.json",
+  "agv_point_file": "interest_point.sample.json"
+}

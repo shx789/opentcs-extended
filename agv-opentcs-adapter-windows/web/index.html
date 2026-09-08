@@ -1,0 +1,263 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AGV openTCS Config</title>
+  <link rel="stylesheet" href="app.css">
+</head>
+<body>
+  <main class="layout">
+    <section class="card">
+      <h1>AGV openTCS 配置页</h1>
+      <p class="muted">这个页面直接编辑 `config/runtime_config.json`，保存后 adapter 会按已有热加载逻辑自动重读。</p>
+      <h2>1. 连接与运行参数</h2>
+      <div class="quick-form">
+        <label>
+          <span>小车 MQTT URI</span>
+          <input id="quickMqttUri" type="text" placeholder="mqtt://192.168.254.100:1883/">
+        </label>
+        <label>
+          <span>反馈 topic</span>
+          <input id="quickSourceTopic" type="text" placeholder="task_feedback">
+        </label>
+        <label>
+          <span>控制 topic</span>
+          <input id="quickCommandTopic" type="text" placeholder="robot_control">
+        </label>
+        <label>
+          <span>openTCS 地址</span>
+          <input id="quickOpenTcsUrl" type="text" placeholder="http://127.0.0.1:55200">
+        </label>
+        <label>
+          <span>RCS 地址</span>
+          <input id="quickRcsUrl" type="text" placeholder="http://127.0.0.1:8090">
+        </label>
+        <label>
+          <span>车辆名</span>
+          <input id="quickVehicleName" type="text" placeholder="Vehicle-01">
+        </label>
+        <label>
+          <span>AGV ID</span>
+          <input id="quickAgvId" type="text" placeholder="AGV_01">
+        </label>
+        <label>
+          <span>坐标容差 m</span>
+          <input id="quickTolerance" type="number" min="0" step="0.1">
+        </label>
+        <label>
+          <span>发布 RCS 事件</span>
+          <select id="quickPublishEvent">
+            <option value="true">true</option>
+            <option value="false">false</option>
+          </select>
+        </label>
+      </div>
+      <label class="wide-field">
+        <span>点位映射 point_id_map</span>
+        <textarea id="quickPointMap" spellcheck="false" placeholder="nav:0=ST_IN_01,nav:1=P_WAIT_IN_01,point:0=ST_OUT_01"></textarea>
+      </label>
+      <div class="point-map-tools">
+        <label>
+          <span>task_feedback type 预设</span>
+          <select id="pointMapPreset">
+            <option value="nav,point">nav + point（推荐测试）</option>
+            <option value="point">point 导航点</option>
+            <option value="nav">nav 巡航点</option>
+            <option value="track">track 轨迹</option>
+            <option value="charge">charge 回充</option>
+            <option value="track,nav,charge,point">全部协议类型</option>
+          </select>
+        </label>
+        <label>
+          <span>起始 ID</span>
+          <input id="pointMapStartId" type="number" step="1" value="0">
+        </label>
+        <p class="muted point-map-note">自动生成按当前拓扑点位顺序写入 type:id=openTCS点名；现场使用前要把 ID 改成真实小车反馈里的 ID。</p>
+      </div>
+      <div class="toolbar">
+        <button id="reloadBtn">保存并热加载</button>
+        <button id="saveQuickBtn">保存常用配置</button>
+        <button id="generatePointMapBtn">自动生成点位映射</button>
+        <button id="syncQuickBtn">丢弃修改，从 JSON 刷新</button>
+        <button id="saveBtn">保存配置</button>
+        <button id="testConnectionBtn">测试连接</button>
+        <select id="templateSelect">
+          <option value="default">默认模板</option>
+          <option value="real_car">真实小车模板</option>
+          <option value="no_car">无车模板</option>
+        </select>
+        <button id="loadTemplateBtn">载入模板</button>
+      </div>
+      <div id="connectionBox" class="message"></div>
+      <h2>高级 JSON</h2>
+      <textarea id="configEditor" spellcheck="false"></textarea>
+      <div id="validationBox" class="message"></div>
+    </section>
+    <section class="card">
+      <h2>2. 上传地图并生成候选拓扑</h2>
+      <div class="upload-row">
+        <label>
+          <span>map.yaml</span>
+          <input id="mapYamlUploadInput" type="file" accept=".yaml,.yml">
+        </label>
+        <label>
+          <span>map.pgm</span>
+          <input id="mapPgmUploadInput" type="file" accept=".pgm">
+        </label>
+        <button id="uploadMapBtn">上传并填入</button>
+      </div>
+      <div class="topology-form">
+        <label>
+          <span>已上传 map.yaml</span>
+          <input id="mapYamlInput" type="text" placeholder="上传后自动填入" readonly>
+        </label>
+        <label>
+          <span>生成模式</span>
+          <select id="topologyModeSelect">
+            <option value="blackline-skeleton">黑线骨架</option>
+            <option value="free-space-skeleton">自由区骨架</option>
+            <option value="hough-line">Hough 线段</option>
+            <option value="free-space">自由区连通域</option>
+          </select>
+        </label>
+        <label>
+          <span>简化级别</span>
+          <select id="topologySimplifySelect">
+            <option value="balanced">均衡</option>
+            <option value="simple">简化</option>
+            <option value="very-simple">极简</option>
+            <option value="detailed">详细</option>
+          </select>
+        </label>
+        <label>
+          <span>直线去冗余</span>
+          <select id="topologyCollinearSelect">
+            <option value="preset">跟随简化级别</option>
+            <option value="off">关闭</option>
+            <option value="normal">普通</option>
+            <option value="strong">强</option>
+          </select>
+        </label>
+        <label>
+          <span>补闭环路径</span>
+          <select id="topologyLoopClosureSelect">
+            <option value="true">开启</option>
+            <option value="false">关闭</option>
+          </select>
+        </label>
+        <label>
+          <span>输出目录</span>
+          <input id="topologyOutputInput" type="text" value="config\generated">
+        </label>
+        <label>
+          <span>模型名</span>
+          <input id="topologyModelNameInput" type="text" value="agv-map-candidate">
+        </label>
+      </div>
+      <div class="toolbar">
+        <button id="generateTopologyBtn">生成拓扑</button>
+        <button id="loadOpenTcsBtn">加载到 openTCS</button>
+        <button id="reloadTopologyBtn">刷新结果</button>
+      </div>
+      <div id="topologyMessage" class="message"></div>
+      <div class="topology-result">
+        <pre id="topologyStatus"></pre>
+        <img id="topologyPreview" alt="topology preview">
+      </div>
+      <h2>3. 人工修正拓扑</h2>
+      <p class="muted">算法结果只是候选图。这里可以删除冗余点、改坐标、补路径、设置单向/双向，再保存成一个新版本。</p>
+      <div class="editor-toolbar">
+        <label>
+          <span>编辑版模型名</span>
+          <input id="editModelNameInput" type="text" value="agv-map-edited">
+        </label>
+        <label>
+          <span>版本备注</span>
+          <input id="editRevisionInput" type="text" placeholder="例如：删除直线冗余点，补出库闭环">
+        </label>
+        <button id="loadEditorBtn">载入当前拓扑</button>
+        <button id="addEditPointBtn">新增点</button>
+        <button id="validateEditBtn">校验编辑</button>
+        <button id="saveEditBtn">保存为新版本</button>
+      </div>
+      <div id="editMessage" class="message"></div>
+      <div class="edit-summary">
+        <span id="editPointCount">点位 0</span>
+        <span id="editPathCount">路径 0</span>
+      </div>
+      <div class="edit-grid">
+        <div>
+          <h3>点位</h3>
+          <div class="edit-table-wrap">
+            <table class="edit-table">
+              <thead>
+                <tr>
+                  <th>点名</th>
+                  <th>类型</th>
+                  <th>ROS x</th>
+                  <th>ROS y</th>
+                  <th>Yaw</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody id="editPointTable"></tbody>
+            </table>
+          </div>
+        </div>
+        <div>
+          <h3>路径</h3>
+          <div class="add-path-row">
+            <select id="newPathSrcSelect"></select>
+            <select id="newPathDestSelect"></select>
+            <label class="inline-check"><input id="newPathBidirectional" type="checkbox" checked> 双向</label>
+            <button id="addEditPathBtn">新增路径</button>
+          </div>
+          <div class="edit-table-wrap">
+            <table class="edit-table">
+              <thead>
+                <tr>
+                  <th>起点</th>
+                  <th>终点</th>
+                  <th>双向</th>
+                  <th>长度 mm</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody id="editPathTable"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      <h2>4. 业务点确认并应用</h2>
+      <div class="business-tools">
+        <label>
+          <span>常用业务点</span>
+          <input id="businessPresetInput" type="text" value="ST_IN_01,P_WAIT_IN_01,ST_OUT_01,P_SHIP_01">
+        </label>
+        <button id="loadBusinessPointsBtn">读取点位</button>
+        <button id="fillBusinessPresetBtn">填入前几个点</button>
+        <button id="saveBusinessTopologyBtn">保存业务点名</button>
+        <button id="applyRuntimeBtn">应用到 adapter</button>
+      </div>
+      <div id="businessMessage" class="message"></div>
+      <div class="business-table-wrap">
+        <table class="business-table">
+          <thead>
+            <tr>
+              <th>算法点</th>
+              <th>业务点名</th>
+              <th>类型</th>
+              <th>ROS x</th>
+              <th>ROS y</th>
+              <th>像素</th>
+            </tr>
+          </thead>
+          <tbody id="businessPointTable"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+  <script src="app.js?v=20"></script>
+</body>
+</html>

@@ -1,0 +1,21 @@
+{
+  "mqtt_uri": "mqtt://机器人IP:1883/",
+  "source_topic": "task_feedback",
+  "command_topic": "robot_control",
+  "forward_command_topic": "",
+  "enable_rcs_direct_command_bridge": true,
+  "agv_command_qos": 0,
+  "agv_command_path_mode": 2,
+  "agv_command_circulates": 0,
+  "open_tcs_base_url": "http://openTCS服务器IP:55200",
+  "rcs_base_url": "http://RCS服务器IP:8090",
+  "vehicle_name": "Vehicle-01",
+  "agv_id": "AGV_01",
+  "mapping_file": "generated/agv_opentcs_business_mapping.json",
+  "point_id_map": "nav:0=WAIT_WEST,nav:1=WAIT_EAST,point:0=WAIT_WEST,point:1=WAIT_EAST",
+  "distance_tolerance_m": 1.2,
+  "publish_rcs_event": true,
+  "rcs_event_topic_template": "agv/{agv_id}/task/events",
+  "status_file": "../logs/agv_native_feedback_adapter_status.json",
+  "agv_point_file": "interest_point.sample.json"
+}

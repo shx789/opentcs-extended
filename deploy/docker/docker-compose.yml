@@ -1,0 +1,76 @@
+services:
+  mqtt:
+    image: eclipse-mosquitto:2
+    container_name: opentcs-mqtt
+    ports:
+      - "${MQTT_HOST_PORT:-1883}:1883"
+    volumes:
+      - ./mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+    restart: unless-stopped
+
+  opentcs-kernel:
+    image: opentcs-kernel:${IMAGE_TAG:-1.0}
+    container_name: opentcs-kernel
+    ports:
+      - "${KERNEL_HOST_PORT:-55200}:55200"
+    volumes:
+      - kernel-data:/opt/opentcs-kernel/data
+    environment:
+      JAVA_TOOL_OPTIONS: ${JAVA_TOOL_OPTIONS:--Xmx512m}
+    security_opt:
+      - seccomp:unconfined
+    ulimits:
+      nproc:
+        soft: 65535
+        hard: 65535
+    entrypoint: ["sh", "-c"]
+    command:
+      - |
+        set -ex
+        export PATH=/opt/java/openjdk/bin:$$PATH
+        cd /opt/opentcs-kernel
+        if [ ! -f config/keystore.p12 ]; then ./generateKeystores.sh; fi
+        exec ./startKernel.sh
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:55200/v1/transportOrders > /dev/null || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+    restart: unless-stopped
+
+  rcs-integration:
+    image: opentcs-rcs:${IMAGE_TAG:-1.0}
+    container_name: opentcs-rcs
+    ports:
+      - "${RCS_HOST_PORT:-8090}:8090"
+    environment:
+      RCS_OPENTCS_BASE_URL: http://opentcs-kernel:55200
+      RCS_OPENTCS_SSE_ENABLED: "true"
+      RCS_STORE_MODE: file
+      RCS_STORE_FILE_DIR: /data/rcs-store
+      RCS_AGV_COMMAND_ENABLED: ${RCS_AGV_COMMAND_ENABLED:-false}
+      RCS_AGV_COMMAND_BROKER_URI: tcp://opentcs-mqtt:1883
+      RCS_AGV_COMMAND_TOPIC: ${RCS_AGV_COMMAND_TOPIC:-robot_control}
+      RCS_AGV_POINT_ID_MAP: ${RCS_AGV_POINT_ID_MAP:-Point-0020=20,Point-0026=26}
+      RCS_AGV_MQTT_ENABLED: "true"
+      RCS_AGV_MQTT_BROKER_URI: tcp://opentcs-mqtt:1883
+      RCS_AGV_MQTT_TOPIC: ${RCS_AGV_MQTT_TOPIC:-robot_status}
+      RCS_WMS_BASE_URL: ${RCS_WMS_BASE_URL:-}
+      RCS_CALLBACK_BASE_URL: ${RCS_CALLBACK_BASE_URL:-http://116.63.181.113:9098}
+    volumes:
+      - rcs-data:/data/rcs-store
+    security_opt:
+      - seccomp:unconfined
+    ulimits:
+      nproc:
+        soft: 65535
+        hard: 65535
+    depends_on:
+      - mqtt
+      - opentcs-kernel
+    restart: unless-stopped
+
+volumes:
+  kernel-data:
+  rcs-data:

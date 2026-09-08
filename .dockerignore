@@ -1,0 +1,14 @@
+.git
+.gitlab
+.gradle
+**/.gradle
+**/build
+.idea
+.vscode
+*.iml
+.cursor
+terminals
+agent-transcripts
+mcps
+*.md
+!deploy/docker/README.md
