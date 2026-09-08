@@ -570,6 +570,13 @@ public final class RcsIntegrationApplication {
       ObjectMapper objectMapper,
       AgvCommandOutboxStore commandOutboxStore
   ) {
+    String controlMode = firstNonBlank(
+        System.getProperty("agv.control.mode"),
+        System.getenv("AGV_CONTROL_MODE")
+    ).orElse("OPENTCS_ADAPTER");
+    if (!"RCS_DIRECT".equalsIgnoreCase(controlMode)) {
+      return new AgvCommandRuntime(AgvCommandPublisher.noop(), Optional.empty());
+    }
     if (!resolveBoolean("rcs.agvCommand.enabled", "RCS_AGV_COMMAND_ENABLED", false)) {
       return new AgvCommandRuntime(AgvCommandPublisher.noop(), Optional.empty());
     }

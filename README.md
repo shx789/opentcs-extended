@@ -439,3 +439,13 @@ POST /api/v1/wms/outbound-results
   - 新增 WCS demo 页面和 AGV monitor 页面。
   - 新增本地启动、停止和端到端演示脚本。
   - 新增集成模块单元测试与联调文档。
+## AGV 命令模式
+
+通过环境变量选择两套独立方案，默认保持 openTCS 适配器模式：
+
+```text
+AGV_CONTROL_MODE=OPENTCS_ADAPTER   # 默认，openTCS MqttCommAdapter 发布 AGV 命令
+AGV_CONTROL_MODE=RCS_DIRECT        # RCS 发布 AGV 命令，需同时开启 RCS_AGV_COMMAND_ENABLED
+```
+
+两种模式共用 openTCS 地图、点位、路径、Transport Order 以及 RCS 回调链路，不能同时启用控制同一台 AGV。
