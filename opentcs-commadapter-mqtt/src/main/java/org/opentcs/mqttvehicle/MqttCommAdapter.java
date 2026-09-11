@@ -18,6 +18,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -82,6 +83,11 @@ public class MqttCommAdapter
    */
   public static final String PROP_AGV_ID = "mqtt:agvId";
   /**
+   * Vehicle property: Delay in milliseconds to wait after a lift operation's
+   * sensor state has settled before completing the command.
+   */
+  public static final String PROP_LIFT_SETTLE_TIME = "mqtt:liftSettleTimeMillis";
+  /**
    * This class's logger.
    */
   private static final Logger LOG = LoggerFactory.getLogger(MqttCommAdapter.class);
@@ -97,6 +103,12 @@ public class MqttCommAdapter
   private static final String MESSAGE_SET_POSITION = "tcs:virtualVehicle:setPosition";
   private static final String MESSAGE_RESET_POSITION = "tcs:virtualVehicle:resetPosition";
   private static final String PARAM_POSITION = "position";
+  /**
+   * Navigation system mode reported by base_status "status" when the AGV is
+   * in its error state. Other modes (idle, navigating, multi-task, ...) are
+   * normal operating states and must not fail the current command.
+   */
+  private static final int NAV_STATUS_ERROR = 9;
 
   private final Vehicle vehicle;
   private final ObjectMapper objectMapper = new ObjectMapper();
@@ -116,6 +128,14 @@ public class MqttCommAdapter
   private boolean liftDown;
   private boolean liftTaskSuccess;
   private boolean liftCommandPublished;
+  private MovementCommand pendingMagneticTransitCommand;
+  private int pendingMagneticTransitAction;
+  private MovementCommand pendingSpecialPointNavigationCommand;
+  private MovementCommand pendingPostDropNavigationCommand;
+  private ScheduledFuture<?> commandTimeoutFuture;
+  private ScheduledFuture<?> idleReturnFuture;
+  private boolean idleReturnActive;
+  private String idleReturnPointName;
 
   /**
    * Creates a new instance.
@@ -182,6 +202,14 @@ public class MqttCommAdapter
   public synchronized void sendCommand(MovementCommand cmd)
       throws IllegalArgumentException {
     requireNonNull(cmd, "cmd");
+    if (idleReturnActive) {
+      publishIdleReturnStop();
+      idleReturnActive = false;
+      idleReturnPointName = null;
+      getProcessModel().setState(Vehicle.State.IDLE);
+      LOG.info("{}: Interrupted idle return for a new transport command.", getName());
+    }
+    cancelIdleReturn();
 
     if (!isVehicleConnected()) {
       throw new IllegalArgumentException("MQTT client is not connected.");
@@ -207,7 +235,25 @@ public class MqttCommAdapter
 
     if (cmd.getStep().getPath() == null) {
       if (isLiftOperation(cmd.getOperation())) {
-        startLiftOperation(cmd);
+        pendingSpecialPointNavigationCommand = cmd;
+        int pointId = resolvePointId(destinationPoint)
+            .orElseThrow(
+                () -> new IllegalArgumentException(
+                    "No MQTT point id mapping for destination point: " + destinationPoint
+                )
+            );
+        publishCommand(
+            toJson(buildCommandPayload(cmd, destinationPoint, destinationPoint, pointId))
+        );
+        scheduleCommandTimeout(
+            cmd, settings.navigationTimeoutSeconds(), "pickup/dropoff start navigation"
+        );
+        getProcessModel().setState(Vehicle.State.EXECUTING);
+        LOG.info(
+            "{}: Published mandatory navigation confirmation to point {} before {}",
+            getName(), destinationPoint, cmd.getOperation()
+        );
+        return;
       }
       else {
         getExecutor().execute(() -> finishMovementCommand(cmd, destinationPoint));
@@ -227,6 +273,7 @@ public class MqttCommAdapter
         buildCommandPayload(cmd, destinationPoint, mqttTargetPoint, pointId)
     );
     publishCommand(payloadJson);
+    scheduleCommandTimeout(cmd, settings.navigationTimeoutSeconds(), "navigation");
     getProcessModel().setState(Vehicle.State.EXECUTING);
     LOG.info(
         "{}: Published MQTT command to {}: stepDestination={} mqttTarget={} id={}",
@@ -298,6 +345,7 @@ public class MqttCommAdapter
       subscribeFeedbackTopics();
       getProcessModel().setCommAdapterConnected(true);
       getProcessModel().setState(Vehicle.State.IDLE);
+      scheduleIdleReturn();
       LOG.info(
           "{}: Connected MQTT broker={} feedbackTopic={}",
           getName(),
@@ -315,6 +363,16 @@ public class MqttCommAdapter
 
   @Override
   protected synchronized void disconnectVehicle() {
+    cancelCommandTimeout();
+    pendingLiftOperationCommand = null;
+    pendingMagneticTransitCommand = null;
+    pendingMagneticTransitAction = 0;
+    pendingPostDropNavigationCommand = null;
+    pendingSpecialPointNavigationCommand = null;
+    pendingPostDropNavigationCommand = null;
+    cancelIdleReturn();
+    idleReturnActive = false;
+    idleReturnPointName = null;
     if (mqttClient == null) {
       getProcessModel().setCommAdapterConnected(false);
       return;
@@ -424,20 +482,10 @@ public class MqttCommAdapter
 
   private void publishStopForCurrentCommand() {
     MovementCommand currentCommand = getSentCommands().peek();
-    if (currentCommand == null || !isVehicleConnected()) {
+    if (currentCommand == null) {
       return;
     }
-    String destinationPoint = currentCommand.getStep().getDestinationPoint().getName();
-    Optional<Integer> pointId = resolvePointId(destinationPoint);
-    if (pointId.isEmpty()) {
-      return;
-    }
-    Map<String, Object> payload = new LinkedHashMap<>();
-    payload.put("cmd_type", "interest_point_control");
-    payload.put("cmd", "stop");
-    payload.put("id", pointId.get());
-    payload.put("time", 0);
-    publishCommand(toJson(payload));
+    publishStopForCommand(currentCommand);
   }
 
   private void publishLiftOperationCommand(MovementCommand command) {
@@ -469,16 +517,37 @@ public class MqttCommAdapter
   synchronized void handleFeedback(String topic, String payloadJson) {
     try {
       FeedbackMessage feedback = FeedbackMessage.parse(objectMapper.readTree(payloadJson));
-      LOG.info(
-          "{}: Received MQTT feedback topic={} cmdType={} type={} id={} status={} pointName={}",
-          getName(),
-          topic,
-          feedback.cmdType(),
-          feedback.type(),
-          feedback.pointId(),
-          feedback.status(),
-          feedback.pointName()
-      );
+      if ("base_status".equalsIgnoreCase(feedback.cmdType())) {
+        // base_status is reported periodically (roughly once per second).
+        // Log it at DEBUG level to avoid flooding the kernel log; warnings
+        // and error-mode failures derived from it are still logged normally.
+        LOG.debug(
+            "{}: Received MQTT base_status topic={} material={} up={} down={} energy={} "
+                + "mainerror={} suberror={} robot_status={} navStatus={}",
+            getName(),
+            topic,
+            feedback.material(),
+            feedback.up(),
+            feedback.down(),
+            feedback.energyLevel(),
+            feedback.mainError(),
+            feedback.subError(),
+            feedback.robotStatus(),
+            feedback.navStatus()
+        );
+      }
+      else {
+        LOG.info(
+            "{}: Received MQTT feedback topic={} cmdType={} type={} id={} status={} pointName={}",
+            getName(),
+            topic,
+            feedback.cmdType(),
+            feedback.type(),
+            feedback.pointId(),
+            feedback.status(),
+            feedback.pointName()
+        );
+      }
       if (!feedback.isSupportedFeedback()) {
         LOG.debug(
             "{}: Ignoring unsupported MQTT message on {}: {}", getName(), topic, payloadJson
@@ -500,7 +569,8 @@ public class MqttCommAdapter
             feedback.down(),
             feedback.mainError(),
             feedback.subError(),
-            feedback.robotStatus()
+            feedback.robotStatus(),
+            feedback.navStatus()
         );
         LOG.info(
             "{}: Mapped MQTT feedback type={} id={} to openTCS point={}",
@@ -542,16 +612,55 @@ public class MqttCommAdapter
         failPendingLiftOperation(feedback);
         return;
       }
-      if (feedback.cmdType() != null
-          && feedback.cmdType().equals("base_status")
-          && (nonZero(feedback.mainError()) || nonZero(feedback.subError()))) {
-        LOG.warn(
-            "{}: AGV base_status reports mainerror={} suberror={} robot_status={}",
-            getName(),
-            feedback.mainError(),
-            feedback.subError(),
-            feedback.robotStatus()
+      if (pendingMagneticTransitCommand != null
+          && "task_feedback".equals(feedback.cmdType())
+          && "magnetic_nav".equalsIgnoreCase(feedback.type())
+          && feedback.isSuccess()) {
+        MovementCommand transitCommand = pendingMagneticTransitCommand;
+        int transitAction = pendingMagneticTransitAction;
+        pendingMagneticTransitCommand = null;
+        pendingMagneticTransitAction = 0;
+        LOG.info(
+            "{}: Magnetic transit action {} completed for operation {}.",
+            getName(), transitAction, transitCommand.getOperation()
         );
+        if (transitAction == 1) {
+          startLiftOperation(transitCommand);
+        }
+        else if (isLiftDownOperation(transitCommand.getOperation())) {
+          startPostDropNavigation(transitCommand);
+        }
+        else {
+          finishMovementCommand(
+              transitCommand, transitCommand.getStep().getDestinationPoint().getName()
+          );
+        }
+        return;
+      }
+      if (pendingMagneticTransitCommand != null
+          && "task_feedback".equals(feedback.cmdType())
+          && "magnetic_nav".equalsIgnoreCase(feedback.type())
+          && feedback.isFailure()) {
+        failMagneticTransit(feedback);
+        return;
+      }
+      // The robot mainerror/suberror fields are not a reliable error signal:
+      // the AGV may report them while operating normally. Only the
+      // navigation mode status=9 indicates a real error, so the raw codes
+      // are logged at DEBUG with the periodic base_status frame and the
+      // warning is reserved for the actual error mode below.
+      if (feedback.isNavError()) {
+        LOG.error(
+            "{}: AGV base_status reports navigation error mode status={}: robot_status={} "
+                + "mainerror={} suberror={}",
+            getName(),
+            feedback.navStatus(),
+            feedback.robotStatus(),
+            feedback.mainError(),
+            feedback.subError()
+        );
+        failCurrentCommandOnNavError(feedback);
+        return;
       }
 
       if (pendingLiftOperationCommand != null && liftCompletionConditionsSatisfied()) {
@@ -565,6 +674,14 @@ public class MqttCommAdapter
       }
 
       if (feedback.isSuccess()) {
+        if (idleReturnActive) {
+          completeIdleReturn(feedback);
+          return;
+        }
+        if (pendingPostDropNavigationCommand != null) {
+          completePostDropNavigation(feedback);
+          return;
+        }
         // A lift command is completed only by the magnetic sensors. A generic
         // task success must not cause the lift command to be sent again.
         if (pendingLiftOperationCommand != null) {
@@ -578,6 +695,14 @@ public class MqttCommAdapter
         completeCurrentCommand(feedback);
       }
       else if (feedback.isFailure()) {
+        if (idleReturnActive) {
+          failIdleReturn(feedback);
+          return;
+        }
+        if (pendingPostDropNavigationCommand != null) {
+          failPostDropNavigation(feedback);
+          return;
+        }
         failCurrentCommand(feedback);
       }
       else {
@@ -664,6 +789,14 @@ public class MqttCommAdapter
    */
   private void completeNavigationCommand(MovementCommand command, String destinationPoint) {
     if (isLiftOperation(command.getOperation())) {
+      if (Objects.equals(pendingSpecialPointNavigationCommand, command)) {
+        pendingSpecialPointNavigationCommand = null;
+        cancelCommandTimeout();
+      }
+      if (isSpecialStoragePoint(destinationPoint)) {
+        startMagneticTransit(command, 1);
+        return;
+      }
       startLiftOperation(command);
       return;
     }
@@ -671,6 +804,7 @@ public class MqttCommAdapter
   }
 
   private void finishMovementCommand(MovementCommand command, String destinationPoint) {
+    cancelCommandTimeout();
     if (getSentCommands().size() <= 1 && getUnsentCommands().isEmpty()) {
       getProcessModel().setState(Vehicle.State.IDLE);
     }
@@ -679,6 +813,7 @@ public class MqttCommAdapter
     if (Objects.equals(getSentCommands().peek(), command)) {
       getProcessModel().commandExecuted(getSentCommands().poll());
       clearCachedFinalFeedbackIfFinal(command);
+      scheduleIdleReturn();
     }
     else {
       LOG.warn(
@@ -702,9 +837,16 @@ public class MqttCommAdapter
       return;
     }
 
-    getProcessModel().setState(Vehicle.State.ERROR);
+    if (isNavigationCommand(command)) {
+      publishStopForCommand(command);
+    }
     getProcessModel().commandFailed(command);
+    getProcessModel().setState(Vehicle.State.IDLE);
     clearPendingLiftOperation(command);
+    pendingMagneticTransitCommand = null;
+    pendingMagneticTransitAction = 0;
+    pendingPostDropNavigationCommand = null;
+    cancelCommandTimeout();
     LOG.warn(
         "{}: AGV reported movement failure destination={} status={}",
         getName(),
@@ -718,9 +860,12 @@ public class MqttCommAdapter
     if (command == null) {
       return;
     }
-    getProcessModel().setState(Vehicle.State.ERROR);
     getProcessModel().commandFailed(command);
+    getProcessModel().setState(Vehicle.State.IDLE);
     clearPendingLiftOperation(command);
+    pendingMagneticTransitCommand = null;
+    pendingMagneticTransitAction = 0;
+    cancelCommandTimeout();
     LOG.warn(
         "{}: AGV magnetic_nav operation failed: operation={} status={}",
         getName(),
@@ -729,8 +874,94 @@ public class MqttCommAdapter
     );
   }
 
-  private boolean nonZero(Integer value) {
-    return value != null && value != 0;
+  /**
+   * Fails whatever command is currently in flight when the AGV reports its
+   * navigation error mode (base_status status=9). The AGV will not complete
+   * the current action on its own, so waiting for the phase timeout only
+   * delays the (inevitable) order failure.
+   */
+  private void failCurrentCommandOnNavError(FeedbackMessage feedback) {
+    String errorDetail = "navStatus=" + feedback.navStatus()
+        + ", robotStatus=" + feedback.robotStatus()
+        + ", mainError=" + feedback.mainError()
+        + ", subError=" + feedback.subError();
+
+    MovementCommand liftCommand = pendingLiftOperationCommand;
+    if (liftCommand != null) {
+      getProcessModel().commandFailed(liftCommand);
+      getProcessModel().setState(Vehicle.State.IDLE);
+      clearPendingLiftOperation(liftCommand);
+      pendingMagneticTransitCommand = null;
+      pendingMagneticTransitAction = 0;
+      pendingPostDropNavigationCommand = null;
+      cancelCommandTimeout();
+      LOG.warn(
+          "{}: Failing {} operation because AGV entered error state: order={} {}",
+          getName(),
+          liftCommand.getOperation(),
+          liftCommand.getTransportOrder().getName(),
+          errorDetail
+      );
+      return;
+    }
+
+    MovementCommand transitCommand = pendingMagneticTransitCommand;
+    if (transitCommand != null) {
+      pendingMagneticTransitCommand = null;
+      pendingMagneticTransitAction = 0;
+      cancelCommandTimeout();
+      getProcessModel().commandFailed(transitCommand);
+      getProcessModel().setState(Vehicle.State.IDLE);
+      LOG.warn(
+          "{}: Failing magnetic transit of {} because AGV entered error state: order={} {}",
+          getName(),
+          transitCommand.getOperation(),
+          transitCommand.getTransportOrder().getName(),
+          errorDetail
+      );
+      return;
+    }
+
+    MovementCommand postDropCommand = pendingPostDropNavigationCommand;
+    if (postDropCommand != null) {
+      pendingPostDropNavigationCommand = null;
+      cancelCommandTimeout();
+      publishStopForCommand(postDropCommand);
+      getProcessModel().commandFailed(postDropCommand);
+      getProcessModel().setState(Vehicle.State.IDLE);
+      LOG.warn(
+          "{}: Failing post-DROP navigation to {} because AGV entered error state: order={} {}",
+          getName(),
+          postDropCommand.getStep().getDestinationPoint().getName(),
+          postDropCommand.getTransportOrder().getName(),
+          errorDetail
+      );
+      return;
+    }
+
+    MovementCommand command = getSentCommands().peek();
+    if (command == null) {
+      LOG.warn(
+          "{}: AGV entered navigation error state with no command in flight: {}",
+          getName(),
+          errorDetail
+      );
+      return;
+    }
+    if (isNavigationCommand(command)) {
+      publishStopForCommand(command);
+    }
+    getProcessModel().commandFailed(command);
+    getProcessModel().setState(Vehicle.State.IDLE);
+    clearPendingLiftOperation(command);
+    cancelCommandTimeout();
+    LOG.warn(
+        "{}: Failing command to {} because AGV entered error state: order={} {}",
+        getName(),
+        command.getStep().getDestinationPoint().getName(),
+        command.getTransportOrder().getName(),
+        errorDetail
+    );
   }
 
   private boolean feedbackMatchesCommand(FeedbackMessage feedback, String destinationPoint) {
@@ -825,11 +1056,349 @@ public class MqttCommAdapter
             }
             clearPendingLiftOperation(command);
             setLoadHandlingDeviceLoaded(isLiftUpOperation(operation));
-            finishMovementCommand(command, command.getStep().getDestinationPoint().getName());
+            if (isMagneticStoragePoint(command.getStep().getDestinationPoint().getName())) {
+              startMagneticTransit(command, 2);
+            }
+            else {
+              finishMovementCommand(command, command.getStep().getDestinationPoint().getName());
+            }
           }
         },
         settings.liftSettleTimeMillis(),
         TimeUnit.MILLISECONDS
+    );
+  }
+
+  private boolean isSpecialStoragePoint(String pointName) {
+    return isMagneticStoragePoint(pointName);
+  }
+
+  private boolean isMagneticStoragePoint(String pointName) {
+    return resolvePointId(pointName).orElse(-1) > 0;
+  }
+
+  private void startMagneticTransit(MovementCommand command, int action) {
+    pendingMagneticTransitCommand = command;
+    pendingMagneticTransitAction = action;
+    Map<String, Object> payload = new LinkedHashMap<>();
+    payload.put("cmd_type", "magnetic_nav");
+    payload.put("aim_id", 0);
+    payload.put("aim_dir", 0);
+    payload.put("aim_action", action);
+    payload.put("opentcs_vehicle", getName());
+    payload.put("opentcs_operation", action == 1 ? "MAGNETIC_FORWARD" : "MAGNETIC_BACKWARD");
+    publishCommand(toJson(payload));
+    scheduleCommandTimeout(
+        command, settings.magneticTransitTimeoutSeconds(),
+        action == 1 ? "magnetic forward" : "magnetic backward"
+    );
+    LOG.info(
+        "{}: Published magnetic transit command action={} for operation={}",
+        getName(), action, command.getOperation()
+    );
+  }
+
+  private void startPostDropNavigation(MovementCommand command) {
+    String pointName = command.getStep().getDestinationPoint().getName();
+    int pointId = resolvePointId(pointName)
+        .orElseThrow(
+            () -> new IllegalArgumentException("No MQTT point id mapping for point: " + pointName)
+        );
+    pendingPostDropNavigationCommand = command;
+    publishCommand(toJson(buildCommandPayload(command, pointName, pointName, pointId)));
+    scheduleCommandTimeout(command, settings.navigationTimeoutSeconds(), "post-drop navigation");
+    getProcessModel().setState(Vehicle.State.EXECUTING);
+    LOG.info(
+        "{}: Published post-DROP navigation confirmation to point={} id={}",
+        getName(), pointName, pointId
+    );
+  }
+
+  private void failMagneticTransit(FeedbackMessage feedback) {
+    MovementCommand command = pendingMagneticTransitCommand;
+    if (command == null) {
+      return;
+    }
+    pendingMagneticTransitCommand = null;
+    pendingMagneticTransitAction = 0;
+    cancelCommandTimeout();
+    getProcessModel().commandFailed(command);
+    getProcessModel().setState(Vehicle.State.IDLE);
+    LOG.warn(
+        "{}: Magnetic transit failed: operation={} status={}",
+        getName(), command.getOperation(), feedback.status()
+    );
+  }
+
+  private void completePostDropNavigation(FeedbackMessage feedback) {
+    MovementCommand command = pendingPostDropNavigationCommand;
+    if (command == null || !isNavigationFeedback(feedback)) {
+      return;
+    }
+    String pointName = command.getStep().getDestinationPoint().getName();
+    if (!feedbackMatchesCommand(feedback, pointName)) {
+      return;
+    }
+    pendingPostDropNavigationCommand = null;
+    finishMovementCommand(command, pointName);
+  }
+
+  private void failPostDropNavigation(FeedbackMessage feedback) {
+    MovementCommand command = pendingPostDropNavigationCommand;
+    if (command == null || !isNavigationFeedback(feedback)) {
+      return;
+    }
+    String pointName = command.getStep().getDestinationPoint().getName();
+    if (!feedbackMatchesCommand(feedback, pointName)) {
+      return;
+    }
+    pendingPostDropNavigationCommand = null;
+    cancelCommandTimeout();
+    publishStopForCommand(command);
+    getProcessModel().commandFailed(command);
+    getProcessModel().setState(Vehicle.State.IDLE);
+    LOG.warn(
+        "{}: Post-DROP navigation failed: destination={} status={}",
+        getName(), pointName, feedback.status()
+    );
+  }
+
+  private boolean isNavigationFeedback(FeedbackMessage feedback) {
+    return feedback.type() == null
+        || feedback.type().isBlank()
+        || feedback.type().equalsIgnoreCase("nav")
+        || feedback.type().equalsIgnoreCase("interest_point_control");
+  }
+
+  private synchronized void scheduleIdleReturn() {
+    cancelIdleReturn();
+    if (settings.idleReturnSeconds() <= 0 || !isVehicleConnected()) {
+      return;
+    }
+    idleReturnFuture = getExecutor().schedule(
+        () -> {
+          synchronized (MqttCommAdapter.this) {
+            if (!getSentCommands().isEmpty()
+                || !getUnsentCommands().isEmpty()
+                || getProcessModel().getState() != Vehicle.State.IDLE) {
+              scheduleIdleReturn();
+              return;
+            }
+            String standbyPoint = pointNamesByFeedbackKey.get(
+                String.valueOf(settings.standbyPointId())
+            );
+            if (standbyPoint == null) {
+              LOG.warn(
+                  "{}: Cannot return to standby point id={}, no point mapping.", getName(), settings
+                      .standbyPointId()
+              );
+              return;
+            }
+            if (Objects.equals(getProcessModel().getPosition(), standbyPoint)) {
+              scheduleIdleReturn();
+              return;
+            }
+            idleReturnActive = true;
+            idleReturnPointName = standbyPoint;
+            Map<String, Object> payload = new LinkedHashMap<>();
+            payload.put("cmd_type", "interest_point_control");
+            payload.put("cmd", "start");
+            payload.put("id", settings.standbyPointId());
+            payload.put("run_speed", settings.runSpeed());
+            payload.put("path_stop_time", 0);
+            payload.put("path_mode", 2);
+            payload.put("circulates", 0);
+            payload.put("time", 0);
+            payload.put("opentcs_vehicle", getName());
+            payload.put("opentcs_operation", "IDLE_RETURN");
+            publishCommand(toJson(payload));
+            getProcessModel().setState(Vehicle.State.EXECUTING);
+            scheduleIdleReturnTimeout();
+            LOG.info(
+                "{}: Idle timeout reached, returning to standby point={} id={}", getName(),
+                standbyPoint, settings.standbyPointId()
+            );
+          }
+        },
+        settings.idleReturnSeconds(),
+        TimeUnit.SECONDS
+    );
+  }
+
+  private synchronized void scheduleIdleReturnTimeout() {
+    idleReturnFuture = getExecutor().schedule(
+        () -> {
+          synchronized (MqttCommAdapter.this) {
+            if (!idleReturnActive) {
+              return;
+            }
+            publishIdleReturnStop();
+            idleReturnActive = false;
+            idleReturnPointName = null;
+            getProcessModel().setState(Vehicle.State.IDLE);
+            scheduleIdleReturn();
+            LOG.warn("{}: Return to standby point timed out.", getName());
+          }
+        },
+        settings.navigationTimeoutSeconds(),
+        TimeUnit.SECONDS
+    );
+  }
+
+  private void completeIdleReturn(FeedbackMessage feedback) {
+    if (!isNavigationFeedback(feedback)
+        || !feedbackMatchesCommand(feedback, idleReturnPointName)) {
+      return;
+    }
+    cancelIdleReturn();
+    getProcessModel().setPosition(idleReturnPointName);
+    idleReturnActive = false;
+    idleReturnPointName = null;
+    getProcessModel().setState(Vehicle.State.IDLE);
+    scheduleIdleReturn();
+    LOG.info("{}: Returned to standby point successfully.", getName());
+  }
+
+  private void failIdleReturn(FeedbackMessage feedback) {
+    if (!isNavigationFeedback(feedback)) {
+      return;
+    }
+    cancelIdleReturn();
+    publishIdleReturnStop();
+    idleReturnActive = false;
+    idleReturnPointName = null;
+    getProcessModel().setState(Vehicle.State.IDLE);
+    scheduleIdleReturn();
+    LOG.warn("{}: Return to standby point failed: status={}", getName(), feedback.status());
+  }
+
+  private void publishIdleReturnStop() {
+    Map<String, Object> payload = new LinkedHashMap<>();
+    payload.put("circulates", 0);
+    payload.put("cmd", "stop");
+    payload.put("cmd_type", "interest_point_control");
+    payload.put("id", settings.standbyPointId());
+    payload.put("path_mode", 2);
+    payload.put("path_stop_time", 0);
+    payload.put("run_speed", settings.runSpeed());
+    payload.put("time", 1);
+    publishCommand(toJson(payload));
+  }
+
+  private synchronized void cancelIdleReturn() {
+    if (idleReturnFuture != null) {
+      idleReturnFuture.cancel(false);
+      idleReturnFuture = null;
+    }
+  }
+
+  private boolean isNavigationCommand(MovementCommand command) {
+    return (command.getStep().getPath() != null && !isLiftOperation(command.getOperation()))
+        || Objects.equals(pendingSpecialPointNavigationCommand, command)
+        || Objects.equals(pendingPostDropNavigationCommand, command);
+  }
+
+  private void publishStopForCommand(MovementCommand command) {
+    if (!isVehicleConnected()) {
+      return;
+    }
+    String destinationPoint = command.getStep().getDestinationPoint().getName();
+    Optional<Integer> pointId = resolvePointId(destinationPoint);
+    if (pointId.isEmpty()) {
+      LOG.warn(
+          "{}: Cannot publish navigation stop, no point id for {}", getName(), destinationPoint
+      );
+      return;
+    }
+    Map<String, Object> payload = new LinkedHashMap<>();
+    payload.put("circulates", 0);
+    payload.put("cmd", "stop");
+    payload.put("cmd_type", "interest_point_control");
+    payload.put("id", pointId.get());
+    payload.put("path_mode", 2);
+    payload.put("path_stop_time", 0);
+    payload.put("run_speed", settings.runSpeed());
+    payload.put("time", 1);
+    publishCommand(toJson(payload));
+    LOG.info(
+        "{}: Published navigation stop for point={} id={}", getName(), destinationPoint, pointId
+            .get()
+    );
+  }
+
+  private synchronized void scheduleCommandTimeout(
+      MovementCommand command,
+      int timeoutSeconds,
+      String phase
+  ) {
+    cancelCommandTimeout();
+    if (timeoutSeconds <= 0) {
+      return;
+    }
+    commandTimeoutFuture = getExecutor().schedule(
+        () -> {
+          synchronized (MqttCommAdapter.this) {
+            boolean active = Objects.equals(getSentCommands().peek(), command)
+                || Objects.equals(pendingLiftOperationCommand, command)
+                || Objects.equals(pendingMagneticTransitCommand, command)
+                || Objects.equals(pendingSpecialPointNavigationCommand, command)
+                || Objects.equals(pendingPostDropNavigationCommand, command);
+            if (!active) {
+              return;
+            }
+            LOG.warn(
+                "{}: {} command timed out after {} seconds: order={} operation={} destination={}",
+                getName(),
+                phase,
+                timeoutSeconds,
+                command.getTransportOrder().getName(),
+                command.getOperation(),
+                command.getStep().getDestinationPoint().getName()
+            );
+            clearPendingLiftOperation(command);
+            if (Objects.equals(pendingMagneticTransitCommand, command)) {
+              pendingMagneticTransitCommand = null;
+              pendingMagneticTransitAction = 0;
+            }
+            if (Objects.equals(pendingSpecialPointNavigationCommand, command)) {
+              pendingSpecialPointNavigationCommand = null;
+            }
+            if (Objects.equals(pendingPostDropNavigationCommand, command)) {
+              pendingPostDropNavigationCommand = null;
+            }
+            cachedFinalFeedbackOrderName = null;
+            cachedFinalFeedbackPointName = null;
+            if (isNavigationCommand(command)) {
+              publishStopForCommand(command);
+            }
+            getProcessModel().commandFailed(command);
+            getProcessModel().setState(Vehicle.State.IDLE);
+            cancelCommandTimeout();
+          }
+        },
+        timeoutSeconds,
+        TimeUnit.SECONDS
+    );
+  }
+
+  private synchronized void cancelCommandTimeout() {
+    if (commandTimeoutFuture != null) {
+      commandTimeoutFuture.cancel(false);
+      commandTimeoutFuture = null;
+    }
+  }
+
+  private void publishTransitFollowupNavigation(MovementCommand command) {
+    String pointName = command.getStep().getDestinationPoint().getName();
+    int pointId = resolvePointId(pointName)
+        .orElseThrow(
+            () -> new IllegalArgumentException("No MQTT point id mapping for point: " + pointName)
+        );
+    publishCommand(toJson(buildCommandPayload(command, pointName, pointName, pointId)));
+    getProcessModel().setState(Vehicle.State.EXECUTING);
+    LOG.info(
+        "{}: Published follow-up navigation confirmation to point={} id={}",
+        getName(), pointName, pointId
     );
   }
 
@@ -857,6 +1426,7 @@ public class MqttCommAdapter
     // snapshot may be stale (for example, material=false before a DROP), and
     // it must not be treated as proof that the current physical action ran.
     publishLiftOperationCommand(command);
+    scheduleCommandTimeout(command, settings.liftTimeoutSeconds(), "lift " + operation);
   }
 
   private boolean liftStateMatches(String operation) {
@@ -864,11 +1434,12 @@ public class MqttCommAdapter
       return materialPresent && liftUp;
     }
     if (isLiftDownOperation(operation)) {
-      // DROP is complete once the AGV has confirmed the lift command and the
-      // load sensor reports that no material remains on the forks. Some AGVs
-      // do not expose a reliable `down` sensor (or report it later), so the
-      // physical empty-load state is the authoritative completion signal.
-      return !materialPresent;
+      // DROP is complete only once the AGV has confirmed the lift command, the
+      // load sensor reports that no material remains on the forks and the
+      // forks have physically returned to their lowered position (magnetic
+      // "down"/"low" sensor). material=false alone is not sufficient: the load
+      // may already be gone while the forks are still raised.
+      return !materialPresent && liftDown;
     }
     return false;
   }
@@ -1046,7 +1617,8 @@ public class MqttCommAdapter
       Boolean down,
       Integer mainError,
       Integer subError,
-      Integer robotStatus
+      Integer robotStatus,
+      Integer navStatus
   ) {
 
     static FeedbackMessage parse(JsonNode root) {
@@ -1069,6 +1641,10 @@ public class MqttCommAdapter
       Integer mainError = firstInt(root.path("robot"), "mainerror", "mainError");
       Integer subError = firstInt(root.path("robot"), "suberror", "subError");
       Integer robotStatus = firstInt(root.path("robot"), "robot_status", "robotStatus");
+      // base_status carries the navigation system mode in "status"
+      // (0 idle, 1 navigating, ..., 9 error). task_feedback uses the same
+      // field with word values (success/failed/...), which do not parse.
+      Integer navStatus = firstInt(root, "status", "nav_status", "navStatus", "mode");
       if (material == null) {
         material = firstBoolean(root, "material");
       }
@@ -1091,7 +1667,8 @@ public class MqttCommAdapter
           down,
           mainError,
           subError,
-          robotStatus
+          robotStatus,
+          navStatus
       );
     }
 
@@ -1135,6 +1712,17 @@ public class MqttCommAdapter
           || status.equals("fail")
           || status.equals("timeout")
           || status.equals("error");
+    }
+
+    /**
+     * Returns whether the AGV reports its navigation error mode. Only
+     * base_status mode 9 indicates an error; the robot mainerror/suberror
+     * fields alone do not (the AGV may report them while operating).
+     */
+    boolean isNavError() {
+      return "base_status".equals(cmdType)
+          && navStatus != null
+          && navStatus == NAV_STATUS_ERROR;
     }
 
     private static String firstText(JsonNode node, String... keys) {
@@ -1229,7 +1817,12 @@ public class MqttCommAdapter
       double runSpeed,
       int connectionTimeoutSeconds,
       int keepAliveSeconds,
-      long liftSettleTimeMillis
+      long liftSettleTimeMillis,
+      int navigationTimeoutSeconds,
+      int liftTimeoutSeconds,
+      int magneticTransitTimeoutSeconds,
+      int idleReturnSeconds,
+      int standbyPointId
   ) {
 
     static MqttSettings from(Map<String, String> vehicleProperties) {
@@ -1238,7 +1831,7 @@ public class MqttCommAdapter
               vehicleProperties,
               PROP_BROKER_URI,
               "opentcs.mqtt.brokerUri",
-              "tcp://127.0.0.1:1883"
+              "tcp://192.168.10.209:1883"
           ),
           read(
               vehicleProperties,
@@ -1275,9 +1868,39 @@ public class MqttCommAdapter
           readInt(vehicleProperties, "mqtt:keepAliveSeconds", "opentcs.mqtt.keepAliveSeconds", 10),
           readLong(
               vehicleProperties,
-              "mqtt:liftSettleTimeMillis",
+              PROP_LIFT_SETTLE_TIME,
               "opentcs.mqtt.liftSettleTimeMillis",
               1000L
+          ),
+          readInt(
+              vehicleProperties,
+              "mqtt:navigationTimeoutSeconds",
+              "opentcs.mqtt.navigationTimeoutSeconds",
+              120
+          ),
+          readInt(
+              vehicleProperties,
+              "mqtt:liftTimeoutSeconds",
+              "opentcs.mqtt.liftTimeoutSeconds",
+              300
+          ),
+          readInt(
+              vehicleProperties,
+              "mqtt:magneticTransitTimeoutSeconds",
+              "opentcs.mqtt.magneticTransitTimeoutSeconds",
+              60
+          ),
+          readInt(
+              vehicleProperties,
+              "mqtt:idleReturnSeconds",
+              "opentcs.mqtt.idleReturnSeconds",
+              300
+          ),
+          readInt(
+              vehicleProperties,
+              "mqtt:standbyPointId",
+              "opentcs.mqtt.standbyPointId",
+              0
           )
       );
     }

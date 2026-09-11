@@ -4,6 +4,7 @@ package org.opentcs.mqttvehicle;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
@@ -254,6 +255,193 @@ class MqttCommAdapterTest {
         .containsEntry("aim_action", 4);
     assertThat(adapter.buildLiftCommandPayload("LIFT_DOWN"))
         .containsEntry("aim_action", 4);
+  }
+
+  @Test
+  void doesNotCompleteDropWhenForksStillRaised() {
+    Point sourcePoint = new Point("P_WAIT_IN_01");
+    Point destinationPoint = new Point("ST_IN_01");
+    Vehicle vehicle = new Vehicle("Vehicle-01")
+        .withProperty(MqttCommAdapter.PROP_INITIAL_POSITION, sourcePoint.getName())
+        .withProperty(MqttCommAdapter.PROP_POINT_ID_MAP, "nav:0=ST_IN_01")
+        .withProperty(MqttCommAdapter.PROP_LIFT_SETTLE_TIME, "0");
+    MqttCommAdapter adapter = new MqttCommAdapter(vehicle, executor);
+    adapter.initialize();
+
+    MovementCommand command = command(
+        sourcePoint,
+        destinationPoint,
+        destinationPoint,
+        true,
+        "DROP"
+    );
+    adapter.getSentCommands().add(command);
+
+    // Navigation success starts the DROP lift action.
+    adapter.handleFeedback(
+        "task_feedback",
+        "{\"cmd_type\":\"task_feedback\",\"type\":\"nav\",\"id\":0,\"status\":\"success\"}"
+    );
+    // AGV confirms the magnetic_nav action...
+    adapter.handleFeedback(
+        "task_feedback",
+        "{\"cmd_type\":\"task_feedback\",\"type\":\"magnetic_nav\",\"status\":\"success\"}"
+    );
+    // ...but the forks are still raised (low=false), even though no load remains.
+    adapter.handleFeedback(
+        "base_status",
+        "{\"cmd_type\":\"base_status\","
+            + "\"magnetic\":{\"material\":false,\"up\":true,\"low\":false}}"
+    );
+
+    assertThat(adapter.getSentCommands()).contains(command);
+  }
+
+  @Test
+  void completesDropWhenLoadClearedAndForksLowered()
+      throws Exception {
+    Point sourcePoint = new Point("P_WAIT_IN_01");
+    Point destinationPoint = new Point("ST_IN_01");
+    Vehicle vehicle = new Vehicle("Vehicle-01")
+        .withProperty(MqttCommAdapter.PROP_INITIAL_POSITION, sourcePoint.getName())
+        .withProperty(MqttCommAdapter.PROP_POINT_ID_MAP, "nav:0=ST_IN_01")
+        .withProperty(MqttCommAdapter.PROP_LIFT_SETTLE_TIME, "0");
+    MqttCommAdapter adapter = new MqttCommAdapter(vehicle, executor);
+    adapter.initialize();
+
+    MovementCommand command = command(
+        sourcePoint,
+        destinationPoint,
+        destinationPoint,
+        true,
+        "DROP"
+    );
+    adapter.getSentCommands().add(command);
+
+    adapter.handleFeedback(
+        "task_feedback",
+        "{\"cmd_type\":\"task_feedback\",\"type\":\"nav\",\"id\":0,\"status\":\"success\"}"
+    );
+    adapter.handleFeedback(
+        "task_feedback",
+        "{\"cmd_type\":\"task_feedback\",\"type\":\"magnetic_nav\",\"status\":\"success\"}"
+    );
+    adapter.handleFeedback(
+        "base_status",
+        "{\"cmd_type\":\"base_status\","
+            + "\"magnetic\":{\"material\":false,\"up\":false,\"low\":true}}"
+    );
+
+    Thread.sleep(500);
+    assertThat(adapter.getSentCommands()).isEmpty();
+    assertThat(adapter.getProcessModel().getPosition()).isEqualTo(destinationPoint.getName());
+    assertThat(adapter.getProcessModel().getLoadHandlingDevices()).hasSize(1);
+    assertThat(adapter.getProcessModel().getLoadHandlingDevices().get(0).isFull()).isFalse();
+  }
+
+  @Test
+  void failsPendingPickImmediatelyWhenAgvReportsNavErrorMode() {
+    Point sourcePoint = new Point("P_WAIT_IN_01");
+    Point destinationPoint = new Point("ST_IN_01");
+    Vehicle vehicle = new Vehicle("Vehicle-01")
+        .withProperty(MqttCommAdapter.PROP_INITIAL_POSITION, sourcePoint.getName())
+        .withProperty(MqttCommAdapter.PROP_POINT_ID_MAP, "nav:0=ST_IN_01")
+        .withProperty(MqttCommAdapter.PROP_LIFT_SETTLE_TIME, "0");
+    MqttCommAdapter adapter = new MqttCommAdapter(vehicle, executor);
+    adapter.initialize();
+
+    MovementCommand command = command(
+        sourcePoint,
+        destinationPoint,
+        destinationPoint,
+        true,
+        "PICK"
+    );
+    adapter.getSentCommands().add(command);
+
+    // Navigation success starts the PICK lift action.
+    adapter.handleFeedback(
+        "task_feedback",
+        "{\"cmd_type\":\"task_feedback\",\"type\":\"nav\",\"id\":0,\"status\":\"success\"}"
+    );
+    assertThat(adapter.getProcessModel().getState()).isEqualTo(Vehicle.State.EXECUTING);
+
+    // The AGV reports navigation error mode (base_status status=9). The PICK
+    // must fail immediately instead of waiting for the lift timeout.
+    adapter.handleFeedback(
+        "base_status",
+        "{\"cmd_type\":\"base_status\",\"status\":9,"
+            + "\"robot\":{\"mainerror\":3,\"suberror\":2,\"robot_status\":8},"
+            + "\"magnetic\":{\"material\":false,\"up\":true,\"low\":false}}"
+    );
+
+    assertThat(adapter.getProcessModel().getState()).isEqualTo(Vehicle.State.IDLE);
+  }
+
+  @Test
+  void doesNotFailPendingPickWhenAgvReportsNonErrorNavMode() {
+    Point sourcePoint = new Point("P_WAIT_IN_01");
+    Point destinationPoint = new Point("ST_IN_01");
+    Vehicle vehicle = new Vehicle("Vehicle-01")
+        .withProperty(MqttCommAdapter.PROP_INITIAL_POSITION, sourcePoint.getName())
+        .withProperty(MqttCommAdapter.PROP_POINT_ID_MAP, "nav:0=ST_IN_01")
+        .withProperty(MqttCommAdapter.PROP_LIFT_SETTLE_TIME, "0");
+    MqttCommAdapter adapter = new MqttCommAdapter(vehicle, executor);
+    adapter.initialize();
+
+    MovementCommand command = command(
+        sourcePoint,
+        destinationPoint,
+        destinationPoint,
+        true,
+        "PICK"
+    );
+    adapter.getSentCommands().add(command);
+
+    adapter.handleFeedback(
+        "task_feedback",
+        "{\"cmd_type\":\"task_feedback\",\"type\":\"nav\",\"id\":0,\"status\":\"success\"}"
+    );
+
+    // status=8 (multi-task paused) with non-zero robot error codes is a normal
+    // operating state: the PICK must remain in flight.
+    adapter.handleFeedback(
+        "base_status",
+        "{\"cmd_type\":\"base_status\",\"status\":8,"
+            + "\"robot\":{\"mainerror\":3,\"suberror\":2,\"robot_status\":8},"
+            + "\"magnetic\":{\"material\":false,\"up\":true,\"low\":false}}"
+    );
+
+    assertThat(adapter.getProcessModel().getState()).isEqualTo(Vehicle.State.EXECUTING);
+    assertThat(adapter.getSentCommands()).contains(command);
+  }
+
+  @Test
+  void parsesBaseStatusNavMode()
+      throws Exception {
+    ObjectMapper mapper = new ObjectMapper();
+
+    MqttCommAdapter.FeedbackMessage errorFeedback = MqttCommAdapter.FeedbackMessage.parse(
+        mapper.readTree("{\"cmd_type\":\"base_status\",\"status\":9}")
+    );
+    assertThat(errorFeedback.navStatus()).isEqualTo(9);
+    assertThat(errorFeedback.isNavError()).isTrue();
+
+    MqttCommAdapter.FeedbackMessage pausedFeedback = MqttCommAdapter.FeedbackMessage.parse(
+        mapper.readTree("{\"cmd_type\":\"base_status\",\"status\":\"8\"}")
+    );
+    assertThat(pausedFeedback.navStatus()).isEqualTo(8);
+    assertThat(pausedFeedback.isNavError()).isFalse();
+
+    // task_feedback reuses the "status" field with word values, which must
+    // not be interpreted as a navigation mode.
+    MqttCommAdapter.FeedbackMessage taskFeedback = MqttCommAdapter.FeedbackMessage.parse(
+        mapper.readTree(
+            "{\"cmd_type\":\"task_feedback\",\"type\":\"nav\",\"id\":0,\"status\":\"success\"}"
+        )
+    );
+    assertThat(taskFeedback.navStatus()).isNull();
+    assertThat(taskFeedback.isNavError()).isFalse();
   }
 
   @Test
