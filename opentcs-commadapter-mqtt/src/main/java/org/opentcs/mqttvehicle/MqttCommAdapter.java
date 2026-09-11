@@ -128,6 +128,9 @@ public class MqttCommAdapter
   private boolean liftDown;
   private boolean liftTaskSuccess;
   private boolean liftCommandPublished;
+  private boolean hasLocalizationStatus;
+  private boolean localizationReady;
+  private double amclScore;
   private MovementCommand pendingMagneticTransitCommand;
   private int pendingMagneticTransitAction;
   private MovementCommand pendingSpecialPointNavigationCommand;
@@ -213,6 +216,15 @@ public class MqttCommAdapter
 
     if (!isVehicleConnected()) {
       throw new IllegalArgumentException("MQTT client is not connected.");
+    }
+    if (isNavigationCommandCandidate(cmd) && hasLocalizationStatus && !localizationReady) {
+      LOG.warn(
+          "{}: Blocking command because AGV localization is not ready: location={} amcl={}",
+          getName(),
+          localizationReady,
+          amclScore
+      );
+      throw new IllegalArgumentException("AGV localization is not ready for navigation.");
     }
 
     String destinationPoint = cmd.getStep().getDestinationPoint().getName();
@@ -533,7 +545,9 @@ public class MqttCommAdapter
             feedback.mainError(),
             feedback.subError(),
             feedback.robotStatus(),
-            feedback.navStatus()
+            feedback.navStatus(),
+            feedback.amcl(),
+            feedback.location()
         );
       }
       else {
@@ -570,7 +584,9 @@ public class MqttCommAdapter
             feedback.mainError(),
             feedback.subError(),
             feedback.robotStatus(),
-            feedback.navStatus()
+            feedback.navStatus(),
+            feedback.amcl(),
+            feedback.location()
         );
         LOG.info(
             "{}: Mapped MQTT feedback type={} id={} to openTCS point={}",
@@ -593,6 +609,11 @@ public class MqttCommAdapter
         materialPresent = feedback.material();
         liftUp = feedback.up();
         liftDown = feedback.down();
+      }
+      if ("base_status".equalsIgnoreCase(feedback.cmdType()) && feedback.hasLocalization()) {
+        hasLocalizationStatus = true;
+        amclScore = feedback.amcl();
+        localizationReady = feedback.location() && amclScore >= settings.minAmclScore();
       }
       if (pendingLiftOperationCommand != null
           && "task_feedback".equals(feedback.cmdType())
@@ -1298,6 +1319,10 @@ public class MqttCommAdapter
         || Objects.equals(pendingPostDropNavigationCommand, command);
   }
 
+  private boolean isNavigationCommandCandidate(MovementCommand command) {
+    return command.getStep().getPath() != null || isLiftOperation(command.getOperation());
+  }
+
   private void publishStopForCommand(MovementCommand command) {
     if (!isVehicleConnected()) {
       return;
@@ -1618,7 +1643,9 @@ public class MqttCommAdapter
       Integer mainError,
       Integer subError,
       Integer robotStatus,
-      Integer navStatus
+      Integer navStatus,
+      Double amcl,
+      Boolean location
   ) {
 
     static FeedbackMessage parse(JsonNode root) {
@@ -1645,6 +1672,9 @@ public class MqttCommAdapter
       // (0 idle, 1 navigating, ..., 9 error). task_feedback uses the same
       // field with word values (success/failed/...), which do not parse.
       Integer navStatus = firstInt(root, "status", "nav_status", "navStatus", "mode");
+      JsonNode local = root.path("local");
+      Double amcl = local.path("amcl").isNumber() ? local.path("amcl").asDouble() : null;
+      Boolean location = firstBoolean(local, "location");
       if (material == null) {
         material = firstBoolean(root, "material");
       }
@@ -1668,7 +1698,9 @@ public class MqttCommAdapter
           mainError,
           subError,
           robotStatus,
-          navStatus
+          navStatus,
+          amcl,
+          location
       );
     }
 
@@ -1681,6 +1713,10 @@ public class MqttCommAdapter
 
     boolean hasMagneticStatus() {
       return material != null && up != null && down != null;
+    }
+
+    boolean hasLocalization() {
+      return amcl != null && location != null;
     }
 
     boolean matchesAgv(String expectedAgvId) {
@@ -1822,7 +1858,8 @@ public class MqttCommAdapter
       int liftTimeoutSeconds,
       int magneticTransitTimeoutSeconds,
       int idleReturnSeconds,
-      int standbyPointId
+      int standbyPointId,
+      double minAmclScore
   ) {
 
     static MqttSettings from(Map<String, String> vehicleProperties) {
@@ -1901,6 +1938,12 @@ public class MqttCommAdapter
               "mqtt:standbyPointId",
               "opentcs.mqtt.standbyPointId",
               0
+          ),
+          readDouble(
+              vehicleProperties,
+              "mqtt:minAmclScore",
+              "opentcs.mqtt.minAmclScore",
+              0.5
           )
       );
     }
