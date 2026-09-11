@@ -476,6 +476,47 @@ public class MqttCommAdapter
     return payload;
   }
 
+  /** Builds a charge point control command without publishing it. */
+  Map<String, Object> buildChargePointControlPayload(
+      String command,
+      boolean pathMode,
+      double runSpeed,
+      int retryCount
+  ) {
+    String normalizedCommand = command == null ? "" : command.trim().toLowerCase(Locale.ROOT);
+    if (!normalizedCommand.equals("set")
+        && !normalizedCommand.equals("get")
+        && !normalizedCommand.equals("goto")
+        && !normalizedCommand.equals("stop")) {
+      throw new IllegalArgumentException("Unsupported charge point command: " + command);
+    }
+    if (runSpeed < 0.1 || runSpeed > 0.8) {
+      throw new IllegalArgumentException("Charge point run speed must be between 0.1 and 0.8.");
+    }
+    if (retryCount < 0) {
+      throw new IllegalArgumentException("Charge point retry count must not be negative.");
+    }
+    Map<String, Object> payload = new LinkedHashMap<>();
+    payload.put("cmd", normalizedCommand);
+    payload.put("cmd_type", "charge_point_control");
+    payload.put("path_mode", pathMode ? 1 : 0);
+    payload.put("run_speed", runSpeed);
+    payload.put("time", retryCount);
+    return payload;
+  }
+
+  /** Builds a charge point definition command without publishing it. */
+  Map<String, Object> buildChargePointAddPayload(double x, double y, double yaw) {
+    Map<String, Object> point = new LinkedHashMap<>();
+    point.put("x", x);
+    point.put("y", y);
+    point.put("z", yaw);
+    Map<String, Object> payload = new LinkedHashMap<>();
+    payload.put("cmd_type", "charge_point_add");
+    payload.put("point", java.util.List.of(point));
+    return payload;
+  }
+
   private void publishCommand(String payloadJson) {
     if (mqttClient == null) {
       LOG.warn("{}: MQTT client is not connected; cannot publish command yet.", getName());

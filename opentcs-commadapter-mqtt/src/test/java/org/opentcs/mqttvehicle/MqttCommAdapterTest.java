@@ -258,6 +258,26 @@ class MqttCommAdapterTest {
   }
 
   @Test
+  void buildsChargePointControlPayload() {
+    Vehicle vehicle = new Vehicle("Vehicle-01");
+    MqttCommAdapter adapter = new MqttCommAdapter(vehicle, executor);
+    assertThat(adapter.buildChargePointControlPayload("goto", false, 0.8, 2))
+        .containsEntry("cmd_type", "charge_point_control")
+        .containsEntry("cmd", "goto")
+        .containsEntry("path_mode", 0)
+        .containsEntry("time", 2);
+  }
+
+  @Test
+  void buildsChargePointAddPayload() {
+    Vehicle vehicle = new Vehicle("Vehicle-01");
+    MqttCommAdapter adapter = new MqttCommAdapter(vehicle, executor);
+    assertThat(adapter.buildChargePointAddPayload(2.94, -0.83, -2.99))
+        .containsEntry("cmd_type", "charge_point_add")
+        .containsKey("point");
+  }
+
+  @Test
   void doesNotCompleteDropWhenForksStillRaised() {
     Point sourcePoint = new Point("P_WAIT_IN_01");
     Point destinationPoint = new Point("ST_IN_01");
